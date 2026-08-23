@@ -9,6 +9,8 @@ use App\Models\Department;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
+use function Pest\Laravel\actingAs;
+
 function permissionStaffPayload(Branch $branch, array $overrides = []): array
 {
     return [
@@ -31,7 +33,7 @@ test('admins can grant extra permissions when creating staff', function () {
     $branch = Branch::factory()->create();
     $admin = User::factory()->superAdmin()->create(['branch_id' => $branch->id]);
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->post(route('staff.store'), permissionStaffPayload($branch, [
             'permissions' => [
                 Permission::ManageKiosk->value,
@@ -56,7 +58,7 @@ test('role defaults are not stored as extra permissions', function () {
     $branch = Branch::factory()->create();
     $admin = User::factory()->superAdmin()->create(['branch_id' => $branch->id]);
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->post(route('staff.store'), permissionStaffPayload($branch, [
             'email' => 'manager-permissions@example.com',
             'role' => UserRole::Manager->value,
@@ -84,14 +86,14 @@ test('employees with kiosk permission can open the kiosk and roster', function (
     $ownDay = AttendanceDay::factory()->create(['branch_id' => $branch->id]);
     AttendanceDay::factory()->create(['branch_id' => $other->id]);
 
-    $this->actingAs($employee)
+    actingAs($employee)
         ->get(route('attendance.kiosk'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('attendance/Kiosk')
             ->where('can.manageKiosk', true));
 
-    $this->actingAs($employee)
+    actingAs($employee)
         ->get(route('attendance.days.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -103,7 +105,7 @@ test('employees with kiosk permission can open the kiosk and roster', function (
 test('employees without extra permissions still cannot open the kiosk', function () {
     $employee = User::factory()->employee()->create();
 
-    $this->actingAs($employee)
+    actingAs($employee)
         ->get(route('attendance.kiosk'))
         ->assertForbidden();
 });
@@ -114,7 +116,7 @@ test('employees with staff permission can create staff in their branch', functio
         'branch_id' => $branch->id,
     ]);
 
-    $this->actingAs($employee)
+    actingAs($employee)
         ->get(route('staff.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -122,7 +124,7 @@ test('employees with staff permission can create staff in their branch', functio
             ->where('canCreate', true)
             ->where('can.manageStaff', true));
 
-    $this->actingAs($employee)
+    actingAs($employee)
         ->post(route('staff.store'), permissionStaffPayload($branch, [
             'email' => 'created-by-employee@example.com',
             'permissions' => [Permission::ManageKiosk->value],
@@ -145,7 +147,7 @@ test('team scoped staff managers cannot assign another department', function () 
         'department_id' => $department->id,
     ]);
 
-    $this->actingAs($employee)
+    actingAs($employee)
         ->from(route('staff.create'))
         ->post(route('staff.store'), permissionStaffPayload($branch, [
             'email' => 'other-department@example.com',
@@ -165,7 +167,7 @@ test('admins can update extra permissions on existing staff', function () {
         'permissions' => [Permission::ManageTasks->value],
     ]);
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->put(route('staff.update', $staff), permissionStaffPayload($branch, [
             'name' => $staff->name,
             'email' => $staff->email,
@@ -190,7 +192,7 @@ test('admins can update extra permissions on existing staff', function () {
 test('the staff form shares grantable permissions', function () {
     $admin = User::factory()->superAdmin()->create();
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->get(route('staff.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
