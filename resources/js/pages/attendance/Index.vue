@@ -1,0 +1,337 @@
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { Download } from '@lucide/vue';
+import PageHeader from '@/components/PageHeader.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { trans } from '@/composables/useTrans';
+import { attendanceTone } from '@/lib/status';
+
+type PersonRow = {
+    id: number;
+    name: string;
+    check_in: string | null;
+    check_out: string | null;
+    work_hours: string | number | null;
+    status: string | null;
+};
+
+type AttendanceRow = {
+    id: number;
+    date: string;
+    check_in: string | null;
+    check_out: string | null;
+    status: string;
+    late_minutes: number;
+    early_leave_minutes: number;
+    work_hours: string | number;
+    user?: { id: number; name: string };
+    branch?: { id: number; name: string };
+};
+
+const props = defineProps<{
+    date: string;
+    canRecord: boolean;
+    people: PersonRow[];
+    attendances: {
+        data: AttendanceRow[];
+    };
+}>();
+
+const form = useForm({
+    date: props.date,
+    entries: props.people.map((person) => ({
+        user_id: person.id,
+        check_in: person.check_in ?? '',
+        check_out: person.check_out ?? '',
+    })),
+});
+
+const firstError = computed(() => Object.values(form.errors)[0] ?? '');
+const exportFrom = ref(props.date);
+const exportTo = ref(props.date);
+const exportUrl = computed(() => `/attendance/export?from=${exportFrom.value}&to=${exportTo.value}`);
+const filledCount = computed(
+    () => form.entries.filter((entry) => entry.check_in || entry.check_out).length,
+);
+
+watch(
+    () => props.date,
+    (date) => {
+        exportFrom.value = date;
+        exportTo.value = date;
+    },
+);
+
+defineOptions({
+    layout: {
+        breadcrumbs: [
+            { title: 'nav.dashboard', href: '/dashboard' },
+            { title: 'nav.attendance', href: '/attendance' },
+        ],
+    },
+});
+
+function changeDate(value: string): void {
+    router.get('/attendance', { date: value || undefined }, { replace: true });
+}
+
+function saveTimes(): void {
+    form.date = props.date;
+    form.transform((data) => ({
+        date: props.date,
+        entries: data.entries.map((entry) => ({
+            user_id: entry.user_id,
+            check_in: entry.check_in || null,
+            check_out: entry.check_out || null,
+        })),
+    }));
+    form.put('/attendance/entries', { preserveScroll: true });
+}
+
+function dayLabel(value: string): string {
+    return value.slice(0, 10);
+}
+
+function clock(value: string | null): string {
+    if (!value) {
+        return '—';
+    }
+
+    const parsed = new Date(value);
+
+    if (Number.isNaN(parsed.getTime())) {
+        return value;
+    }
+
+    return parsed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+</script>
+
+<template>
+    <Head :title="trans('attendance.title')" />
+
+    <div class="page-shell">
+        <PageHeader
+            :eyebrow="trans('attendance.eyebrow')"
+            :title="trans('attendance.title')"
+            :description="
+                canRecord
+                    ? trans('attendance.description_manager')
+                    : trans('attendance.description_self')
+            "
+        />
+
+        <Card class="shadow-sm">
+            <CardContent class="flex flex-col gap-4 pt-5 sm:gap-5 sm:pt-6 lg:flex-row lg:items-end lg:justify-between">
+                <div class="w-full space-y-2 lg:w-auto">
+                    <p class="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                        {{ trans('attendance.timesheet') }}
+                    </p>
+                    <div class="space-y-1">
+                        <Label for="date">{{ trans('common.day') }}</Label>
+                        <Input
+                            id="date"
+                            type="date"
+                            class="w-full min-w-0 sm:w-44"
+                            :model-value="date"
+                            @update:model-value="changeDate(String($event))"
+                        />
+                    </div>
+                </div>
+                <div class="w-full space-y-2 lg:w-auto">
+                    <p class="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                        {{ trans('attendance.export') }}
+                    </p>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end">
+                        <div class="space-y-1">
+                            <Label for="from">{{ trans('common.from') }}</Label>
+                            <Input id="from" v-model="exportFrom" type="date" class="w-full min-w-0 sm:w-44" />
+                        </div>
+                        <div class="space-y-1">
+                            <Label for="to">{{ trans('common.to') }}</Label>
+                            <Input id="to" v-model="exportTo" type="date" class="w-full min-w-0 sm:w-44" />
+                        </div>
+                        <Button variant="outline" class="w-full rounded-full sm:col-span-2 sm:w-auto" as-child>
+                            <a :href="exportUrl">
+                                <Download class="size-4" />
+                                {{ trans('attendance.download') }}
+                            </a>
+                        </Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card v-if="canRecord" class="shadow-sm">
+            <CardHeader class="border-b">
+                <CardTitle>{{ trans('attendance.daily_times') }}</CardTitle>
+                <p class="text-sm text-muted-foreground">
+                    {{ trans('attendance.people_day', { count: people.length, date: dayLabel(date) }) }}
+                </p>
+            </CardHeader>
+            <CardContent class="pt-4 sm:overflow-x-auto sm:pt-0">
+                <p v-if="firstError" class="pb-3 text-sm text-destructive sm:pt-4">{{ firstError }}</p>
+                <div v-if="people.length === 0" class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground sm:p-8">
+                    {{ trans('attendance.no_staff_day') }}
+                </div>
+                <div v-else class="space-y-3 md:hidden">
+                    <div
+                        v-for="(entry, index) in form.entries"
+                        :key="entry.user_id"
+                        class="rounded-2xl border bg-muted/20 p-3"
+                    >
+                        <div class="mb-3 flex items-start justify-between gap-2">
+                            <p class="min-w-0 text-sm font-medium leading-5">{{ people[index]?.name }}</p>
+                            <StatusBadge
+                                v-if="people[index]?.status"
+                                :value="people[index].status"
+                                :tone="attendanceTone(people[index].status)"
+                            />
+                            <span v-else class="text-xs text-muted-foreground">—</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="space-y-1">
+                                <Label :for="`in-${entry.user_id}`" class="text-xs">{{ trans('common.in') }}</Label>
+                                <Input
+                                    :id="`in-${entry.user_id}`"
+                                    v-model="entry.check_in"
+                                    type="time"
+                                    class="tabular-nums"
+                                />
+                            </div>
+                            <div class="space-y-1">
+                                <Label :for="`out-${entry.user_id}`" class="text-xs">{{ trans('common.out') }}</Label>
+                                <Input
+                                    :id="`out-${entry.user_id}`"
+                                    v-model="entry.check_out"
+                                    type="time"
+                                    class="tabular-nums"
+                                />
+                            </div>
+                        </div>
+                        <p class="mt-2 text-xs text-muted-foreground">
+                            {{ trans('attendance.hours_label', { hours: people[index]?.work_hours ?? '—' }) }}
+                        </p>
+                    </div>
+                </div>
+                <table v-if="people.length > 0" class="hidden w-full text-sm md:table">
+                    <thead class="text-start text-muted-foreground">
+                        <tr>
+                            <th class="py-4 font-medium">{{ trans('common.employee') }}</th>
+                            <th class="py-4 font-medium">{{ trans('common.in') }}</th>
+                            <th class="py-4 font-medium">{{ trans('common.out') }}</th>
+                            <th class="py-4 font-medium">{{ trans('common.hours') }}</th>
+                            <th class="py-4 font-medium">{{ trans('common.status') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="(entry, index) in form.entries"
+                            :key="entry.user_id"
+                            class="border-t border-border/70 last:border-b-0 hover:bg-muted/40"
+                        >
+                            <td class="py-3 font-medium">{{ people[index]?.name }}</td>
+                            <td class="py-3">
+                                <Input v-model="entry.check_in" type="time" class="w-32 tabular-nums" />
+                            </td>
+                            <td class="py-3">
+                                <Input v-model="entry.check_out" type="time" class="w-32 tabular-nums" />
+                            </td>
+                            <td class="py-3 tabular-nums">{{ people[index]?.work_hours ?? '—' }}</td>
+                            <td class="py-3">
+                                <StatusBadge
+                                    v-if="people[index]?.status"
+                                    :value="people[index].status"
+                                    :tone="attendanceTone(people[index].status)"
+                                />
+                                <span v-else class="text-muted-foreground">—</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </CardContent>
+            <CardFooter
+                v-if="people.length > 0"
+                class="flex-col-reverse gap-3 border-t bg-muted/30 sm:flex-row sm:justify-between"
+            >
+                <p class="text-center text-sm text-muted-foreground sm:text-start">
+                    {{ trans('attendance.filled', { filled: filledCount, total: people.length }) }}
+                </p>
+                <Button class="w-full rounded-full sm:w-auto" :disabled="form.processing" @click="saveTimes">
+                    {{ trans('attendance.save_times') }}
+                </Button>
+            </CardFooter>
+        </Card>
+
+        <Card v-else class="shadow-sm">
+            <CardHeader class="border-b">
+                <CardTitle>{{ trans('attendance.your_records') }}</CardTitle>
+                <p class="text-sm text-muted-foreground">{{ dayLabel(date) }}</p>
+            </CardHeader>
+            <CardContent class="pt-4 sm:overflow-x-auto sm:pt-0">
+                <div
+                    v-if="attendances.data.length === 0"
+                    class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground sm:p-8"
+                >
+                    {{ trans('attendance.empty_day') }}
+                </div>
+                <div v-else class="space-y-3 md:hidden">
+                    <div
+                        v-for="row in attendances.data"
+                        :key="row.id"
+                        class="rounded-2xl border bg-muted/20 p-3"
+                    >
+                        <div class="mb-2 flex items-start justify-between gap-2">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium">{{ row.user?.name }}</p>
+                                <p class="text-xs text-muted-foreground">
+                                    {{ dayLabel(row.date) }} · {{ row.branch?.name }}
+                                </p>
+                            </div>
+                            <StatusBadge :value="row.status" :tone="attendanceTone(row.status)" />
+                        </div>
+                        <p class="text-sm tabular-nums text-muted-foreground">
+                            {{ clock(row.check_in) }} – {{ clock(row.check_out) }}
+                            · {{ row.work_hours }}h
+                        </p>
+                    </div>
+                </div>
+                <table v-if="attendances.data.length > 0" class="hidden w-full text-sm md:table">
+                    <thead class="text-start text-muted-foreground">
+                        <tr>
+                            <th class="py-4 font-medium">{{ trans('common.date') }}</th>
+                            <th class="py-4 font-medium">{{ trans('common.employee') }}</th>
+                            <th class="py-4 font-medium">{{ trans('common.branch') }}</th>
+                            <th class="py-4 font-medium">{{ trans('common.in') }}</th>
+                            <th class="py-4 font-medium">{{ trans('common.out') }}</th>
+                            <th class="py-4 font-medium">{{ trans('common.hours') }}</th>
+                            <th class="py-4 font-medium">{{ trans('common.status') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="row in attendances.data"
+                            :key="row.id"
+                            class="border-t border-border/70 hover:bg-muted/40"
+                        >
+                            <td class="py-3.5">{{ dayLabel(row.date) }}</td>
+                            <td class="py-3.5 font-medium">{{ row.user?.name }}</td>
+                            <td class="py-3.5">{{ row.branch?.name }}</td>
+                            <td class="py-3.5 tabular-nums">{{ clock(row.check_in) }}</td>
+                            <td class="py-3.5 tabular-nums">{{ clock(row.check_out) }}</td>
+                            <td class="py-3.5 tabular-nums">{{ row.work_hours }}</td>
+                            <td class="py-3.5">
+                                <StatusBadge :value="row.status" :tone="attendanceTone(row.status)" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </CardContent>
+        </Card>
+    </div>
+</template>
