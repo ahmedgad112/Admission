@@ -197,4 +197,24 @@
     .field-control {
         @apply border-input h-10 w-full rounded-lg border bg-background px-3 text-sm shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30;
     }
+
+    .glass-card {
+        @apply bg-card/80 backdrop-blur-md border border-border/80 shadow-xs transition-all duration-200 hover:shadow-md hover:border-border;
+    }
+
+    .metric-card-hover {
+        @apply transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md;
+    }
+
+    .active-pulse-dot {
+        @apply relative flex h-2.5 w-2.5;
+    }
+
+    .active-pulse-dot span:first-child {
+        @apply absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75;
+    }
+
+    .active-pulse-dot span:last-child {
+        @apply relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500;
+    }
 }

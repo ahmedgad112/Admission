@@ -47,17 +47,18 @@ const mainNavItems = computed<NavItem[]>(() => {
         });
     }
 
+    items.push({
+        title: trans('nav.roster'),
+        href: '/attendance/days',
+        icon: CalendarDays,
+    });
+
     if (page.props.can?.manageKiosk) {
         items.push(
             {
                 title: trans('nav.branches'),
                 href: '/branches',
                 icon: MapPin,
-            },
-            {
-                title: trans('nav.roster'),
-                href: '/attendance/days',
-                icon: CalendarDays,
             },
             {
                 title: trans('nav.kiosk'),

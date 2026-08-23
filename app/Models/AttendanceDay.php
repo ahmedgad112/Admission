@@ -79,6 +79,19 @@ class AttendanceDay extends Model
         return $this->belongsToMany(User::class, 'attendance_day_user')->withTimestamps();
     }
 
+    /**
+     * @return array{check_in_starts_at: string, check_in_ends_at: string, check_out_starts_at: string, check_out_ends_at: string}
+     */
+    public static function defaultSessionHours(): array
+    {
+        return [
+            'check_in_starts_at' => '00:00',
+            'check_in_ends_at' => '23:59',
+            'check_out_starts_at' => '00:00',
+            'check_out_ends_at' => '23:59',
+        ];
+    }
+
     public function hasScheduledStaff(): bool
     {
         if ($this->relationLoaded('staff')) {

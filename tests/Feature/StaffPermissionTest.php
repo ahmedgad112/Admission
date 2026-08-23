@@ -95,6 +95,7 @@ test('employees with kiosk permission can open the kiosk and roster', function (
         ->get(route('attendance.days.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
+            ->where('canCreate', true)
             ->has('days.data', 1)
             ->where('days.data.0.id', $ownDay->id));
 });

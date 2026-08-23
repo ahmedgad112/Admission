@@ -42,10 +42,6 @@ class UpdateAttendanceDayRequest extends FormRequest
                 'date',
                 $this->uniqueDateRule($day instanceof AttendanceDay ? $day->id : null),
             ],
-            'check_in_starts_at' => ['required', 'date_format:H:i'],
-            'check_in_ends_at' => ['required', 'date_format:H:i', 'after:check_in_starts_at'],
-            'check_out_starts_at' => ['required', 'date_format:H:i', 'after_or_equal:check_in_ends_at'],
-            'check_out_ends_at' => ['required', 'date_format:H:i', 'after:check_out_starts_at'],
         ];
     }
 }

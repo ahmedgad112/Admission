@@ -41,6 +41,7 @@ class AttendanceDayController extends Controller
 
         return Inertia::render('attendance/days/Index', [
             'days' => $days,
+            'canCreate' => $user->can('create', AttendanceDay::class),
         ]);
     }
 
@@ -57,6 +58,7 @@ class AttendanceDayController extends Controller
         abort_unless($user !== null, 403);
 
         $day = AttendanceDay::query()->create([
+            ...AttendanceDay::defaultSessionHours(),
             ...$request->safe()->except('staff_ids'),
             'created_by' => $user->id,
         ]);
@@ -78,10 +80,6 @@ class AttendanceDayController extends Controller
                 'id' => $attendanceDay->id,
                 'branch_id' => $attendanceDay->branch_id,
                 'date' => $attendanceDay->date->toDateString(),
-                'check_in_starts_at' => substr($attendanceDay->check_in_starts_at, 0, 5),
-                'check_in_ends_at' => substr($attendanceDay->check_in_ends_at, 0, 5),
-                'check_out_starts_at' => substr($attendanceDay->check_out_starts_at, 0, 5),
-                'check_out_ends_at' => substr($attendanceDay->check_out_ends_at, 0, 5),
                 'staff_ids' => $attendanceDay->staff->pluck('id')->all(),
             ],
             ...$this->formOptions($request),

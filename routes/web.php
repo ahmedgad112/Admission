@@ -32,7 +32,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('attendance.check-out');
 
     Route::get('attendance/days', [AttendanceDayController::class, 'index'])
-        ->middleware('permission:manage_kiosk')
         ->name('attendance.days.index');
     Route::get('attendance/days/create', [AttendanceDayController::class, 'create'])
         ->middleware('permission:manage_kiosk')

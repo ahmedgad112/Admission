@@ -8,16 +8,13 @@ import { trans } from '@/composables/useTrans';
 type DayRow = {
     id: number;
     date: string;
-    check_in_starts_at: string;
-    check_in_ends_at: string;
-    check_out_starts_at: string;
-    check_out_ends_at: string;
     branch?: { id: number; name: string };
     staff?: { id: number; name: string }[];
 };
 
 defineProps<{
     days: { data: DayRow[] };
+    canCreate: boolean;
 }>();
 
 defineOptions({
@@ -31,10 +28,6 @@ defineOptions({
 
 function destroy(id: number): void {
     router.delete(`/attendance/days/${id}`);
-}
-
-function time(value: string): string {
-    return value.slice(0, 5);
 }
 
 function staffLabel(staff: { id: number; name: string }[] | undefined): string {
@@ -63,7 +56,7 @@ function staffLabel(staff: { id: number; name: string }[] | undefined): string {
             :description="trans('roster.description')"
         >
             <template #actions>
-                <Button class="rounded-full" as-child>
+                <Button v-if="canCreate" class="rounded-full" as-child>
                     <Link href="/attendance/days/create">{{ trans('roster.new') }}</Link>
                 </Button>
             </template>
@@ -76,34 +69,26 @@ function staffLabel(staff: { id: number; name: string }[] | undefined): string {
                         <tr>
                             <th class="pb-3 font-medium">{{ trans('common.date') }}</th>
                             <th class="pb-3 font-medium">{{ trans('common.branch') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('scan.check_in') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('scan.check_out') }}</th>
                             <th class="pb-3 font-medium">{{ trans('common.staff') }}</th>
-                            <th class="pb-3 font-medium" />
+                            <th v-if="canCreate" class="pb-3 font-medium" />
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-if="days.data.length === 0">
-                            <td colspan="6" class="py-10 text-center text-muted-foreground">
-                                No rosters yet. Create one and choose the staff on duty.
+                            <td :colspan="canCreate ? 4 : 3" class="py-10 text-center text-muted-foreground">
+                                {{ trans('roster.empty') }}
                             </td>
                         </tr>
                         <tr v-for="day in days.data" :key="day.id" class="border-t border-border/70">
                             <td class="py-3.5 font-medium">{{ day.date }}</td>
                             <td class="py-3.5">{{ day.branch?.name }}</td>
                             <td class="py-3.5">
-                                {{ time(day.check_in_starts_at) }} – {{ time(day.check_in_ends_at) }}
-                            </td>
-                            <td class="py-3.5">
-                                {{ time(day.check_out_starts_at) }} – {{ time(day.check_out_ends_at) }}
-                            </td>
-                            <td class="py-3.5">
                                 <span class="font-medium">{{ day.staff?.length ?? 0 }}</span>
                                 <span class="block text-xs text-muted-foreground">
                                     {{ staffLabel(day.staff) }}
                                 </span>
                             </td>
-                            <td class="py-3.5 text-right">
+                            <td v-if="canCreate" class="py-3.5 text-right">
                                 <div class="flex justify-end gap-2">
                                     <Button variant="outline" size="sm" class="rounded-full" as-child>
                                         <Link :href="`/attendance/days/${day.id}/edit`">{{ trans('common.edit') }}</Link>

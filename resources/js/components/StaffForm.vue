@@ -232,7 +232,7 @@ function submit(): void {
                                 class="mt-0.5"
                                 :checked="isPermissionChecked(permission.value)"
                                 :disabled="isPermissionLocked(permission.value)"
-                                @update:checked="(checked) => togglePermission(permission.value, checked)"
+                                @update:checked="(checked: boolean | 'indeterminate') => togglePermission(permission.value, checked)"
                             />
                             <span class="space-y-1">
                                 <span class="flex items-center gap-2 text-sm font-medium">

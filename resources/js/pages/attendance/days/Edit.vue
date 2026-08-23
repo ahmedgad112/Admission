@@ -16,10 +16,6 @@ type Day = {
     id: number;
     branch_id: number;
     date: string;
-    check_in_starts_at: string;
-    check_in_ends_at: string;
-    check_out_starts_at: string;
-    check_out_ends_at: string;
     staff_ids: number[];
 };
 

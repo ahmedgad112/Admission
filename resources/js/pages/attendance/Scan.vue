@@ -162,17 +162,7 @@ function submit(): void {
             </div>
 
             <div class="space-y-4 rounded-[2rem] border bg-card p-6 shadow-sm">
-                <p v-if="day" class="rounded-2xl bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
-                    {{
-                        trans('scan.window', {
-                            in_start: day.check_in_starts_at,
-                            in_end: day.check_in_ends_at,
-                            out_start: day.check_out_starts_at,
-                            out_end: day.check_out_ends_at,
-                        })
-                    }}
-                </p>
-                <p v-else class="text-sm text-destructive">
+                <p v-if="!day" class="text-sm text-destructive">
                     {{ trans('scan.no_session') }}
                 </p>
                 <p v-if="day && !isScheduled" class="text-sm text-destructive">
@@ -190,8 +180,8 @@ function submit(): void {
                 >
                     {{ trans('scan.check_out_closed') }}
                 </p>
-                <p v-if="form.errors.attendance" class="text-sm text-destructive">
-                    {{ form.errors.attendance }}
+                <p v-if="(form.errors as Record<string, string>).attendance" class="text-sm text-destructive">
+                    {{ (form.errors as Record<string, string>).attendance }}
                 </p>
                 <div class="space-y-2">
                     <Label for="mode">{{ trans('common.action') }}</Label>

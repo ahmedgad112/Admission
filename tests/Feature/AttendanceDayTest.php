@@ -48,9 +48,55 @@ test('admins can create a daily check-in and check-out session', function () {
         ->and($day->created_by)->toBe($admin->id)
         ->and($day->staff->pluck('id')->all())->toBe([$employee->id])
         ->and($day->check_in_is_open)->toBeFalse()
-        ->and($day->check_out_is_open)->toBeFalse()
-        ->and($day->isCheckInOpen(now()->setTime(9, 0)))->toBeTrue()
-        ->and($day->isCheckOutOpen(now()->setTime(9, 0)))->toBeFalse();
+        ->and($day->check_out_is_open)->toBeFalse();
+});
+
+test('employees can view the roster for their branch', function () {
+    $branch = Branch::factory()->create();
+    $other = Branch::factory()->create();
+    $employee = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $ownDay = AttendanceDay::factory()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $ownDay->staff()->sync([$employee->id]);
+    AttendanceDay::factory()->create([
+        'branch_id' => $other->id,
+    ]);
+
+    $this->actingAs($employee)
+        ->get(route('attendance.days.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('attendance/days/Index')
+            ->where('canCreate', false)
+            ->has('days.data', 1)
+            ->where('days.data.0.id', $ownDay->id)
+            ->where('days.data.0.staff.0.id', $employee->id));
+});
+
+test('a roster can be created without check-in and check-out windows', function () {
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->superAdmin()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $employee = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+    ]);
+
+    $this->actingAs($admin)
+        ->post(route('attendance.days.store'), [
+            'branch_id' => $branch->id,
+            'date' => now()->toDateString(),
+            'staff_ids' => [$employee->id],
+        ])
+        ->assertRedirect(route('attendance.days.index'));
+
+    $day = AttendanceDay::query()->first();
+
+    expect($day)->not->toBeNull()
+        ->and($day->staff->pluck('id')->all())->toBe([$employee->id]);
 });
 
 test('employees cannot create attendance sessions', function () {

@@ -20,10 +20,6 @@ type Day = {
     id: number;
     branch_id: number;
     date: string;
-    check_in_starts_at: string;
-    check_in_ends_at: string;
-    check_out_starts_at: string;
-    check_out_ends_at: string;
     staff_ids: number[];
 };
 
@@ -39,10 +35,6 @@ const search = ref('');
 const form = useForm({
     branch_id: props.day?.branch_id ?? props.defaultBranchId ?? props.branches[0]?.id ?? '',
     date: props.day?.date ?? new Date().toISOString().slice(0, 10),
-    check_in_starts_at: props.day?.check_in_starts_at ?? '08:00',
-    check_in_ends_at: props.day?.check_in_ends_at ?? '11:00',
-    check_out_starts_at: props.day?.check_out_starts_at ?? '16:00',
-    check_out_ends_at: props.day?.check_out_ends_at ?? '19:00',
     staff_ids: [...(props.day?.staff_ids ?? [])],
 });
 
@@ -135,34 +127,6 @@ function submit(): void {
                     <Input id="date" v-model="form.date" type="date" />
                     <p v-if="form.errors.date" class="text-sm text-destructive">
                         {{ form.errors.date }}
-                    </p>
-                </div>
-                <div class="space-y-2">
-                    <Label for="check_in_starts_at">{{ trans('roster.check_in_starts') }}</Label>
-                    <Input id="check_in_starts_at" v-model="form.check_in_starts_at" type="time" />
-                    <p v-if="form.errors.check_in_starts_at" class="text-sm text-destructive">
-                        {{ form.errors.check_in_starts_at }}
-                    </p>
-                </div>
-                <div class="space-y-2">
-                    <Label for="check_in_ends_at">{{ trans('roster.check_in_ends') }}</Label>
-                    <Input id="check_in_ends_at" v-model="form.check_in_ends_at" type="time" />
-                    <p v-if="form.errors.check_in_ends_at" class="text-sm text-destructive">
-                        {{ form.errors.check_in_ends_at }}
-                    </p>
-                </div>
-                <div class="space-y-2">
-                    <Label for="check_out_starts_at">{{ trans('roster.check_out_starts') }}</Label>
-                    <Input id="check_out_starts_at" v-model="form.check_out_starts_at" type="time" />
-                    <p v-if="form.errors.check_out_starts_at" class="text-sm text-destructive">
-                        {{ form.errors.check_out_starts_at }}
-                    </p>
-                </div>
-                <div class="space-y-2">
-                    <Label for="check_out_ends_at">{{ trans('roster.check_out_ends') }}</Label>
-                    <Input id="check_out_ends_at" v-model="form.check_out_ends_at" type="time" />
-                    <p v-if="form.errors.check_out_ends_at" class="text-sm text-destructive">
-                        {{ form.errors.check_out_ends_at }}
                     </p>
                 </div>
             </div>

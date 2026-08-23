@@ -9,12 +9,12 @@ class AttendanceDayPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->canManageKiosk();
+        return $user->isSuperAdmin() || $user->branch_id !== null;
     }
 
     public function view(User $user, AttendanceDay $attendanceDay): bool
     {
-        return $user->canManageKiosk() && $user->canAccessBranch($attendanceDay->branch_id);
+        return $user->canAccessBranch($attendanceDay->branch_id);
     }
 
     public function create(User $user): bool

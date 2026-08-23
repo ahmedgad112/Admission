@@ -288,17 +288,7 @@ watch([type, branchId], () => {
                         </option>
                     </select>
                 </div>
-                <p v-if="todaySession" class="text-sm text-muted-foreground">
-                    {{
-                        trans('kiosk.planned', {
-                            in_start: todaySession.check_in_starts_at,
-                            in_end: todaySession.check_in_ends_at,
-                            out_start: todaySession.check_out_starts_at,
-                            out_end: todaySession.check_out_ends_at,
-                        })
-                    }}
-                </p>
-                <Button v-else variant="outline" class="w-full rounded-full" as-child>
+                <Button v-if="!todaySession" variant="outline" class="w-full rounded-full" as-child>
                     <Link href="/attendance/days/create">{{ trans('kiosk.create_today') }}</Link>
                 </Button>
                 <Button
