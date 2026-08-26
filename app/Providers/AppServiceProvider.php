@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\RolePermissionCatalog;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -19,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(RolePermissionCatalog::class);
     }
 
     /**

@@ -293,53 +293,37 @@ function formatTime(checkIn: string | null): string {
                     </Link>
                 </div>
 
-                <div v-else class="overflow-x-auto">
-                    <table class="w-full text-sm text-start border-collapse">
-                        <thead>
-                            <tr class="border-b border-border/60 bg-muted/30 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                <th class="px-6 py-3.5 text-start">{{ trans('common.employee') }}</th>
-                                <th class="px-6 py-3.5 text-start">{{ trans('common.branch') }}</th>
-                                <th class="px-6 py-3.5 text-start">{{ trans('dashboard.check_in') }}</th>
-                                <th class="px-6 py-3.5 text-start">{{ trans('common.status') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-border/60">
-                            <tr
-                                v-for="row in metrics.today_attendance"
-                                :key="row.id"
-                                class="group transition-colors hover:bg-muted/40"
-                            >
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <Avatar class="size-9 border border-border/60 shadow-xs">
-                                            <AvatarImage v-if="row.user?.avatar" :src="row.user.avatar" :alt="row.user.name" />
-                                            <AvatarFallback class="bg-primary/10 text-xs font-bold text-primary">
-                                                {{ getInitials(row.user?.name) }}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <span class="font-medium text-foreground group-hover:text-primary transition-colors">
-                                            {{ row.user?.name || '—' }}
-                                        </span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-muted-foreground">
-                                    <div class="inline-flex items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1 text-xs">
-                                        <Building2 class="size-3 text-muted-foreground" />
-                                        <span>{{ row.branch?.name || '—' }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-muted-foreground font-mono text-xs">
-                                    <div class="inline-flex items-center gap-1.5">
-                                        <Clock3 class="size-3.5 text-muted-foreground" />
-                                        <span>{{ formatTime(row.check_in) }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <StatusBadge :value="row.status" :tone="attendanceTone(row.status)" />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div v-else class="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div
+                        v-for="row in metrics.today_attendance"
+                        :key="row.id"
+                        class="flex items-start gap-3 rounded-2xl border border-border/80 bg-muted/20 p-3.5 transition-colors hover:bg-muted/40"
+                    >
+                        <Avatar class="size-9 border border-border/60 shadow-xs">
+                            <AvatarImage v-if="row.user?.avatar" :src="row.user.avatar" :alt="row.user.name" />
+                            <AvatarFallback class="bg-primary/10 text-xs font-bold text-primary">
+                                {{ getInitials(row.user?.name) }}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div class="min-w-0 flex-1 space-y-2">
+                            <div class="flex items-start justify-between gap-2">
+                                <p class="font-medium text-foreground">
+                                    {{ row.user?.name || '—' }}
+                                </p>
+                                <StatusBadge :value="row.status" :tone="attendanceTone(row.status)" />
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                <span class="inline-flex items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1">
+                                    <Building2 class="size-3" />
+                                    <span>{{ row.branch?.name || '—' }}</span>
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 font-mono">
+                                    <Clock3 class="size-3.5" />
+                                    <span>{{ formatTime(row.check_in) }}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </CardContent>
         </Card>

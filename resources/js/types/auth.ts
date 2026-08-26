@@ -27,6 +27,7 @@ export type Auth = {
 };
 
 export type AppPermissions = {
+    managePermissions: boolean;
     manageKiosk: boolean;
     manageStaff: boolean;
     manageTasks: boolean;

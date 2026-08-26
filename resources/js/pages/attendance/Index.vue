@@ -174,16 +174,19 @@ function clock(value: string | null): string {
                     {{ trans('attendance.people_day', { count: people.length, date: dayLabel(date) }) }}
                 </p>
             </CardHeader>
-            <CardContent class="pt-4 sm:overflow-x-auto sm:pt-0">
-                <p v-if="firstError" class="pb-3 text-sm text-destructive sm:pt-4">{{ firstError }}</p>
-                <div v-if="people.length === 0" class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground sm:p-8">
+            <CardContent class="pt-4 sm:pt-6">
+                <p v-if="firstError" class="pb-4 text-sm text-destructive">{{ firstError }}</p>
+                <div
+                    v-if="people.length === 0"
+                    class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground sm:p-8"
+                >
                     {{ trans('attendance.no_staff_day') }}
                 </div>
-                <div v-else class="space-y-3 md:hidden">
+                <div v-else class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     <div
                         v-for="(entry, index) in form.entries"
                         :key="entry.user_id"
-                        class="rounded-2xl border bg-muted/20 p-3"
+                        class="rounded-2xl border bg-muted/20 p-4"
                     >
                         <div class="mb-3 flex items-start justify-between gap-2">
                             <p class="min-w-0 text-sm font-medium leading-5">{{ people[index]?.name }}</p>
@@ -219,41 +222,6 @@ function clock(value: string | null): string {
                         </p>
                     </div>
                 </div>
-                <table v-if="people.length > 0" class="hidden w-full text-sm md:table">
-                    <thead class="text-start text-muted-foreground">
-                        <tr>
-                            <th class="py-4 font-medium">{{ trans('common.employee') }}</th>
-                            <th class="py-4 font-medium">{{ trans('common.in') }}</th>
-                            <th class="py-4 font-medium">{{ trans('common.out') }}</th>
-                            <th class="py-4 font-medium">{{ trans('common.hours') }}</th>
-                            <th class="py-4 font-medium">{{ trans('common.status') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="(entry, index) in form.entries"
-                            :key="entry.user_id"
-                            class="border-t border-border/70 last:border-b-0 hover:bg-muted/40"
-                        >
-                            <td class="py-3 font-medium">{{ people[index]?.name }}</td>
-                            <td class="py-3">
-                                <Input v-model="entry.check_in" type="time" class="w-32 tabular-nums" />
-                            </td>
-                            <td class="py-3">
-                                <Input v-model="entry.check_out" type="time" class="w-32 tabular-nums" />
-                            </td>
-                            <td class="py-3 tabular-nums">{{ people[index]?.work_hours ?? '—' }}</td>
-                            <td class="py-3">
-                                <StatusBadge
-                                    v-if="people[index]?.status"
-                                    :value="people[index].status"
-                                    :tone="attendanceTone(people[index].status)"
-                                />
-                                <span v-else class="text-muted-foreground">—</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
             </CardContent>
             <CardFooter
                 v-if="people.length > 0"
@@ -273,18 +241,18 @@ function clock(value: string | null): string {
                 <CardTitle>{{ trans('attendance.your_records') }}</CardTitle>
                 <p class="text-sm text-muted-foreground">{{ dayLabel(date) }}</p>
             </CardHeader>
-            <CardContent class="pt-4 sm:overflow-x-auto sm:pt-0">
+            <CardContent class="pt-4 sm:pt-6">
                 <div
                     v-if="attendances.data.length === 0"
                     class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground sm:p-8"
                 >
                     {{ trans('attendance.empty_day') }}
                 </div>
-                <div v-else class="space-y-3 md:hidden">
+                <div v-else class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     <div
                         v-for="row in attendances.data"
                         :key="row.id"
-                        class="rounded-2xl border bg-muted/20 p-3"
+                        class="rounded-2xl border bg-muted/20 p-4"
                     >
                         <div class="mb-2 flex items-start justify-between gap-2">
                             <div class="min-w-0">
@@ -301,36 +269,6 @@ function clock(value: string | null): string {
                         </p>
                     </div>
                 </div>
-                <table v-if="attendances.data.length > 0" class="hidden w-full text-sm md:table">
-                    <thead class="text-start text-muted-foreground">
-                        <tr>
-                            <th class="py-4 font-medium">{{ trans('common.date') }}</th>
-                            <th class="py-4 font-medium">{{ trans('common.employee') }}</th>
-                            <th class="py-4 font-medium">{{ trans('common.branch') }}</th>
-                            <th class="py-4 font-medium">{{ trans('common.in') }}</th>
-                            <th class="py-4 font-medium">{{ trans('common.out') }}</th>
-                            <th class="py-4 font-medium">{{ trans('common.hours') }}</th>
-                            <th class="py-4 font-medium">{{ trans('common.status') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="row in attendances.data"
-                            :key="row.id"
-                            class="border-t border-border/70 hover:bg-muted/40"
-                        >
-                            <td class="py-3.5">{{ dayLabel(row.date) }}</td>
-                            <td class="py-3.5 font-medium">{{ row.user?.name }}</td>
-                            <td class="py-3.5">{{ row.branch?.name }}</td>
-                            <td class="py-3.5 tabular-nums">{{ clock(row.check_in) }}</td>
-                            <td class="py-3.5 tabular-nums">{{ clock(row.check_out) }}</td>
-                            <td class="py-3.5 tabular-nums">{{ row.work_hours }}</td>
-                            <td class="py-3.5">
-                                <StatusBadge :value="row.status" :tone="attendanceTone(row.status)" />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
             </CardContent>
         </Card>
     </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { CalendarDays, CalendarOff, ClipboardList, Clock, LayoutGrid, MapPin, QrCode, ScanLine, Timer, Users } from '@lucide/vue';
+import { CalendarDays, CalendarOff, ClipboardList, Clock, LayoutGrid, MapPin, QrCode, ScanLine, ShieldCheck, Timer, Users } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -36,6 +36,14 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: trans('nav.staff'),
             href: '/staff',
             icon: Users,
+        });
+    }
+
+    if (page.props.can?.managePermissions) {
+        items.push({
+            title: trans('nav.permissions'),
+            href: '/permissions',
+            icon: ShieldCheck,
         });
     }
 

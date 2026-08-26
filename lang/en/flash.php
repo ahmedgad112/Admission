@@ -48,4 +48,7 @@ return [
     'password' => [
         'updated' => 'Password updated.',
     ],
+    'permissions' => [
+        'updated' => 'Role permissions updated.',
+    ],
 ];

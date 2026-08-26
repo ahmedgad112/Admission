@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\QrSessionController;
+use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\TaskController;
@@ -75,6 +76,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('shifts/{shift}/edit', [ShiftController::class, 'edit'])->name('shifts.edit');
     Route::put('shifts/{shift}', [ShiftController::class, 'update'])->name('shifts.update');
     Route::delete('shifts/{shift}', [ShiftController::class, 'destroy'])->name('shifts.destroy');
+
+    Route::get('permissions', [RolePermissionController::class, 'edit'])->name('permissions.edit');
+    Route::put('permissions', [RolePermissionController::class, 'update'])->name('permissions.update');
 
     Route::get('staff', [StaffController::class, 'index'])->name('staff.index');
     Route::get('staff/create', [StaffController::class, 'create'])->name('staff.create');

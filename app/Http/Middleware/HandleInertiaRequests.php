@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
             ],
             'can' => [
+                'managePermissions' => $user?->canManagePermissions() ?? false,
                 'manageKiosk' => $user?->canManageKiosk() ?? false,
                 'manageStaff' => $user?->canManageStaff() ?? false,
                 'manageTasks' => $user?->canManageTasks() ?? false,

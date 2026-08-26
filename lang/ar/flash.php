@@ -48,4 +48,7 @@ return [
     'password' => [
         'updated' => 'تم تحديث كلمة المرور.',
     ],
+    'permissions' => [
+        'updated' => 'تم تحديث صلاحيات الأدوار.',
+    ],
 ];

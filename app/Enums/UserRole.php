@@ -2,6 +2,8 @@
 
 namespace App\Enums;
 
+use App\Support\RolePermissionCatalog;
+
 enum UserRole: string
 {
     case SuperAdmin = 'super_admin';
@@ -20,9 +22,20 @@ enum UserRole: string
     }
 
     /**
+     * @return list<self>
+     */
+    public static function assignable(): array
+    {
+        return array_values(array_filter(
+            self::cases(),
+            fn (self $role): bool => $role !== self::SuperAdmin,
+        ));
+    }
+
+    /**
      * @return list<Permission>
      */
-    public function permissions(): array
+    public function defaultPermissions(): array
     {
         return match ($this) {
             self::SuperAdmin => Permission::cases(),
@@ -40,6 +53,29 @@ enum UserRole: string
             ],
             self::Employee => [],
         };
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function defaultPermissionValues(): array
+    {
+        return array_map(
+            fn (Permission $permission): string => $permission->value,
+            $this->defaultPermissions(),
+        );
+    }
+
+    /**
+     * @return list<Permission>
+     */
+    public function permissions(): array
+    {
+        if ($this === self::SuperAdmin || ! app()->bound(RolePermissionCatalog::class)) {
+            return $this->defaultPermissions();
+        }
+
+        return app(RolePermissionCatalog::class)->permissionsFor($this);
     }
 
     /**

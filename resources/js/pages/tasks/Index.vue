@@ -92,7 +92,13 @@ function assigneeLabel(task: TaskRow): string {
             </select>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div
+            v-if="tasks.data.length === 0"
+            class="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground"
+        >
+            {{ trans('tasks.empty') }}
+        </div>
+        <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <Card
                 v-for="task in tasks.data"
                 :key="task.id"

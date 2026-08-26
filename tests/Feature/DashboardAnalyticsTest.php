@@ -38,6 +38,11 @@ test('the dashboard includes attendance and task analytics', function () {
             ->has('metrics.task_completion_rate')
             ->where('metrics.late_today', 1)
             ->where('metrics.completed_tasks', 1)
+            ->has('metrics.today_attendance', 1)
+            ->where('metrics.today_attendance.0.user.name', $user->name)
+            ->has('metrics.today_attendance.0.branch.name')
+            ->has('metrics.today_attendance.0.status')
+            ->has('metrics.today_attendance.0.check_in')
         );
 });
 

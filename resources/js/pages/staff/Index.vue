@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { trans } from '@/composables/useTrans';
 import { userRoleTone, userStatusTone } from '@/lib/status';
@@ -28,6 +35,7 @@ const props = defineProps<{
     canCreate: boolean;
 }>();
 
+const page = usePage();
 const search = ref(props.filters.search);
 
 defineOptions({
@@ -66,6 +74,9 @@ function destroy(id: number): void {
             :description="trans('staff.description')"
         >
             <template #actions>
+                <Button v-if="page.props.can?.managePermissions" variant="outline" class="rounded-full" as-child>
+                    <Link href="/permissions">{{ trans('nav.permissions') }}</Link>
+                </Button>
                 <Button v-if="canCreate" class="rounded-full" as-child>
                     <Link href="/staff/create">{{ trans('staff.new') }}</Link>
                 </Button>
@@ -102,61 +113,60 @@ function destroy(id: number): void {
             </select>
         </div>
 
-        <Card class="shadow-sm">
-            <CardContent class="overflow-x-auto pt-6">
-                <table class="w-full text-sm">
-                    <thead class="text-start text-muted-foreground">
-                        <tr>
-                            <th class="pb-3 font-medium">{{ trans('common.name') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('common.branch') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('common.department') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('common.shift') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('staff.leave_days') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('common.role') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('common.status') }}</th>
-                            <th class="pb-3 font-medium" />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-if="staff.data.length === 0">
-                            <td colspan="8" class="py-10 text-center text-muted-foreground">
-                                {{ trans('staff.empty') }}
-                            </td>
-                        </tr>
-                        <tr v-for="member in staff.data" :key="member.id" class="border-t border-border/70">
-                            <td class="py-3.5">
-                                <p class="font-medium">{{ member.name }}</p>
-                                <p class="text-xs text-muted-foreground">{{ member.email }}</p>
-                            </td>
-                            <td class="py-3.5">{{ member.branch?.name ?? '—' }}</td>
-                            <td class="py-3.5">{{ member.department?.name ?? '—' }}</td>
-                            <td class="py-3.5">{{ member.shift?.name ?? '—' }}</td>
-                            <td class="py-3.5">{{ member.leave_days }}</td>
-                            <td class="py-3.5">
-                                <StatusBadge :value="member.role" :tone="userRoleTone(member.role)" />
-                            </td>
-                            <td class="py-3.5">
-                                <StatusBadge :value="member.status" :tone="userStatusTone(member.status)" />
-                            </td>
-                            <td class="py-3.5 text-right">
-                                <div v-if="canCreate" class="flex justify-end gap-2">
-                                    <Button variant="outline" size="sm" class="rounded-full" as-child>
-                                        <Link :href="`/staff/${member.id}/edit`">{{ trans('common.edit') }}</Link>
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        class="rounded-full"
-                                        @click="destroy(member.id)"
-                                    >
-                                        {{ trans('common.delete') }}
-                                    </Button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </CardContent>
-        </Card>
+        <div
+            v-if="staff.data.length === 0"
+            class="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground"
+        >
+            {{ trans('staff.empty') }}
+        </div>
+        <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <Card
+                v-for="member in staff.data"
+                :key="member.id"
+                class="h-full shadow-sm transition-transform hover:-translate-y-0.5"
+            >
+                <CardHeader>
+                    <CardTitle class="text-lg">{{ member.name }}</CardTitle>
+                    <CardDescription>{{ member.email }}</CardDescription>
+                </CardHeader>
+                <CardContent class="space-y-4">
+                    <div class="flex flex-wrap gap-2">
+                        <StatusBadge :value="member.role" :tone="userRoleTone(member.role)" />
+                        <StatusBadge :value="member.status" :tone="userStatusTone(member.status)" />
+                    </div>
+                    <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
+                        <div>
+                            <dt class="text-xs text-muted-foreground">{{ trans('common.branch') }}</dt>
+                            <dd class="font-medium">{{ member.branch?.name ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-muted-foreground">{{ trans('common.department') }}</dt>
+                            <dd class="font-medium">{{ member.department?.name ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-muted-foreground">{{ trans('common.shift') }}</dt>
+                            <dd class="font-medium">{{ member.shift?.name ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-muted-foreground">{{ trans('staff.leave_days') }}</dt>
+                            <dd class="font-medium">{{ member.leave_days }}</dd>
+                        </div>
+                    </dl>
+                </CardContent>
+                <CardFooter v-if="canCreate" class="mt-auto flex flex-wrap gap-2 border-t">
+                    <Button variant="outline" size="sm" class="rounded-full" as-child>
+                        <Link :href="`/staff/${member.id}/edit`">{{ trans('common.edit') }}</Link>
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        class="rounded-full"
+                        @click="destroy(member.id)"
+                    >
+                        {{ trans('common.delete') }}
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
     </div>
 </template>

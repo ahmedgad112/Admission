@@ -2,7 +2,14 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import PageHeader from '@/components/PageHeader.vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { trans } from '@/composables/useTrans';
 
 type DayRow = {
@@ -62,51 +69,44 @@ function staffLabel(staff: { id: number; name: string }[] | undefined): string {
             </template>
         </PageHeader>
 
-        <Card class="shadow-sm">
-            <CardContent class="overflow-x-auto pt-6">
-                <table class="w-full text-sm">
-                    <thead class="text-start text-muted-foreground">
-                        <tr>
-                            <th class="pb-3 font-medium">{{ trans('common.date') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('common.branch') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('common.staff') }}</th>
-                            <th v-if="canCreate" class="pb-3 font-medium" />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-if="days.data.length === 0">
-                            <td :colspan="canCreate ? 4 : 3" class="py-10 text-center text-muted-foreground">
-                                {{ trans('roster.empty') }}
-                            </td>
-                        </tr>
-                        <tr v-for="day in days.data" :key="day.id" class="border-t border-border/70">
-                            <td class="py-3.5 font-medium">{{ day.date }}</td>
-                            <td class="py-3.5">{{ day.branch?.name }}</td>
-                            <td class="py-3.5">
-                                <span class="font-medium">{{ day.staff?.length ?? 0 }}</span>
-                                <span class="block text-xs text-muted-foreground">
-                                    {{ staffLabel(day.staff) }}
-                                </span>
-                            </td>
-                            <td v-if="canCreate" class="py-3.5 text-right">
-                                <div class="flex justify-end gap-2">
-                                    <Button variant="outline" size="sm" class="rounded-full" as-child>
-                                        <Link :href="`/attendance/days/${day.id}/edit`">{{ trans('common.edit') }}</Link>
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        class="rounded-full"
-                                        @click="destroy(day.id)"
-                                    >
-                                        {{ trans('common.delete') }}
-                                    </Button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </CardContent>
-        </Card>
+        <div
+            v-if="days.data.length === 0"
+            class="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground"
+        >
+            {{ trans('roster.empty') }}
+        </div>
+        <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <Card
+                v-for="day in days.data"
+                :key="day.id"
+                class="h-full shadow-sm transition-transform hover:-translate-y-0.5"
+            >
+                <CardHeader>
+                    <CardTitle class="text-lg">{{ day.date }}</CardTitle>
+                    <CardDescription>{{ day.branch?.name }}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p class="text-sm font-medium">
+                        {{ trans('common.staff') }} · {{ day.staff?.length ?? 0 }}
+                    </p>
+                    <p class="mt-1 text-xs text-muted-foreground">
+                        {{ staffLabel(day.staff) }}
+                    </p>
+                </CardContent>
+                <CardFooter v-if="canCreate" class="mt-auto flex flex-wrap gap-2 border-t">
+                    <Button variant="outline" size="sm" class="rounded-full" as-child>
+                        <Link :href="`/attendance/days/${day.id}/edit`">{{ trans('common.edit') }}</Link>
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        class="rounded-full"
+                        @click="destroy(day.id)"
+                    >
+                        {{ trans('common.delete') }}
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
     </div>
 </template>

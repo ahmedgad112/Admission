@@ -196,6 +196,11 @@ class User extends Authenticatable
         return $this->role === UserRole::Employee;
     }
 
+    public function canManagePermissions(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
     public function canManageKiosk(): bool
     {
         return $this->hasPermission(Permission::ManageKiosk);

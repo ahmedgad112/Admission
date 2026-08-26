@@ -3,7 +3,14 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { trans } from '@/composables/useTrans';
 import { leaveRequestStatusTone } from '@/lib/status';
 
@@ -91,49 +98,43 @@ function dateRange(request: LeaveRequestRow): string {
             </select>
         </div>
 
-        <Card class="shadow-sm">
-            <CardContent class="overflow-x-auto pt-6">
-                <table class="w-full text-sm">
-                    <thead class="text-start text-muted-foreground">
-                        <tr>
-                            <th class="pb-3 font-medium">{{ trans('common.staff') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('common.date') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('common.type') }}</th>
-                            <th class="pb-3 font-medium">{{ trans('common.status') }}</th>
-                            <th class="pb-3 font-medium" />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-if="leaveRequests.data.length === 0">
-                            <td colspan="5" class="py-10 text-center text-muted-foreground">
-                                {{ trans('leave.empty') }}
-                            </td>
-                        </tr>
-                        <tr
-                            v-for="request in leaveRequests.data"
-                            :key="request.id"
-                            class="border-t border-border/70"
-                        >
-                            <td class="py-3.5">
-                                <p class="font-medium">{{ request.user?.name ?? '—' }}</p>
-                                <p class="text-xs text-muted-foreground">
-                                    {{ request.department?.name ?? trans('common.no_department') }}
-                                </p>
-                            </td>
-                            <td class="py-3.5">{{ dateRange(request) }}</td>
-                            <td class="py-3.5">{{ trans(`leave.type.${request.type}`) }}</td>
-                            <td class="py-3.5">
-                                <StatusBadge :value="request.status" :tone="leaveRequestStatusTone(request.status)" />
-                            </td>
-                            <td class="py-3.5 text-right">
-                                <Button variant="outline" size="sm" class="rounded-full" as-child>
-                                    <Link :href="`/leave-requests/${request.id}`">{{ trans('common.open') }}</Link>
-                                </Button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </CardContent>
-        </Card>
+        <div
+            v-if="leaveRequests.data.length === 0"
+            class="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground"
+        >
+            {{ trans('leave.empty') }}
+        </div>
+        <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <Card
+                v-for="request in leaveRequests.data"
+                :key="request.id"
+                class="h-full shadow-sm transition-transform hover:-translate-y-0.5"
+            >
+                <CardHeader>
+                    <CardTitle class="text-lg">{{ request.user?.name ?? '—' }}</CardTitle>
+                    <CardDescription>
+                        {{ request.department?.name ?? trans('common.no_department') }}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent class="space-y-4">
+                    <StatusBadge :value="request.status" :tone="leaveRequestStatusTone(request.status)" />
+                    <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
+                        <div>
+                            <dt class="text-xs text-muted-foreground">{{ trans('common.date') }}</dt>
+                            <dd class="font-medium">{{ dateRange(request) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-muted-foreground">{{ trans('common.type') }}</dt>
+                            <dd class="font-medium">{{ trans(`leave.type.${request.type}`) }}</dd>
+                        </div>
+                    </dl>
+                </CardContent>
+                <CardFooter class="mt-auto border-t">
+                    <Button variant="outline" size="sm" class="rounded-full" as-child>
+                        <Link :href="`/leave-requests/${request.id}`">{{ trans('common.open') }}</Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
     </div>
 </template>
