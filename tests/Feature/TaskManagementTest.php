@@ -6,7 +6,13 @@ use App\Models\Department;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+
+test('task assignees are stored on the pivot instead of assigned_to', function () {
+    expect(Schema::hasTable('task_user'))->toBeTrue()
+        ->and(Schema::hasColumn('tasks', 'assigned_to'))->toBeFalse();
+});
 
 test('managers can create and assign tasks to multiple staff', function () {
     $department = Department::factory()->create();

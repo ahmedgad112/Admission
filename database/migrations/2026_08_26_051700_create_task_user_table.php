@@ -12,14 +12,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('task_user', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('task_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->timestamps();
+        if (! Schema::hasTable('task_user')) {
+            Schema::create('task_user', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('task_id')->constrained()->cascadeOnDelete();
+                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+                $table->timestamps();
 
-            $table->unique(['task_id', 'user_id']);
-        });
+                $table->unique(['task_id', 'user_id']);
+            });
+        }
+
+        if (! Schema::hasColumn('tasks', 'assigned_to')) {
+            return;
+        }
 
         $now = now();
 
@@ -29,7 +35,7 @@ return new class extends Migration
             ->get(['id', 'assigned_to']);
 
         foreach ($assigned as $task) {
-            DB::table('task_user')->insert([
+            DB::table('task_user')->insertOrIgnore([
                 'task_id' => $task->id,
                 'user_id' => $task->assigned_to,
                 'created_at' => $now,
@@ -38,8 +44,12 @@ return new class extends Migration
         }
 
         Schema::table('tasks', function (Blueprint $table) {
+            $table->dropForeign(['assigned_to']);
+        });
+
+        Schema::table('tasks', function (Blueprint $table) {
             $table->dropIndex(['assigned_to', 'status']);
-            $table->dropConstrainedForeignId('assigned_to');
+            $table->dropColumn('assigned_to');
         });
     }
 
@@ -48,10 +58,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tasks', function (Blueprint $table) {
-            $table->foreignId('assigned_to')->nullable()->after('created_by')->constrained('users')->nullOnDelete();
-            $table->index(['assigned_to', 'status']);
-        });
+        if (! Schema::hasColumn('tasks', 'assigned_to')) {
+            Schema::table('tasks', function (Blueprint $table) {
+                $table->foreignId('assigned_to')->nullable()->after('created_by')->constrained('users')->nullOnDelete();
+                $table->index(['assigned_to', 'status']);
+            });
+        }
 
         $assignments = DB::table('task_user')
             ->select('task_id', 'user_id')
