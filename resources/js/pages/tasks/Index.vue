@@ -13,7 +13,7 @@ type TaskRow = {
     priority: string;
     status: string;
     due_date: string | null;
-    assignee?: { id: number; name: string } | null;
+    assignees: Array<{ id: number; name: string }>;
     department?: { id: number; name: string } | null;
 };
 
@@ -38,6 +38,16 @@ function filter(key: 'status' | 'priority', value: string): void {
         { [key]: value || undefined },
         { preserveState: true, replace: true },
     );
+}
+
+function assigneeLabel(task: TaskRow): string {
+    const assignees = task.assignees ?? [];
+
+    if (assignees.length === 0) {
+        return task.department?.name ?? trans('tasks.unassigned');
+    }
+
+    return assignees.map((assignee) => assignee.name).join(' · ');
 }
 </script>
 
@@ -95,7 +105,7 @@ function filter(key: 'status' | 'priority', value: string): void {
                         </Link>
                     </CardTitle>
                     <CardDescription>
-                        {{ task.assignee?.name ?? task.department?.name ?? trans('tasks.unassigned') }}
+                        {{ assigneeLabel(task) }}
                     </CardDescription>
                 </CardHeader>
                 <CardContent class="flex items-center justify-between">

@@ -21,7 +21,7 @@ type Task = {
     priority: string;
     status: string;
     due_date: string | null;
-    assignee?: Person | null;
+    assignees?: Person[];
     creator?: Person | null;
     department?: { id: number; name: string } | null;
     comments: Array<{ id: number; body: string; created_at: string; user?: Person }>;
@@ -93,7 +93,11 @@ function destroy(): void {
                 <p class="text-xs font-semibold tracking-[0.18em] text-primary uppercase">{{ trans('tasks.title') }}</p>
                 <h1 class="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">{{ task.title }}</h1>
                 <p class="text-sm text-muted-foreground">
-                    {{ task.assignee?.name ?? trans('tasks.department_assignment') }}
+                    {{
+                        task.assignees?.length
+                            ? task.assignees.map((assignee) => assignee.name).join(' · ')
+                            : trans('tasks.department_assignment')
+                    }}
                     · {{ task.department?.name ?? trans('common.no_department') }}
                 </p>
             </div>

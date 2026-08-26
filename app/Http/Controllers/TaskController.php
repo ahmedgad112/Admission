@@ -39,7 +39,7 @@ class TaskController extends Controller
         /** @var LengthAwarePaginator<int, Task> $tasks */
         $tasks = Task::query()
             ->visibleTo($user)
-            ->with(['assignee:id,name', 'department:id,name', 'creator:id,name'])
+            ->with(['assignees:id,name', 'department:id,name', 'creator:id,name'])
             ->when($request->string('status')->isNotEmpty(), fn ($query) => $query->where('status', $request->string('status')))
             ->when($request->string('priority')->isNotEmpty(), fn ($query) => $query->where('priority', $request->string('priority')))
             ->latest()
@@ -72,11 +72,15 @@ class TaskController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
+        $payload = $request->safe()->except('assignee_ids');
+
         $task = Task::query()->create([
-            ...$request->validated(),
+            ...$payload,
             'created_by' => $user->id,
-            'status' => $request->validated('status') ?? TaskStatus::Todo->value,
+            'status' => $payload['status'] ?? TaskStatus::Todo->value,
         ]);
+
+        $task->assignees()->sync($request->validated('assignee_ids') ?? []);
 
         $this->logActivity($task, $user, 'created', [
             'priority' => $task->priority->value,
@@ -93,7 +97,7 @@ class TaskController extends Controller
         $this->authorize('view', $task);
 
         $task->load([
-            'assignee:id,name,email',
+            'assignees:id,name,email',
             'creator:id,name',
             'department:id,name',
             'comments.user:id,name',
@@ -112,6 +116,8 @@ class TaskController extends Controller
     {
         $this->authorize('update', $task);
 
+        $task->load('assignees:id,name');
+
         return Inertia::render('tasks/Edit', [
             'task' => $task,
             ...$this->formOptions($request),
@@ -124,7 +130,7 @@ class TaskController extends Controller
         abort_unless($user !== null, 403);
 
         $previousStatus = $task->status;
-        $task->fill($request->validated());
+        $task->fill($request->safe()->except('assignee_ids'));
 
         if ($task->status === TaskStatus::Completed && $task->completed_at === null) {
             $task->completed_at = now();
@@ -135,6 +141,7 @@ class TaskController extends Controller
         }
 
         $task->save();
+        $task->assignees()->sync($request->validated('assignee_ids') ?? []);
 
         if ($previousStatus !== $task->status) {
             $this->logActivity($task, $user, 'status_changed', [
@@ -270,6 +277,7 @@ class TaskController extends Controller
         return [
             'employees' => User::query()
                 ->visibleTo($user)
+                ->with('department:id,name')
                 ->orderBy('name')
                 ->get(['id', 'name', 'department_id']),
             'departments' => Department::query()

@@ -96,6 +96,13 @@ function clearQr(): void {
     remaining.value = 0;
 }
 
+function renderQr(payload: QrPayload): void {
+    session.value = payload;
+    qrSvg.value = encodeQrSvg(payload.entry_code || payload.token);
+    remaining.value = Math.max(0, Math.ceil(payload.refresh_in_seconds));
+    error.value = '';
+}
+
 async function requestSession(path: string, method: 'GET' | 'POST'): Promise<Response> {
     const params = new URLSearchParams({
         type: type.value,
@@ -135,6 +142,7 @@ async function loadSession(): Promise<void> {
     if (!todaySession.value || !isOpen.value) {
         clearQr();
         error.value = '';
+
         return;
     }
 
@@ -146,13 +154,11 @@ async function loadSession(): Promise<void> {
     if (!response.ok) {
         clearQr();
         error.value = body.message ?? 'Unable to generate a QR session.';
+
         return;
     }
 
-    session.value = body;
-    qrSvg.value = encodeQrSvg(body.token);
-    remaining.value = Math.max(0, Math.ceil(body.refresh_in_seconds));
-    error.value = '';
+    renderQr(body);
 }
 
 async function toggleSession(open: boolean): Promise<void> {
@@ -170,14 +176,13 @@ async function toggleSession(open: boolean): Promise<void> {
         if (!response.ok) {
             clearQr();
             error.value = body.message ?? 'Unable to update the session.';
+
             return;
         }
 
-        if (open && body.token) {
-            session.value = body;
-            qrSvg.value = encodeQrSvg(body.token);
-            remaining.value = Math.max(0, Math.ceil(body.refresh_in_seconds));
-            error.value = '';
+        if (open && (body.entry_code || body.token)) {
+            renderQr(body);
+
             return;
         }
 
@@ -191,15 +196,25 @@ async function toggleSession(open: boolean): Promise<void> {
 onMounted(async () => {
     await loadSession();
 
+    let refreshing = false;
+
     timer = window.setInterval(async () => {
-        if (!isOpen.value) {
+        if (!isOpen.value || refreshing) {
             return;
         }
 
         remaining.value = Math.max(0, remaining.value - 1);
 
-        if (remaining.value <= 0) {
+        if (remaining.value > 2) {
+            return;
+        }
+
+        refreshing = true;
+
+        try {
             await loadSession();
+        } finally {
+            refreshing = false;
         }
     }, 1000);
 });
@@ -244,7 +259,7 @@ watch([type, branchId], () => {
                 </p>
                 <div
                     v-if="qrSvg"
-                    class="flex aspect-square w-full max-w-md items-center justify-center rounded-[1.7rem] border bg-white p-5 text-black"
+                    class="flex aspect-square w-full max-w-md items-center justify-center overflow-hidden rounded-[1.7rem] border bg-white p-5 text-black [&>svg]:size-full"
                     v-html="qrSvg"
                 />
                 <div

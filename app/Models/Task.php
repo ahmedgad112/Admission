@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -19,7 +20,6 @@ use Illuminate\Support\Carbon;
  * @property string $title
  * @property string|null $description
  * @property int $created_by
- * @property int|null $assigned_to
  * @property int|null $department_id
  * @property TaskPriority $priority
  * @property TaskStatus $status
@@ -32,7 +32,6 @@ use Illuminate\Support\Carbon;
     'title',
     'description',
     'created_by',
-    'assigned_to',
     'department_id',
     'priority',
     'status',
@@ -66,11 +65,11 @@ class Task extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return BelongsToMany<User, $this>
      */
-    public function assignee(): BelongsTo
+    public function assignees(): BelongsToMany
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->belongsToMany(User::class)->withTimestamps();
     }
 
     /**
@@ -105,6 +104,15 @@ class Task extends Model
         return $this->hasMany(TaskActivity::class);
     }
 
+    public function isAssignedTo(User $user): bool
+    {
+        if ($this->relationLoaded('assignees')) {
+            return $this->assignees->contains('id', $user->id);
+        }
+
+        return $this->assignees()->where('users.id', $user->id)->exists();
+    }
+
     /**
      * @param  Builder<Task>  $query
      */
@@ -113,20 +121,21 @@ class Task extends Model
         match ($user->recordScope()) {
             'all' => null,
             'branch' => $query->where(function (Builder $builder) use ($user): void {
-                $builder->whereHas('assignee', fn (Builder $assignee) => $assignee->where('branch_id', $user->branch_id))
+                $builder->whereHas('assignees', fn (Builder $assignee) => $assignee->where('branch_id', $user->branch_id))
                     ->orWhereHas('creator', fn (Builder $creator) => $creator->where('branch_id', $user->branch_id))
                     ->orWhereHas('department', fn (Builder $department) => $department->where('branch_id', $user->branch_id));
             }),
             'team' => $query->where(function (Builder $builder) use ($user): void {
                 $builder->where('department_id', $user->department_id)
-                    ->orWhere('assigned_to', $user->id)
                     ->orWhere('created_by', $user->id)
-                    ->orWhereHas('assignee', fn (Builder $assignee) => $assignee->where('department_id', $user->department_id));
+                    ->orWhereHas('assignees', fn (Builder $assignee) => $assignee
+                        ->where('users.id', $user->id)
+                        ->orWhere('department_id', $user->department_id));
             }),
             default => $query->where(function (Builder $builder) use ($user): void {
-                $builder->where('assigned_to', $user->id)
+                $builder->whereHas('assignees', fn (Builder $assignee) => $assignee->where('users.id', $user->id))
                     ->orWhere(function (Builder $departmentTask) use ($user): void {
-                        $departmentTask->whereNull('assigned_to')
+                        $departmentTask->whereDoesntHave('assignees')
                             ->where('department_id', $user->department_id);
                     });
             }),

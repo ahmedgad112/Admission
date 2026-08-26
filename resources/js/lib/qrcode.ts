@@ -206,6 +206,7 @@ export function encodeQrSvg(text: string): string {
 
     if (payload.length > 0) {
         data[1] = (data[1] ?? 0) | ((payload[0] ?? 0) >> 4);
+
         for (let i = 0; i < payload.length; i++) {
             const current = ((payload[i] ?? 0) << 4) & 0xf0;
             const next = (payload[i + 1] ?? 0) >> 4;
@@ -245,7 +246,9 @@ export function encodeQrSvg(text: string): string {
     const quiet = 4;
     const scale = 8;
     const canvas = (size + quiet * 2) * scale;
-    const rects: string[] = [];
+    const rects: string[] = [
+        `<rect width="${canvas}" height="${canvas}" fill="#ffffff" />`,
+    ];
 
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
@@ -254,10 +257,10 @@ export function encodeQrSvg(text: string): string {
             }
 
             rects.push(
-                `<rect x="${(col + quiet) * scale}" y="${(row + quiet) * scale}" width="${scale}" height="${scale}" />`,
+                `<rect x="${(col + quiet) * scale}" y="${(row + quiet) * scale}" width="${scale}" height="${scale}" fill="#000000" />`,
             );
         }
     }
 
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${canvas} ${canvas}" shape-rendering="crispEdges">${rects.join('')}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 ${canvas} ${canvas}" preserveAspectRatio="xMidYMid meet" shape-rendering="crispEdges">${rects.join('')}</svg>`;
 }

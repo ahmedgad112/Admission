@@ -15,7 +15,7 @@ class QrSessionService
         $existing = QrSession::query()
             ->where('branch_id', $branch->id)
             ->where('type', $type)
-            ->where('expires_at', '>', now()->addSeconds(2))
+            ->where('expires_at', '>', now()->addSeconds(5))
             ->latest('id')
             ->first();
 

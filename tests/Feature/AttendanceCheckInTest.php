@@ -274,9 +274,53 @@ test('branch admins can generate a time limited qr session', function () {
         ->getJson(route('api.qr-sessions.current', ['type' => 'check_in']))
         ->assertOk()
         ->assertJsonPath('branch_id', $branch->id)
-        ->assertJsonPath('type', 'check_in');
+        ->assertJsonPath('type', 'check_in')
+        ->assertJsonStructure(['token', 'entry_code', 'expires_at', 'refresh_in_seconds']);
 
-    expect(QrSession::query()->count())->toBe(1);
+    expect(QrSession::query()->count())->toBe(1)
+        ->and(QrSession::query()->value('entry_code'))->toHaveLength(6);
+});
+
+test('an active qr session is reused until it is close to expiring', function () {
+    $branch = Branch::factory()->create();
+    $first = app(QrSessionService::class)->create($branch, QrSessionType::CheckIn);
+    $reused = app(QrSessionService::class)->currentOrCreate($branch, QrSessionType::CheckIn);
+
+    expect($reused->is($first))->toBeTrue();
+
+    $this->travel(16)->seconds();
+
+    $rotated = app(QrSessionService::class)->currentOrCreate($branch, QrSessionType::CheckIn);
+
+    expect($rotated->is($first))->toBeFalse()
+        ->and($rotated->entry_code)->not->toBe($first->entry_code);
+});
+
+test('employees can open the scan page', function () {
+    $user = staffedEmployee();
+
+    $this->actingAs($user)
+        ->get(route('attendance.scan'))
+        ->assertOk();
+});
+
+test('employees can check in from the scan page with the kiosk entry code', function () {
+    $branch = Branch::factory()->create();
+    $user = staffedEmployee(['branch' => $branch]);
+    openAttendanceDay($branch);
+    $session = app(QrSessionService::class)->create($branch, QrSessionType::CheckIn);
+
+    $this->actingAs($user)
+        ->from(route('attendance.scan'))
+        ->post(route('attendance.check-in'), [
+            'token' => $session->entry_code,
+            'latitude' => $branch->latitude,
+            'longitude' => $branch->longitude,
+            'device_uuid' => (string) Str::uuid(),
+        ])
+        ->assertRedirect(route('attendance.scan'));
+
+    expect(Attendance::query()->first()?->user_id)->toBe($user->id);
 });
 
 test('qr scan endpoints are rate limited', function () {

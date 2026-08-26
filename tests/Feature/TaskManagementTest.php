@@ -8,18 +8,24 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-test('managers can create and assign tasks', function () {
-    $manager = User::factory()->manager()->create();
+test('managers can create and assign tasks to multiple staff', function () {
+    $department = Department::factory()->create();
+    $manager = User::factory()->manager()->create([
+        'department_id' => $department->id,
+    ]);
     $employee = User::factory()->employee()->create([
-        'department_id' => Department::factory()->create()->id,
+        'department_id' => $department->id,
+    ]);
+    $teammate = User::factory()->employee()->create([
+        'department_id' => $department->id,
     ]);
 
     $this->actingAs($manager)
         ->post(route('tasks.store'), [
             'title' => 'Prepare client demo',
             'description' => 'Collect screenshots and metrics.',
-            'assigned_to' => $employee->id,
-            'department_id' => $employee->department_id,
+            'assignee_ids' => [$employee->id, $teammate->id],
+            'department_id' => $department->id,
             'priority' => TaskPriority::High->value,
             'due_date' => now()->addDay()->toDateString(),
         ])
@@ -29,7 +35,9 @@ test('managers can create and assign tasks', function () {
 
     expect($task)->not->toBeNull()
         ->and($task->title)->toBe('Prepare client demo')
-        ->and($task->assigned_to)->toBe($employee->id)
+        ->and($task->assignees()->pluck('users.id')->sort()->values()->all())->toBe(
+            collect([$employee->id, $teammate->id])->sort()->values()->all(),
+        )
         ->and($task->created_by)->toBe($manager->id)
         ->and($task->activities()->where('action', 'created')->exists())->toBeTrue();
 });
@@ -48,8 +56,8 @@ test('employees cannot create tasks', function () {
 test('employees can comment on assigned tasks and cannot view foreign tasks', function () {
     $employee = User::factory()->employee()->create();
     $other = User::factory()->employee()->create();
-    $assigned = Task::factory()->create(['assigned_to' => $employee->id]);
-    $foreign = Task::factory()->create(['assigned_to' => $other->id, 'department_id' => null]);
+    $assigned = Task::factory()->assignedTo($employee)->create();
+    $foreign = Task::factory()->assignedTo($other)->create(['department_id' => null]);
 
     $this->actingAs($employee)
         ->post(route('tasks.comments.store', $assigned), [
@@ -64,10 +72,54 @@ test('employees can comment on assigned tasks and cannot view foreign tasks', fu
     expect($assigned->comments()->where('body', 'Working on this now.')->exists())->toBeTrue();
 });
 
+test('managers can change the staff linked to a task', function () {
+    $department = Department::factory()->create();
+    $manager = User::factory()->manager()->create([
+        'department_id' => $department->id,
+    ]);
+    $employee = User::factory()->employee()->create([
+        'department_id' => $department->id,
+    ]);
+    $teammate = User::factory()->employee()->create([
+        'department_id' => $department->id,
+    ]);
+    $task = Task::factory()->assignedTo($employee)->create([
+        'created_by' => $manager->id,
+        'department_id' => $department->id,
+    ]);
+
+    $this->actingAs($manager)
+        ->put(route('tasks.update', $task), [
+            'title' => $task->title,
+            'description' => $task->description,
+            'assignee_ids' => [$teammate->id],
+            'department_id' => $department->id,
+            'priority' => $task->priority->value,
+            'status' => $task->status->value,
+            'due_date' => $task->due_date?->toDateString(),
+        ])
+        ->assertRedirect(route('tasks.show', $task));
+
+    expect($task->assignees()->pluck('users.id')->all())->toBe([$teammate->id]);
+});
+
+test('department-wide tasks stay visible to department employees', function () {
+    $department = Department::factory()->create();
+    $employee = User::factory()->employee()->create([
+        'department_id' => $department->id,
+    ]);
+    $task = Task::factory()->create([
+        'department_id' => $department->id,
+    ]);
+
+    $this->actingAs($employee)
+        ->get(route('tasks.show', $task))
+        ->assertOk();
+});
+
 test('assignees can transition task status', function () {
     $employee = User::factory()->employee()->create();
-    $task = Task::factory()->create([
-        'assigned_to' => $employee->id,
+    $task = Task::factory()->assignedTo($employee)->create([
         'status' => TaskStatus::Todo,
     ]);
 
@@ -84,7 +136,7 @@ test('task attachments are stored with sanitized file names', function () {
     Storage::fake('local');
 
     $employee = User::factory()->employee()->create();
-    $task = Task::factory()->create(['assigned_to' => $employee->id]);
+    $task = Task::factory()->assignedTo($employee)->create();
     $file = UploadedFile::fake()->create('Quarterly Report.PDF', 120, 'application/pdf');
 
     $this->actingAs($employee)
@@ -106,7 +158,7 @@ test('assignees can download task attachments', function () {
     Storage::fake('local');
 
     $employee = User::factory()->employee()->create();
-    $task = Task::factory()->create(['assigned_to' => $employee->id]);
+    $task = Task::factory()->assignedTo($employee)->create();
     $file = UploadedFile::fake()->create('Quarterly Report.PDF', 120, 'application/pdf');
 
     $this->actingAs($employee)

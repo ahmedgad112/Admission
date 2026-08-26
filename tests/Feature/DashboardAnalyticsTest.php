@@ -23,9 +23,8 @@ test('the dashboard includes attendance and task analytics', function () {
         'check_out' => now(),
     ]);
 
-    Task::factory()->create([
+    Task::factory()->assignedTo($user)->create([
         'created_by' => $user->id,
-        'assigned_to' => $user->id,
         'status' => TaskStatus::Completed,
         'completed_at' => now(),
     ]);

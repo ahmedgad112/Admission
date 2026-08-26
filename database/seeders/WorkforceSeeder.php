@@ -83,22 +83,21 @@ class WorkforceSeeder extends Seeder
             'shift_id' => $shift->id,
         ]);
 
-        Task::query()->create([
+        $report = Task::query()->create([
             'title' => 'Prepare monthly attendance report',
             'description' => 'Compile late arrivals and working hours for the branch.',
             'created_by' => $manager->id,
-            'assigned_to' => $employee->id,
             'department_id' => $engineering->id,
             'priority' => TaskPriority::High,
             'status' => TaskStatus::InProgress,
             'due_date' => now()->addDays(5)->toDateString(),
         ]);
+        $report->assignees()->sync([$employee->id, $manager->id]);
 
         Task::query()->create([
             'title' => 'Review kiosk QR rotation',
             'description' => 'Confirm the 20-second token refresh is working on the lobby display.',
             'created_by' => $branchAdmin->id,
-            'assigned_to' => null,
             'department_id' => $operations->id,
             'priority' => TaskPriority::Medium,
             'status' => TaskStatus::Todo,

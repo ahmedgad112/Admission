@@ -119,11 +119,11 @@ class User extends Authenticatable
     }
 
     /**
-     * @return HasMany<Task, $this>
+     * @return BelongsToMany<Task, $this>
      */
-    public function assignedTasks(): HasMany
+    public function assignedTasks(): BelongsToMany
     {
-        return $this->hasMany(Task::class, 'assigned_to');
+        return $this->belongsToMany(Task::class)->withTimestamps();
     }
 
     /**

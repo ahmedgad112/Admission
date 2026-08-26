@@ -28,7 +28,7 @@ class TaskPolicy
             return true;
         }
 
-        return $task->assigned_to === $user->id;
+        return $task->isAssignedTo($user);
     }
 
     public function delete(User $user, Task $task): bool

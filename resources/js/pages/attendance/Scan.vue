@@ -7,6 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { trans } from '@/composables/useTrans';
 import { getDeviceUuid } from '@/lib/device';
+import {
+    createQrDetector,
+    drawVideoFrame,
+    normalizeScannedValue,
+    startRearCamera,
+} from '@/lib/qr-scan';
+import type { QrFrameDetector } from '@/lib/qr-scan';
 
 type DaySession = {
     date: string;
@@ -34,9 +41,16 @@ defineOptions({
 
 const mode = ref<'check-in' | 'check-out'>('check-in');
 const status = ref(trans('scan.requesting'));
+const cameraFailed = ref(false);
 const video = ref<HTMLVideoElement | null>(null);
+const canvas = document.createElement('canvas');
 let stream: MediaStream | null = null;
 let scanTimer: number | undefined;
+let detectQr: QrFrameDetector | null = null;
+let scanning = false;
+let detecting = false;
+let lastScanAt = 0;
+let retryAfter = 0;
 
 const form = useForm({
     token: '',
@@ -60,48 +74,96 @@ async function locate(): Promise<void> {
 }
 
 async function startCamera(): Promise<void> {
-    stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-    });
+    stream?.getTracks().forEach((track) => track.stop());
+    stream = await startRearCamera();
 
-    if (video.value) {
-        video.value.srcObject = stream;
-        await video.value.play();
+    if (!video.value) {
+        throw new Error(trans('scan.camera_failed'));
     }
 
-    const Detector = (
-        window as Window & {
-            BarcodeDetector?: new (options: { formats: string[] }) => {
-                detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue: string }>>;
-            };
-        }
-    ).BarcodeDetector;
+    video.value.srcObject = stream;
+    await video.value.play();
 
-    if (!Detector || !video.value) {
-        status.value = trans('scan.camera_ready');
-        return;
-    }
-
-    const detector = new Detector({ formats: ['qr_code'] });
+    detectQr ??= await createQrDetector();
+    cameraFailed.value = false;
     status.value = trans('scan.point_camera');
+    startScanLoop();
+}
 
-    scanTimer = window.setInterval(async () => {
-        if (!video.value || form.token) {
+function startScanLoop(): void {
+    stopScanLoop();
+    scanning = true;
+
+    const tick = (): void => {
+        if (!scanning) {
             return;
         }
 
-        try {
-            const codes = await detector.detect(video.value);
-            const value = codes[0]?.rawValue;
+        void scanFrame();
+        scanTimer = window.requestAnimationFrame(tick);
+    };
 
-            if (value) {
-                form.token = value;
-                status.value = trans('scan.qr_detected');
-            }
-        } catch {
-            // Keep scanning.
+    scanTimer = window.requestAnimationFrame(tick);
+}
+
+function stopScanLoop(): void {
+    scanning = false;
+
+    if (scanTimer) {
+        window.cancelAnimationFrame(scanTimer);
+        scanTimer = undefined;
+    }
+}
+
+async function scanFrame(): Promise<void> {
+    if (
+        detecting ||
+        form.processing ||
+        form.token ||
+        !detectQr ||
+        !video.value ||
+        Date.now() < retryAfter
+    ) {
+        return;
+    }
+
+    const now = performance.now();
+
+    if (now - lastScanAt < 250) {
+        return;
+    }
+
+    lastScanAt = now;
+
+    if (!drawVideoFrame(video.value, canvas)) {
+        return;
+    }
+
+    detecting = true;
+
+    try {
+        const value = await detectQr(canvas);
+
+        if (value) {
+            applyScan(value);
         }
-    }, 700);
+    } catch {
+        // Keep scanning.
+    } finally {
+        detecting = false;
+    }
+}
+
+function applyScan(value: string): void {
+    const token = normalizeScannedValue(value);
+
+    if (token.length < 6 || form.processing || form.token) {
+        return;
+    }
+
+    form.token = token;
+    status.value = trans('scan.qr_detected');
+    submit();
 }
 
 onMounted(async () => {
@@ -116,6 +178,7 @@ onMounted(async () => {
     try {
         await startCamera();
     } catch (error) {
+        cameraFailed.value = true;
         status.value =
             error instanceof Error
                 ? error.message
@@ -124,16 +187,39 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-    if (scanTimer) {
-        window.clearInterval(scanTimer);
-    }
-
+    stopScanLoop();
     stream?.getTracks().forEach((track) => track.stop());
 });
 
 function submit(): void {
+    if (!form.token || form.processing) {
+        return;
+    }
+
     const url = mode.value === 'check-in' ? '/attendance/check-in' : '/attendance/check-out';
-    form.post(url, { preserveScroll: true });
+    form.post(url, {
+        preserveScroll: true,
+        onError: () => {
+            form.token = '';
+            retryAfter = Date.now() + 1500;
+            status.value = trans('scan.point_camera');
+        },
+    });
+}
+
+async function retryCamera(): Promise<void> {
+    cameraFailed.value = false;
+    status.value = trans('scan.requesting');
+
+    try {
+        await startCamera();
+    } catch (error) {
+        cameraFailed.value = true;
+        status.value =
+            error instanceof Error
+                ? error.message
+                : trans('scan.camera_failed');
+    }
 }
 </script>
 
@@ -152,10 +238,20 @@ function submit(): void {
                 <video
                     ref="video"
                     class="aspect-[4/5] w-full object-cover md:aspect-video"
+                    autoplay
                     muted
                     playsinline
+                    webkit-playsinline
                 />
                 <div class="pointer-events-none absolute inset-4 rounded-3xl border-2 border-white/70 sm:inset-8" />
+                <button
+                    v-if="cameraFailed"
+                    type="button"
+                    class="absolute inset-0 z-10 flex items-center justify-center bg-black/55 px-6 text-sm font-medium text-white"
+                    @click="retryCamera"
+                >
+                    {{ trans('scan.start_camera') }}
+                </button>
                 <p class="absolute inset-x-0 bottom-0 bg-black/55 px-4 py-3 text-sm text-white">
                     {{ status }}
                 </p>

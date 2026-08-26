@@ -11,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class StoreTaskRequest extends FormRequest
 {
+    use ValidatesTaskAssignees;
+
     public function authorize(): bool
     {
         return $this->user()?->can('create', Task::class) ?? false;
@@ -24,7 +26,8 @@ class StoreTaskRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:5000'],
-            'assigned_to' => ['nullable', 'integer', 'exists:users,id'],
+            'assignee_ids' => ['nullable', 'array'],
+            'assignee_ids.*' => ['integer', 'distinct', $this->visibleAssigneeRule()],
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
             'priority' => ['required', Rule::enum(TaskPriority::class)],
             'status' => ['nullable', Rule::enum(TaskStatus::class)],
