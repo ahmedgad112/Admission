@@ -319,6 +319,108 @@ test('employees only download their own attendance row', function () {
         ->not->toContain('Other Staff');
 });
 
+test('admins can clear attendance records for a chosen day', function () {
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->branchAdmin()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $employee = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $employee->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-21',
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $employee->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-22',
+    ]);
+
+    $this->actingAs($admin)
+        ->delete(route('attendance.records.clear'), ['date' => '2026-08-21'])
+        ->assertRedirect(route('attendance.index', ['date' => '2026-08-21']));
+
+    expect(Attendance::query()->count())->toBe(1)
+        ->and(Attendance::query()->first()->date->toDateString())->toBe('2026-08-22');
+});
+
+test('admins can clear attendance records for a date range', function () {
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->branchAdmin()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $employee = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $employee->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-20',
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $employee->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-21',
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $employee->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-25',
+    ]);
+
+    $this->actingAs($admin)
+        ->delete(route('attendance.records.clear'), [
+            'from' => '2026-08-20',
+            'to' => '2026-08-21',
+        ])
+        ->assertRedirect(route('attendance.index', ['date' => '2026-08-20']));
+
+    expect(Attendance::query()->count())->toBe(1)
+        ->and(Attendance::query()->first()->date->toDateString())->toBe('2026-08-25');
+});
+
+test('branch admins cannot clear attendance records for another branch', function () {
+    $own = Branch::factory()->create();
+    $other = Branch::factory()->create();
+    $admin = User::factory()->branchAdmin()->create([
+        'branch_id' => $own->id,
+    ]);
+    $employee = User::factory()->employee()->create([
+        'branch_id' => $other->id,
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $employee->id,
+        'branch_id' => $other->id,
+        'date' => '2026-08-21',
+    ]);
+
+    $this->actingAs($admin)
+        ->delete(route('attendance.records.clear'), ['date' => '2026-08-21'])
+        ->assertRedirect();
+
+    expect(Attendance::query()->count())->toBe(1);
+});
+
+test('employees cannot clear attendance records', function () {
+    $branch = Branch::factory()->create();
+    $employee = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $employee->id,
+        'branch_id' => $branch->id,
+        'date' => now()->toDateString(),
+    ]);
+
+    $this->actingAs($employee)
+        ->delete(route('attendance.records.clear'), ['date' => now()->toDateString()])
+        ->assertForbidden();
+
+    expect(Attendance::query()->count())->toBe(1);
+});
+
 function excelSheetXml(string $binary): string
 {
     $path = tempnam(sys_get_temp_dir(), 'xlsx');

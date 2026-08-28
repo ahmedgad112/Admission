@@ -201,6 +201,43 @@ class AttendanceDay extends Model
         ];
     }
 
+    /**
+     * @return list<array{id: int, name: string}>
+     */
+    public function pendingStaff(QrSessionType $type): array
+    {
+        $staff = $this->staff()->orderBy('name')->get(['users.id', 'users.name']);
+
+        if ($staff->isEmpty()) {
+            return [];
+        }
+
+        $attendances = Attendance::query()
+            ->whereDate('date', $this->date)
+            ->whereIn('user_id', $staff->modelKeys())
+            ->get()
+            ->keyBy('user_id');
+
+        return $staff
+            ->filter(function (User $user) use ($type, $attendances): bool {
+                $record = $attendances->get($user->id);
+
+                if ($type === QrSessionType::CheckIn) {
+                    return $record === null || $record->check_in === null;
+                }
+
+                return $record !== null
+                    && $record->check_in !== null
+                    && $record->check_out === null;
+            })
+            ->map(fn (User $user): array => [
+                'id' => $user->id,
+                'name' => $user->name,
+            ])
+            ->values()
+            ->all();
+    }
+
     private function isWindowOpen(string $startsAt, string $endsAt, ?CarbonInterface $at = null): bool
     {
         $moment = $at ?? now();

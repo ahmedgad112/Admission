@@ -28,6 +28,7 @@ type QrPayload = {
     day?: DaySession;
     message?: string;
 };
+type PendingPerson = { id: number; name: string };
 
 const props = defineProps<{
     branches: BranchOption[];
@@ -54,7 +55,9 @@ const qrSvg = ref('');
 const remaining = ref(0);
 const error = ref('');
 const processing = ref(false);
+const pending = ref<PendingPerson[]>([]);
 let timer: number | undefined;
+let pendingTimer: number | undefined;
 
 const todaySession = computed(() =>
     days.value.find((day) => day.branch_id === branchId.value) ?? null,
@@ -163,6 +166,37 @@ async function loadSession(): Promise<void> {
     await renderQr(body);
 }
 
+async function loadPending(): Promise<void> {
+    if (!todaySession.value) {
+        pending.value = [];
+
+        return;
+    }
+
+    const params = new URLSearchParams({
+        type: type.value,
+    });
+
+    if (branchId.value) {
+        params.set('branch_id', String(branchId.value));
+    }
+
+    const response = await fetch(`/attendance/kiosk/pending?${params.toString()}`, {
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        credentials: 'same-origin',
+    });
+
+    if (!response.ok) {
+        return;
+    }
+
+    const body = (await response.json()) as { pending: PendingPerson[] };
+    pending.value = body.pending ?? [];
+}
+
 async function toggleSession(open: boolean): Promise<void> {
     processing.value = true;
 
@@ -196,7 +230,7 @@ async function toggleSession(open: boolean): Promise<void> {
 }
 
 onMounted(async () => {
-    await loadSession();
+    await Promise.all([loadSession(), loadPending()]);
 
     let refreshing = false;
 
@@ -219,16 +253,25 @@ onMounted(async () => {
             refreshing = false;
         }
     }, 1000);
+
+    pendingTimer = window.setInterval(() => {
+        void loadPending();
+    }, 3000);
 });
 
 onUnmounted(() => {
     if (timer) {
         window.clearInterval(timer);
     }
+
+    if (pendingTimer) {
+        window.clearInterval(pendingTimer);
+    }
 });
 
 watch([type, branchId], () => {
     void loadSession();
+    void loadPending();
 });
 </script>
 
@@ -339,6 +382,62 @@ watch([type, branchId], () => {
                 >
                     {{ trans('kiosk.refresh') }}
                 </Button>
+            </div>
+        </div>
+
+        <div
+            v-if="todaySession"
+            class="rounded-[2rem] border bg-card p-6 shadow-sm"
+        >
+            <div class="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <p class="text-xs tracking-[0.3em] text-primary uppercase">
+                        {{
+                            type === 'check_in'
+                                ? trans('kiosk.pending_check_in_title')
+                                : trans('kiosk.pending_check_out_title')
+                        }}
+                    </p>
+                    <p class="text-sm text-muted-foreground">
+                        {{
+                            type === 'check_in'
+                                ? trans('kiosk.pending_check_in_hint')
+                                : trans('kiosk.pending_check_out_hint')
+                        }}
+                    </p>
+                </div>
+                <p class="text-sm font-medium text-muted-foreground">
+                    {{ trans('kiosk.pending_count', { count: pending.length }) }}
+                </p>
+            </div>
+
+            <div
+                v-if="pending.length === 0"
+                class="rounded-2xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground"
+            >
+                {{
+                    type === 'check_in'
+                        ? trans('kiosk.pending_check_in_empty')
+                        : trans('kiosk.pending_check_out_empty')
+                }}
+            </div>
+
+            <div
+                v-else
+                class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+            >
+                <div
+                    v-for="(person, index) in pending"
+                    :key="person.id"
+                    class="flex items-center gap-3 rounded-2xl border bg-muted/20 px-4 py-3"
+                >
+                    <span
+                        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold tabular-nums text-primary"
+                    >
+                        {{ index + 1 }}
+                    </span>
+                    <p class="min-w-0 text-sm font-medium leading-5">{{ person.name }}</p>
+                </div>
             </div>
         </div>
     </div>

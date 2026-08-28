@@ -33,6 +33,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('attendance/entries', [AttendanceController::class, 'syncEntries'])
         ->middleware('permission:view_team_attendance')
         ->name('attendance.entries.sync');
+    Route::delete('attendance/records', [AttendanceController::class, 'clearRecords'])
+        ->middleware('permission:view_team_attendance')
+        ->name('attendance.records.clear');
     Route::get('attendance/scan', [AttendanceController::class, 'scan'])
         ->middleware('permission:scan_attendance')
         ->name('attendance.scan');
@@ -74,6 +77,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('attendance/qr-sessions/close', [QrSessionController::class, 'close'])
         ->middleware('permission:manage_kiosk')
         ->name('attendance.qr-sessions.close');
+    Route::get('attendance/kiosk/pending', [QrSessionController::class, 'pending'])
+        ->middleware('permission:manage_kiosk')
+        ->name('attendance.kiosk.pending');
 
     Route::get('branches', [BranchController::class, 'index'])
         ->middleware('permission:manage_branches')

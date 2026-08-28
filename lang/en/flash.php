@@ -46,6 +46,7 @@ return [
         'saved' => 'Attendance times saved.',
         'checked_in' => 'Checked in successfully.',
         'checked_out' => 'Checked out successfully.',
+        'cleared' => 'Attendance records cleared.',
     ],
     'profile' => [
         'updated' => 'Profile updated.',

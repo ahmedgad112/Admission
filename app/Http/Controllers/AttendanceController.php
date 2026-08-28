@@ -7,6 +7,7 @@ use App\Enums\UserStatus;
 use App\Exceptions\AttendanceException;
 use App\Http\Requests\Attendance\CheckInRequest;
 use App\Http\Requests\Attendance\CheckOutRequest;
+use App\Http\Requests\Attendance\ClearAttendanceRecordsRequest;
 use App\Http\Requests\Attendance\SyncAttendanceEntriesRequest;
 use App\Models\Attendance;
 use App\Models\AttendanceDay;
@@ -69,6 +70,31 @@ class AttendanceController extends Controller
             $request,
             __('flash.attendance.saved'),
             route('attendance.index', ['date' => $request->validated('date')]),
+        );
+    }
+
+    public function clearRecords(ClearAttendanceRecordsRequest $request): JsonResponse|RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user !== null, 403);
+
+        if ($request->filled('date')) {
+            $from = $request->string('date')->toString();
+            $to = $from;
+        } else {
+            [$from, $to] = $this->requestedDateRange($request);
+        }
+
+        Attendance::query()
+            ->tap(fn ($query) => $user->constrainAttendanceVisibility($query))
+            ->whereDate('date', '>=', $from)
+            ->whereDate('date', '<=', $to)
+            ->each(fn (Attendance $attendance) => $attendance->delete());
+
+        return $this->flashRedirect(
+            $request,
+            __('flash.attendance.cleared'),
+            route('attendance.index', ['date' => $from]),
         );
     }
 

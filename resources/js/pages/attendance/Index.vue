@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { Download } from '@lucide/vue';
+import { Download, Trash2 } from '@lucide/vue';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
@@ -93,6 +93,38 @@ function saveTimes(): void {
     form.put('/attendance/entries', { preserveScroll: true });
 }
 
+function clearDay(): void {
+    if (!confirm(trans('attendance.clear_confirm_day', { date: dayLabel(props.date) }))) {
+        return;
+    }
+
+    router.delete('/attendance/records', {
+        data: { date: props.date },
+        preserveScroll: true,
+    });
+}
+
+function clearRange(): void {
+    if (
+        !confirm(
+            trans('attendance.clear_confirm_range', {
+                from: dayLabel(exportFrom.value),
+                to: dayLabel(exportTo.value),
+            }),
+        )
+    ) {
+        return;
+    }
+
+    router.delete('/attendance/records', {
+        data: {
+            from: exportFrom.value,
+            to: exportTo.value,
+        },
+        preserveScroll: true,
+    });
+}
+
 function dayLabel(value: string): string {
     return value.slice(0, 10);
 }
@@ -162,6 +194,15 @@ function clock(value: string | null): string {
                                 {{ trans('attendance.download') }}
                             </a>
                         </Button>
+                        <Button
+                            v-if="canRecord"
+                            variant="destructive"
+                            class="w-full rounded-full sm:col-span-2 sm:w-auto"
+                            @click="clearRange"
+                        >
+                            <Trash2 class="size-4" />
+                            {{ trans('attendance.clear_range') }}
+                        </Button>
                     </div>
                 </div>
             </CardContent>
@@ -230,9 +271,19 @@ function clock(value: string | null): string {
                 <p class="text-center text-sm text-muted-foreground sm:text-start">
                     {{ trans('attendance.filled', { filled: filledCount, total: people.length }) }}
                 </p>
-                <Button class="w-full rounded-full sm:w-auto" :disabled="form.processing" @click="saveTimes">
-                    {{ trans('attendance.save_times') }}
-                </Button>
+                <div class="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row">
+                    <Button
+                        variant="destructive"
+                        class="w-full rounded-full sm:w-auto"
+                        @click="clearDay"
+                    >
+                        <Trash2 class="size-4" />
+                        {{ trans('attendance.clear_all') }}
+                    </Button>
+                    <Button class="w-full rounded-full sm:w-auto" :disabled="form.processing" @click="saveTimes">
+                        {{ trans('attendance.save_times') }}
+                    </Button>
+                </div>
             </CardFooter>
         </Card>
 

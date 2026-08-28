@@ -121,6 +121,21 @@ class QrSessionController extends Controller
         ]);
     }
 
+    public function pending(GenerateQrSessionRequest $request): JsonResponse
+    {
+        [$type, , $day] = $this->resolvedDay($request);
+
+        if (! $day instanceof AttendanceDay) {
+            return response()->json([
+                'pending' => [],
+            ]);
+        }
+
+        return response()->json([
+            'pending' => $day->pendingStaff($type),
+        ]);
+    }
+
     /**
      * @return array{0: QrSessionType, 1: Branch, 2: AttendanceDay|null}
      */

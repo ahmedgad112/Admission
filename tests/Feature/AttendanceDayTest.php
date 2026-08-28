@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\QrSessionType;
+use App\Models\Attendance;
 use App\Models\AttendanceDay;
 use App\Models\Branch;
 use App\Models\User;
@@ -375,4 +376,82 @@ test('the kiosk cannot generate a qr code without an open session', function () 
         ->getJson(route('api.qr-sessions.current', ['type' => 'check_in']))
         ->assertStatus(422)
         ->assertJsonPath('message', 'Create an attendance session for today before opening the kiosk.');
+});
+
+test('the kiosk pending list shows roster staff who have not checked in', function () {
+    $this->travelTo(now()->setTime(9, 5));
+
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->branchAdmin()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $checkedIn = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+        'name' => 'Checked In Staff',
+    ]);
+    $pending = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+        'name' => 'Pending Staff',
+    ]);
+    $day = AttendanceDay::factory()->create([
+        'branch_id' => $branch->id,
+        'date' => now()->toDateString(),
+    ]);
+    $day->staff()->sync([$checkedIn->id, $pending->id]);
+
+    Attendance::factory()->create([
+        'user_id' => $checkedIn->id,
+        'branch_id' => $branch->id,
+        'date' => now()->toDateString(),
+        'check_in' => now(),
+    ]);
+
+    $this->actingAs($admin)
+        ->getJson(route('api.kiosk.pending', ['type' => 'check_in']))
+        ->assertOk()
+        ->assertJsonCount(1, 'pending')
+        ->assertJsonPath('pending.0.name', 'Pending Staff');
+});
+
+test('the kiosk pending list shows roster staff who have not checked out', function () {
+    $this->travelTo(now()->setTime(16, 5));
+
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->branchAdmin()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $checkedOut = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+        'name' => 'Checked Out Staff',
+    ]);
+    $pending = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+        'name' => 'Awaiting Checkout',
+    ]);
+    $day = AttendanceDay::factory()->create([
+        'branch_id' => $branch->id,
+        'date' => now()->toDateString(),
+    ]);
+    $day->staff()->sync([$checkedOut->id, $pending->id]);
+
+    Attendance::factory()->create([
+        'user_id' => $checkedOut->id,
+        'branch_id' => $branch->id,
+        'date' => now()->toDateString(),
+        'check_in' => now()->setTime(9, 0),
+        'check_out' => now()->setTime(16, 0),
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $pending->id,
+        'branch_id' => $branch->id,
+        'date' => now()->toDateString(),
+        'check_in' => now()->setTime(9, 0),
+        'check_out' => null,
+    ]);
+
+    $this->actingAs($admin)
+        ->getJson(route('api.kiosk.pending', ['type' => 'check_out']))
+        ->assertOk()
+        ->assertJsonCount(1, 'pending')
+        ->assertJsonPath('pending.0.name', 'Awaiting Checkout');
 });

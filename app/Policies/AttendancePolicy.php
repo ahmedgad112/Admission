@@ -43,6 +43,11 @@ class AttendancePolicy
         return $user->canViewTeamAttendance();
     }
 
+    public function deleteAny(User $user): bool
+    {
+        return $user->canViewTeamAttendance();
+    }
+
     public function manageKiosk(User $user): bool
     {
         return $user->canManageKiosk();

@@ -26,6 +26,9 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::post('qr-sessions/close', [QrSessionController::class, 'close'])
         ->middleware('permission:manage_kiosk')
         ->name('api.qr-sessions.close');
+    Route::get('kiosk/pending', [QrSessionController::class, 'pending'])
+        ->middleware('permission:manage_kiosk')
+        ->name('api.kiosk.pending');
 
     Route::post('attendance/check-in', [AttendanceController::class, 'checkIn'])
         ->middleware(['permission:scan_attendance', 'throttle:qr-scan'])
