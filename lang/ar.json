@@ -161,6 +161,7 @@
     "staff.keep_password": "(سيب فاضي عشان تفضل زي ما هي)",
     "staff.update": "تحديث الموظف",
     "staff.save": "حفظ الموظف",
+    "staff.save_and_create": "حفظ موظف و إنشاء موظف جديد",
     "staff.leave_days": "أيام الإجازة",
     "staff.leave_days_help": "عدد أيام الغياب المسموح بيها للموظف خلال السنة.",
     "staff.permissions": "الصلاحيات",

@@ -111,13 +111,14 @@ function togglePermission(permission: string, checked: boolean | 'indeterminate'
     }
 }
 
-function submit(): void {
+function submit(createAnother = false): void {
     form.transform((data) => ({
         ...data,
         phone: data.phone || null,
         department_id: data.department_id || null,
         shift_id: data.shift_id || null,
         password: data.password || null,
+        create_another: createAnother,
     }));
 
     if (props.member) {
@@ -255,9 +256,21 @@ function submit(): void {
                     </p>
                 </div>
             </div>
-            <Button class="rounded-full" :disabled="form.processing" @click="submit">
-                {{ member ? trans('staff.update') : trans('staff.save') }}
-            </Button>
+            <div class="flex flex-wrap gap-2">
+                <Button class="rounded-full" :disabled="form.processing" @click="submit(false)">
+                    {{ member ? trans('staff.update') : trans('staff.save') }}
+                </Button>
+                <Button
+                    v-if="!member"
+                    type="button"
+                    variant="outline"
+                    class="rounded-full"
+                    :disabled="form.processing"
+                    @click="submit(true)"
+                >
+                    {{ trans('staff.save_and_create') }}
+                </Button>
+            </div>
         </CardContent>
     </Card>
 </template>

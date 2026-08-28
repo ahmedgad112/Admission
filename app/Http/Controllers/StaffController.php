@@ -95,7 +95,11 @@ class StaffController extends Controller
             'email_verified_at' => now(),
         ]);
 
-        return $this->flashRedirect($request, __('flash.staff.created'), route('staff.index'), [
+        $redirectTo = $request->boolean('create_another')
+            ? route('staff.create')
+            : route('staff.index');
+
+        return $this->flashRedirect($request, __('flash.staff.created'), $redirectTo, [
             'staff' => $staff,
         ]);
     }

@@ -125,6 +125,20 @@ test('managers can view department staff but cannot create them', function () {
         ->assertForbidden();
 });
 
+test('branch admins can save staff and create another', function () {
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->branchAdmin()->create(['branch_id' => $branch->id]);
+
+    $this->actingAs($admin)
+        ->post(route('staff.store'), staffPayload($branch, [
+            'email' => 'first@example.com',
+            'create_another' => true,
+        ]))
+        ->assertRedirect(route('staff.create'));
+
+    expect(User::query()->where('email', 'first@example.com')->exists())->toBeTrue();
+});
+
 test('branch admins cannot assign staff to another branch', function () {
     $branch = Branch::factory()->create();
     $other = Branch::factory()->create();

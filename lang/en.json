@@ -161,6 +161,7 @@
     "staff.keep_password": "(leave blank to keep)",
     "staff.update": "Update staff",
     "staff.save": "Save staff",
+    "staff.save_and_create": "Save staff & create another",
     "staff.leave_days": "Leave days",
     "staff.leave_days_help": "Yearly absence days this staff member can request.",
     "staff.permissions": "Permissions",
