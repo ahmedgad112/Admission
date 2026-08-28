@@ -15,6 +15,7 @@ use App\Models\Task;
 use App\Models\TaskAttachment;
 use App\Models\TaskComment;
 use App\Models\User;
+use App\Support\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -82,6 +83,11 @@ class TaskController extends Controller
 
         $task->assignees()->sync($request->validated('assignee_ids') ?? []);
 
+        ActivityLogger::record('assignees_synced', $task, [
+            'name' => $task->title,
+            'assignee_ids' => $request->validated('assignee_ids') ?? [],
+        ]);
+
         $this->logActivity($task, $user, 'created', [
             'priority' => $task->priority->value,
             'status' => $task->status->value,
@@ -142,6 +148,11 @@ class TaskController extends Controller
 
         $task->save();
         $task->assignees()->sync($request->validated('assignee_ids') ?? []);
+
+        ActivityLogger::record('assignees_synced', $task, [
+            'name' => $task->title,
+            'assignee_ids' => $request->validated('assignee_ids') ?? [],
+        ]);
 
         if ($previousStatus !== $task->status) {
             $this->logActivity($task, $user, 'status_changed', [

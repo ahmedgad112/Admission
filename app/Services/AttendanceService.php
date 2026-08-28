@@ -13,6 +13,7 @@ use App\Models\QrSession;
 use App\Models\Shift;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\ActivityLogger;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
@@ -165,6 +166,12 @@ class AttendanceService
                 ]);
                 $attendance->save();
 
+                ActivityLogger::record('checked_in', $attendance, [
+                    'name' => $user->name,
+                    'date' => $today,
+                    'status' => $attendance->status?->value ?? $attendance->status,
+                ], $user);
+
                 return $attendance->refresh();
             });
         } catch (Throwable $exception) {
@@ -209,6 +216,12 @@ class AttendanceService
             'status' => $evaluation['status'],
         ]);
         $attendance->save();
+
+        ActivityLogger::record('checked_out', $attendance, [
+            'name' => $user->name,
+            'date' => $attendance->date?->toDateString() ?? now()->toDateString(),
+            'status' => $attendance->status?->value ?? $attendance->status,
+        ], $user);
 
         return $attendance->refresh();
     }

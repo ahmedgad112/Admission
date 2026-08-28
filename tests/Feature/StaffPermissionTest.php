@@ -80,7 +80,7 @@ test('role defaults are not stored as extra permissions', function () {
 test('employees with kiosk permission can open the kiosk and roster', function () {
     $branch = Branch::factory()->create();
     $other = Branch::factory()->create();
-    $employee = User::factory()->employee()->withPermissions(Permission::ManageKiosk)->create([
+    $employee = User::factory()->employee()->withPermissions(Permission::ManageKiosk, Permission::ManageRoster)->create([
         'branch_id' => $branch->id,
     ]);
     $ownDay = AttendanceDay::factory()->create(['branch_id' => $branch->id]);
@@ -199,6 +199,6 @@ test('the staff form shares grantable permissions', function () {
             ->component('staff/Create')
             ->has('permissionOptions', count(Permission::cases()))
             ->where('grantablePermissions', Permission::values())
-            ->has('rolePermissions.employee', 0)
-            ->has('rolePermissions.manager', 3));
+            ->has('rolePermissions.employee', count(UserRole::Employee->defaultPermissionValues()))
+            ->has('rolePermissions.manager', count(UserRole::Manager->defaultPermissionValues())));
 });

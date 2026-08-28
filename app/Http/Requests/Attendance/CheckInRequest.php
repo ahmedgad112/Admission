@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Attendance;
 
+use App\Models\Attendance;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -11,7 +12,7 @@ class CheckInRequest extends FormRequest
 
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return $this->user()?->can('create', Attendance::class) ?? false;
     }
 
     /**

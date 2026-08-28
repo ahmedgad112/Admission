@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\LogsActivity;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use Carbon\CarbonImmutable;
@@ -41,7 +42,7 @@ use Illuminate\Support\Carbon;
 class Task extends Model
 {
     /** @use HasFactory<TaskFactory> */
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     /**
      * @return array<string, string>

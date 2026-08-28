@@ -24,6 +24,11 @@ return [
         'updated' => 'Branch updated.',
         'deleted' => 'Branch deleted.',
     ],
+    'department' => [
+        'created' => 'Department created.',
+        'updated' => 'Department updated.',
+        'deleted' => 'Department deleted.',
+    ],
     'roster' => [
         'created' => 'Attendance session created.',
         'updated' => 'Attendance session updated.',
@@ -50,5 +55,12 @@ return [
     ],
     'permissions' => [
         'updated' => 'Role permissions updated.',
+        'role_created' => 'Role created.',
+        'role_updated' => 'Role updated.',
+        'role_deleted' => 'Role deleted.',
+    ],
+    'impersonation' => [
+        'started' => 'You are now logged in as :name.',
+        'stopped' => 'You are back as :name.',
     ],
 ];

@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Concerns\LogsActivity;
 use Database\Factories\TaskCommentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
@@ -21,7 +23,7 @@ use Illuminate\Support\Carbon;
 class TaskComment extends Model
 {
     /** @use HasFactory<TaskCommentFactory> */
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     /**
      * @return BelongsTo<Task, $this>
@@ -37,5 +39,16 @@ class TaskComment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    protected function activityName(): string
+    {
+        $body = trim($this->body ?? '');
+
+        if ($body === '') {
+            return '#'.$this->getKey();
+        }
+
+        return Str::limit($body, 40);
     }
 }

@@ -22,6 +22,7 @@ type StaffRow = {
     email: string;
     phone: string | null;
     role: string;
+    role_label: string;
     status: string;
     branch?: { id: number; name: string } | null;
     department?: { id: number; name: string } | null;
@@ -32,6 +33,7 @@ type StaffRow = {
 const props = defineProps<{
     staff: { data: StaffRow[] };
     filters: { search: string; role: string; status: string };
+    roleOptions: { value: string; label: string }[];
     canCreate: boolean;
 }>();
 
@@ -61,6 +63,14 @@ function filter(key: 'search' | 'role' | 'status', value: string): void {
 
 function destroy(id: number): void {
     router.delete(`/staff/${id}`);
+}
+
+function impersonate(id: number): void {
+    router.post(`/staff/${id}/impersonate`);
+}
+
+function canImpersonate(member: StaffRow): boolean {
+    return Boolean(page.props.can?.impersonate) && member.id !== page.props.auth.user.id;
 }
 </script>
 
@@ -96,10 +106,9 @@ function destroy(id: number): void {
                 @change="filter('role', ($event.target as HTMLSelectElement).value)"
             >
                 <option value="">{{ trans('staff.all_roles') }}</option>
-                <option value="super_admin">{{ trans('roles.super_admin') }}</option>
-                <option value="branch_admin">{{ trans('roles.branch_admin') }}</option>
-                <option value="manager">{{ trans('roles.manager') }}</option>
-                <option value="employee">{{ trans('roles.employee') }}</option>
+                <option v-for="role in roleOptions" :key="role.value" :value="role.value">
+                    {{ role.label }}
+                </option>
             </select>
             <select
                 :value="filters.status"
@@ -131,7 +140,14 @@ function destroy(id: number): void {
                 </CardHeader>
                 <CardContent class="space-y-4">
                     <div class="flex flex-wrap gap-2">
-                        <StatusBadge :value="member.role" :tone="userRoleTone(member.role)" />
+                        <span
+                            :class="[
+                                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
+                                userRoleTone(member.role),
+                            ]"
+                        >
+                            {{ member.role_label }}
+                        </span>
                         <StatusBadge :value="member.status" :tone="userStatusTone(member.status)" />
                     </div>
                     <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
@@ -153,11 +169,24 @@ function destroy(id: number): void {
                         </div>
                     </dl>
                 </CardContent>
-                <CardFooter v-if="canCreate" class="mt-auto flex flex-wrap gap-2 border-t">
-                    <Button variant="outline" size="sm" class="rounded-full" as-child>
+                <CardFooter
+                    v-if="canCreate || canImpersonate(member)"
+                    class="mt-auto flex flex-wrap gap-2 border-t"
+                >
+                    <Button
+                        v-if="canImpersonate(member)"
+                        variant="secondary"
+                        size="sm"
+                        class="rounded-full"
+                        @click="impersonate(member.id)"
+                    >
+                        {{ trans('staff.login_as') }}
+                    </Button>
+                    <Button v-if="canCreate" variant="outline" size="sm" class="rounded-full" as-child>
                         <Link :href="`/staff/${member.id}/edit`">{{ trans('common.edit') }}</Link>
                     </Button>
                     <Button
+                        v-if="canCreate"
                         variant="destructive"
                         size="sm"
                         class="rounded-full"

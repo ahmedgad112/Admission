@@ -1,4 +1,4 @@
-import type { AppPermissions, Auth } from '@/types/auth';
+import type { AppPermissions, Auth, ImpersonationState } from '@/types/auth';
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
@@ -22,6 +22,8 @@ declare module '@inertiajs/core' {
             translations: Record<string, string>;
             auth: Auth;
             can: AppPermissions;
+            home: string;
+            impersonation: ImpersonationState;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

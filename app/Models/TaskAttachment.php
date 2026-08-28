@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\LogsActivity;
 use Database\Factories\TaskAttachmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,7 +26,7 @@ use Illuminate\Support\Carbon;
 class TaskAttachment extends Model
 {
     /** @use HasFactory<TaskAttachmentFactory> */
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     /**
      * @return array<string, string>
@@ -35,6 +36,11 @@ class TaskAttachment extends Model
         return [
             'size' => 'integer',
         ];
+    }
+
+    protected function activityName(): string
+    {
+        return $this->original_name;
     }
 
     /**

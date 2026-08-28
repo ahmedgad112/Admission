@@ -21,6 +21,7 @@ class RolePermissionSetFactory extends Factory
         return [
             'role' => UserRole::Manager,
             'permissions' => UserRole::Manager->defaultPermissionValues(),
+            'home_page' => UserRole::Manager->defaultHomePage()->value,
         ];
     }
 }

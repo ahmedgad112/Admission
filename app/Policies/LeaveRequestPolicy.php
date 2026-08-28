@@ -9,7 +9,7 @@ class LeaveRequestPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->canViewLeaveRequests();
     }
 
     public function view(User $user, LeaveRequest $leaveRequest): bool
@@ -19,7 +19,7 @@ class LeaveRequestPolicy
 
     public function create(User $user): bool
     {
-        return true;
+        return $user->canViewLeaveRequests();
     }
 
     public function review(User $user, LeaveRequest $leaveRequest): bool

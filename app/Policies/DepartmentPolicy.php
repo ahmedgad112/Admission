@@ -9,19 +9,35 @@ class DepartmentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->canManageTasks();
+        return $user->canManageStaff();
     }
 
     public function view(User $user, Department $department): bool
+    {
+        return $this->canAccess($user, $department);
+    }
+
+    public function create(User $user): bool
+    {
+        return $user->canManageStaff() && ($user->isSuperAdmin() || $user->branch_id !== null);
+    }
+
+    public function update(User $user, Department $department): bool
+    {
+        return $user->canManageStaff() && $this->canAccess($user, $department);
+    }
+
+    public function delete(User $user, Department $department): bool
+    {
+        return $this->update($user, $department);
+    }
+
+    private function canAccess(User $user, Department $department): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
         }
 
-        if ($user->limitsRecordsToBranch()) {
-            return $department->branch_id === $user->branch_id;
-        }
-
-        return $department->id === $user->department_id;
+        return $user->branch_id !== null && $department->branch_id === $user->branch_id;
     }
 }

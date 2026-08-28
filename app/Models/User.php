@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Concerns\LogsActivity;
 use App\Enums\LeaveRequestStatus;
 use App\Enums\Permission;
-use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -26,7 +26,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $phone
  * @property Carbon|null $email_verified_at
  * @property string $password
- * @property UserRole $role
+ * @property int $role_id
  * @property int|null $branch_id
  * @property int|null $department_id
  * @property int|null $shift_id
@@ -40,13 +40,14 @@ use Illuminate\Support\Carbon;
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read Role|null $role
  */
 #[Fillable([
     'name',
     'email',
     'phone',
     'password',
-    'role',
+    'role_id',
     'branch_id',
     'department_id',
     'shift_id',
@@ -59,11 +60,9 @@ use Illuminate\Support\Carbon;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, LogsActivity, Notifiable;
 
     /**
-     * Get the attributes that should be cast.
-     *
      * @return array<string, string>
      */
     protected function casts(): array
@@ -71,11 +70,19 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => UserRole::class,
+            'role_id' => 'integer',
             'status' => UserStatus::class,
             'leave_days' => 'integer',
             'permissions' => 'array',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Role, $this>
+     */
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
     }
 
     /**
@@ -171,34 +178,56 @@ class User extends Authenticatable
         return $days <= $this->remainingLeaveDays($year);
     }
 
-    public function hasRole(UserRole ...$roles): bool
+    public function hasRole(string ...$slugs): bool
     {
-        return in_array($this->role, $roles, true);
+        $slug = $this->role?->slug;
+
+        return $slug !== null && in_array($slug, $slugs, true);
     }
 
     public function isSuperAdmin(): bool
     {
-        return $this->role === UserRole::SuperAdmin;
+        return $this->role?->isSuperAdmin() ?? false;
     }
 
     public function isBranchAdmin(): bool
     {
-        return $this->role === UserRole::BranchAdmin;
+        return $this->hasRole('branch_admin');
     }
 
     public function isManager(): bool
     {
-        return $this->role === UserRole::Manager;
+        return $this->hasRole('manager');
     }
 
     public function isEmployee(): bool
     {
-        return $this->role === UserRole::Employee;
+        return $this->hasRole('employee');
     }
 
     public function canManagePermissions(): bool
     {
+        return $this->hasPermission(Permission::ManagePermissions);
+    }
+
+    public function canStartImpersonation(): bool
+    {
         return $this->isSuperAdmin();
+    }
+
+    public function canViewDashboard(): bool
+    {
+        return $this->hasPermission(Permission::ViewDashboard);
+    }
+
+    public function canScanAttendance(): bool
+    {
+        return $this->hasPermission(Permission::ScanAttendance);
+    }
+
+    public function canViewStaff(): bool
+    {
+        return $this->hasPermission(Permission::ViewStaff);
     }
 
     public function canManageKiosk(): bool
@@ -211,9 +240,52 @@ class User extends Authenticatable
         return $this->hasPermission(Permission::ManageStaff);
     }
 
+    public function canManageShifts(): bool
+    {
+        return $this->hasPermission(Permission::ManageShifts);
+    }
+
+    public function canViewRoster(): bool
+    {
+        return $this->hasPermission(Permission::ViewRoster)
+            || $this->hasPermission(Permission::ManageRoster);
+    }
+
+    public function canManageRoster(): bool
+    {
+        return $this->hasPermission(Permission::ManageRoster);
+    }
+
+    public function canManageBranches(): bool
+    {
+        return $this->hasPermission(Permission::ManageBranches);
+    }
+
+    public function canViewAttendance(): bool
+    {
+        return $this->hasPermission(Permission::ViewAttendance);
+    }
+
+    public function canViewActivityLog(): bool
+    {
+        return $this->hasPermission(Permission::ViewActivityLog);
+    }
+
+    public function canViewTasks(): bool
+    {
+        return $this->hasPermission(Permission::ViewTasks)
+            || $this->hasPermission(Permission::ManageTasks);
+    }
+
     public function canManageTasks(): bool
     {
         return $this->hasPermission(Permission::ManageTasks);
+    }
+
+    public function canViewLeaveRequests(): bool
+    {
+        return $this->hasPermission(Permission::ViewLeaveRequests)
+            || $this->hasPermission(Permission::ReviewLeaveRequests);
     }
 
     public function canViewTeamAttendance(): bool
@@ -232,7 +304,7 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->role->hasPermission($permission)
+        return ($this->role?->hasPermission($permission) ?? false)
             || in_array($permission->value, $this->grantedPermissionValues(), true);
     }
 
@@ -277,9 +349,9 @@ class User extends Authenticatable
      * @param  list<string>  $requested
      * @return list<string>
      */
-    public static function extraPermissions(UserRole $role, array $requested, User $actor, ?self $staff = null): array
+    public static function extraPermissions(Role $role, array $requested, User $actor, ?self $staff = null): array
     {
-        if ($role === UserRole::SuperAdmin) {
+        if ($role->isSuperAdmin()) {
             return [];
         }
 
@@ -301,6 +373,10 @@ class User extends Authenticatable
     {
         if ($this->isSuperAdmin()) {
             return 'all';
+        }
+
+        if ($this->isBranchAdmin() && $this->department_id !== null) {
+            return 'team';
         }
 
         if (
@@ -368,6 +444,41 @@ class User extends Authenticatable
             'branch' => $query->where('branch_id', $actor->branch_id),
             'team' => $query->where('department_id', $actor->department_id),
             default => $query->where('id', $actor->id),
+        };
+    }
+
+    /**
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeWithoutSuperAdmins(Builder $query): Builder
+    {
+        return $query->whereHas(
+            'role',
+            fn (Builder $builder) => $builder->where('slug', '!=', Role::SUPER_ADMIN),
+        );
+    }
+
+    /**
+     * @param  Builder<ActivityLog>  $query
+     */
+    public function constrainActivityVisibility(Builder $query): void
+    {
+        match ($this->recordScope()) {
+            'all' => null,
+            'branch' => $query->where(function (Builder $builder): void {
+                $builder->whereHas(
+                    'causer',
+                    fn (Builder $causer) => $causer->where('branch_id', $this->branch_id),
+                )->orWhere('causer_id', $this->id);
+            }),
+            'team' => $query->where(function (Builder $builder): void {
+                $builder->whereHas(
+                    'causer',
+                    fn (Builder $causer) => $causer->where('department_id', $this->department_id),
+                )->orWhere('causer_id', $this->id);
+            }),
+            default => $query->where('causer_id', $this->id),
         };
     }
 }

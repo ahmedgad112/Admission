@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\LogsActivity;
 use App\Enums\LeaveRequestStatus;
 use App\Enums\LeaveRequestType;
 use Database\Factories\LeaveRequestFactory;
@@ -44,7 +45,7 @@ use Illuminate\Support\Carbon;
 class LeaveRequest extends Model
 {
     /** @use HasFactory<LeaveRequestFactory> */
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     /**
      * @return array<string, string>
@@ -148,5 +149,10 @@ class LeaveRequest extends Model
             }),
             default => $query->where('user_id', $actor->id),
         };
+    }
+
+    protected function activityName(): string
+    {
+        return $this->start_date?->toDateString().' → '.$this->end_date?->toDateString();
     }
 }

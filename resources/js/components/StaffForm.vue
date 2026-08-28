@@ -11,7 +11,7 @@ import { trans } from '@/composables/useTrans';
 type Option = { id: number; name: string };
 type DepartmentOption = { id: number; name: string; branch_id: number };
 type LabeledOption = { value: string; label: string };
-type PermissionOption = { value: string; label: string; description: string };
+type PermissionOption = { value: string; label: string; description: string; group?: string };
 type Member = {
     id: number;
     name: string;

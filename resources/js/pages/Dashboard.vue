@@ -80,6 +80,7 @@ function formatTime(checkIn: string | null): string {
         >
             <template #actions>
                 <Link
+                    v-if="page.props.can?.scanAttendance"
                     href="/attendance/scan"
                     class="inline-flex h-10 items-center gap-2 rounded-full bg-gradient-to-r from-primary to-[hsl(174_62%_26%)] px-5 text-sm font-semibold text-primary-foreground shadow-md transition-all duration-200 hover:shadow-lg hover:brightness-110 active:scale-95"
                 >
@@ -92,6 +93,7 @@ function formatTime(checkIn: string | null): string {
         <!-- Quick Actions Shortcuts Bar -->
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Link
+                v-if="page.props.can?.scanAttendance"
                 href="/attendance/scan"
                 class="group flex items-center gap-3 rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/40 hover:shadow-sm"
             >
@@ -107,6 +109,7 @@ function formatTime(checkIn: string | null): string {
             </Link>
 
             <Link
+                v-if="page.props.can?.viewRoster"
                 href="/attendance/days"
                 class="group flex items-center gap-3 rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/40 hover:shadow-sm"
             >
@@ -122,6 +125,7 @@ function formatTime(checkIn: string | null): string {
             </Link>
 
             <Link
+                v-if="page.props.can?.viewLeaveRequests"
                 href="/leave-requests"
                 class="group flex items-center gap-3 rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/40 hover:shadow-sm"
             >
@@ -137,6 +141,7 @@ function formatTime(checkIn: string | null): string {
             </Link>
 
             <Link
+                v-if="page.props.can?.viewTasks"
                 href="/tasks"
                 class="group flex items-center gap-3 rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/40 hover:shadow-sm"
             >

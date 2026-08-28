@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\LogsActivity;
 use App\Enums\AttendanceStatus;
 use Database\Factories\AttendanceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -46,7 +47,7 @@ use Illuminate\Support\Carbon;
 class Attendance extends Model
 {
     /** @use HasFactory<AttendanceFactory> */
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     /**
      * @return array<string, string>
@@ -82,5 +83,13 @@ class Attendance extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    protected function activityName(): string
+    {
+        $date = $this->date?->toDateString() ?? '#'.$this->getKey();
+        $userName = $this->relationLoaded('user') ? $this->user?->name : null;
+
+        return $userName !== null ? "{$userName} · {$date}" : $date;
     }
 }

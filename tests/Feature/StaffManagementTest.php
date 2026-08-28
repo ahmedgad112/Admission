@@ -29,7 +29,10 @@ test('branch admins can view and create staff in their branch', function () {
     $branch = Branch::factory()->create();
     $department = Department::factory()->create(['branch_id' => $branch->id]);
     $shift = Shift::factory()->create();
-    $admin = User::factory()->branchAdmin()->create(['branch_id' => $branch->id]);
+    $admin = User::factory()->branchAdmin()->create([
+        'branch_id' => $branch->id,
+        'department_id' => $department->id,
+    ]);
 
     $this->actingAs($admin)
         ->post(route('staff.store'), staffPayload($branch, [
@@ -45,9 +48,39 @@ test('branch admins can view and create staff in their branch', function () {
         ->and($staff->branch_id)->toBe($branch->id)
         ->and($staff->department_id)->toBe($department->id)
         ->and($staff->shift_id)->toBe($shift->id)
-        ->and($staff->role)->toBe(UserRole::Employee)
+        ->and($staff->role?->slug)->toBe(UserRole::Employee->value)
         ->and($staff->leave_days)->toBe(21)
         ->and($staff->permissions)->toBe([]);
+});
+
+test('branch admins only see staff in their department', function () {
+    $department = Department::factory()->create();
+    $otherDepartment = Department::factory()->create(['branch_id' => $department->branch_id]);
+    $admin = User::factory()->branchAdmin()->create([
+        'name' => 'Branch Admin',
+        'branch_id' => $department->branch_id,
+        'department_id' => $department->id,
+    ]);
+    $teammate = User::factory()->employee()->create([
+        'name' => 'Dept Staff',
+        'department_id' => $department->id,
+        'branch_id' => $department->branch_id,
+    ]);
+    User::factory()->employee()->create([
+        'name' => 'Other Dept Staff',
+        'department_id' => $otherDepartment->id,
+        'branch_id' => $department->branch_id,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('staff.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('staff/Index')
+            ->where('canCreate', true)
+            ->has('staff.data', 2)
+            ->where('staff.data.0.name', 'Branch Admin')
+            ->where('staff.data.1.name', 'Dept Staff'));
 });
 
 test('employees cannot open the staff page', function () {
@@ -136,7 +169,7 @@ test('admins can update staff details', function () {
         ->assertRedirect(route('staff.index'));
 
     expect($staff->refresh()->name)->toBe('Updated Name')
-        ->and($staff->role)->toBe(UserRole::Manager)
+        ->and($staff->role?->slug)->toBe(UserRole::Manager->value)
         ->and($staff->leave_days)->toBe(10);
 });
 

@@ -2,8 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\Permission;
 use App\Support\AppLocale;
+use App\Support\HomeRedirect;
+use App\Support\Impersonation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -37,7 +41,10 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $user?->loadMissing('role');
         $locale = app()->getLocale();
+        $impersonation = app(Impersonation::class);
+        $impersonator = $impersonation->impersonator($request);
 
         return [
             ...parent::share($request),
@@ -46,15 +53,34 @@ class HandleInertiaRequests extends Middleware
             'dir' => AppLocale::direction($locale),
             'translations' => $this->translations($locale),
             'auth' => [
-                'user' => $user,
+                'user' => $user === null ? null : [
+                    ...$user->toArray(),
+                    'role' => $user->role?->slug,
+                    'role_label' => $user->role?->label(),
+                ],
             ],
+            'home' => app(HomeRedirect::class)->url($user),
             'can' => [
-                'managePermissions' => $user?->canManagePermissions() ?? false,
-                'manageKiosk' => $user?->canManageKiosk() ?? false,
-                'manageStaff' => $user?->canManageStaff() ?? false,
-                'manageTasks' => $user?->canManageTasks() ?? false,
-                'viewTeamAttendance' => $user?->canViewTeamAttendance() ?? false,
-                'reviewLeaveRequests' => $user?->canReviewLeaveRequests() ?? false,
+                ...collect(Permission::cases())->mapWithKeys(
+                    fn (Permission $permission): array => [
+                        Str::camel($permission->value) => $user?->hasPermission($permission) ?? false,
+                    ],
+                )->all(),
+                'viewStaff' => ($user?->canViewStaff() ?? false)
+                    || ($user?->canManageStaff() ?? false)
+                    || ($user?->canViewTeamAttendance() ?? false),
+                'viewRoster' => $user?->canViewRoster() ?? false,
+                'viewTasks' => $user?->canViewTasks() ?? false,
+                'viewLeaveRequests' => $user?->canViewLeaveRequests() ?? false,
+                'impersonate' => ($user?->canStartImpersonation() ?? false)
+                    && ! $impersonation->isActive($request),
+            ],
+            'impersonation' => [
+                'active' => $impersonation->isActive($request),
+                'impersonator' => $impersonator === null ? null : [
+                    'id' => $impersonator->id,
+                    'name' => $impersonator->name,
+                ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

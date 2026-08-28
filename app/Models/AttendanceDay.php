@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\LogsActivity;
 use App\Enums\QrSessionType;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -41,7 +42,7 @@ use Illuminate\Support\Carbon;
 class AttendanceDay extends Model
 {
     /** @use HasFactory<AttendanceDayFactory> */
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     /**
      * @return array<string, string>
@@ -222,5 +223,10 @@ class AttendanceDay extends Model
         }
 
         return [$start, $end];
+    }
+
+    protected function activityName(): string
+    {
+        return $this->date?->toDateString() ?? '#'.$this->getKey();
     }
 }

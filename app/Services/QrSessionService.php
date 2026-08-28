@@ -6,6 +6,7 @@ use App\Enums\QrSessionType;
 use App\Models\Branch;
 use App\Models\QrSession;
 use App\Models\User;
+use App\Support\ActivityLogger;
 use Illuminate\Support\Str;
 
 class QrSessionService
@@ -28,11 +29,22 @@ class QrSessionService
 
     public function expireActive(Branch $branch, QrSessionType $type): void
     {
-        QrSession::query()
+        $active = QrSession::query()
             ->where('branch_id', $branch->id)
             ->where('type', $type)
             ->where('expires_at', '>', now())
+            ->get();
+
+        QrSession::query()
+            ->whereIn('id', $active->modelKeys())
             ->update(['expires_at' => now()]);
+
+        foreach ($active as $session) {
+            ActivityLogger::record('qr_expired', $session, [
+                'name' => $branch->name,
+                'type' => $type->value,
+            ]);
+        }
     }
 
     public function create(Branch $branch, QrSessionType $type): QrSession
@@ -42,7 +54,7 @@ class QrSessionService
         $token = Str::lower(Str::random(32));
         $expiresAt = now()->addSeconds((int) config('attendance.qr_ttl_seconds', 20));
 
-        return QrSession::query()->create([
+        $session = QrSession::query()->create([
             'branch_id' => $branch->id,
             'token' => $token,
             'entry_code' => $this->uniqueEntryCode(),
@@ -51,6 +63,13 @@ class QrSessionService
             'expires_at' => $expiresAt,
             'created_at' => now(),
         ]);
+
+        ActivityLogger::record('qr_created', $session, [
+            'name' => $branch->name,
+            'type' => $type->value,
+        ]);
+
+        return $session;
     }
 
     private function uniqueEntryCode(): string

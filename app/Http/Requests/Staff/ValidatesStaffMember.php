@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Staff;
 
 use App\Enums\Permission;
-use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -18,6 +18,14 @@ trait ValidatesStaffMember
     {
         $user = $this->user();
         $staff = $this->route('user');
+
+        $assignableRoleIds = Role::query()
+            ->when(
+                $user === null || ! $user->isSuperAdmin(),
+                fn ($query) => $query->where('slug', '!=', Role::SUPER_ADMIN),
+            )
+            ->pluck('id')
+            ->all();
 
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -35,14 +43,9 @@ trait ValidatesStaffMember
             ],
             'role' => [
                 'required',
-                Rule::enum(UserRole::class),
-                Rule::when(
-                    $user !== null && ! $user->isSuperAdmin(),
-                    Rule::in([
-                        UserRole::BranchAdmin->value,
-                        UserRole::Manager->value,
-                        UserRole::Employee->value,
-                    ]),
+                'string',
+                Rule::exists('roles', 'slug')->where(
+                    fn ($query) => $query->whereIn('id', $assignableRoleIds),
                 ),
             ],
             'branch_id' => [
@@ -96,11 +99,13 @@ trait ValidatesStaffMember
         abort_unless($actor !== null, 403);
 
         $staff = $this->route('user');
+        $role = Role::requireBySlug($this->validated('role'));
 
         return [
-            ...$this->safe()->except(['password', 'permissions']),
+            ...$this->safe()->except(['password', 'permissions', 'role']),
+            'role_id' => $role->id,
             'permissions' => User::extraPermissions(
-                UserRole::from($this->validated('role')),
+                $role,
                 $this->validated('permissions') ?? [],
                 $actor,
                 $updating && $staff instanceof User ? $staff : null,

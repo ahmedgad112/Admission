@@ -8,7 +8,9 @@ class UserPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->canViewTeamAttendance() || $user->canManageStaff();
+        return $user->canViewStaff()
+            || $user->canManageStaff()
+            || $user->canViewTeamAttendance();
     }
 
     public function view(User $user, User $staff): bool
@@ -37,5 +39,14 @@ class UserPolicy
         }
 
         return $this->update($user, $staff);
+    }
+
+    public function impersonate(User $user, User $staff): bool
+    {
+        if (! $user->canStartImpersonation() || $user->is($staff)) {
+            return false;
+        }
+
+        return $this->view($user, $staff);
     }
 }

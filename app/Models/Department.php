@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Concerns\LogsActivity;
 use Database\Factories\DepartmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,7 +24,7 @@ use Illuminate\Support\Carbon;
 class Department extends Model
 {
     /** @use HasFactory<DepartmentFactory> */
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     /**
      * @return BelongsTo<Branch, $this>
@@ -54,5 +56,17 @@ class Department extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    /**
+     * @param  Builder<Department>  $query
+     */
+    public function scopeVisibleTo($query, User $actor): void
+    {
+        if ($actor->isSuperAdmin()) {
+            return;
+        }
+
+        $query->where('branch_id', $actor->branch_id);
     }
 }

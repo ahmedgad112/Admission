@@ -40,13 +40,6 @@ class WorkforceSeeder extends Seeder
             'shift_id' => $shift->id,
         ]);
 
-        $branchAdmin = User::factory()->branchAdmin()->create([
-            'name' => 'Branch Admin',
-            'email' => 'branch@example.com',
-            'branch_id' => $branch->id,
-            'shift_id' => $shift->id,
-        ]);
-
         $engineering = Department::query()->create([
             'name' => 'Engineering',
             'branch_id' => $branch->id,
@@ -55,6 +48,14 @@ class WorkforceSeeder extends Seeder
         $operations = Department::query()->create([
             'name' => 'Operations',
             'branch_id' => $branch->id,
+        ]);
+
+        $branchAdmin = User::factory()->branchAdmin()->create([
+            'name' => 'Branch Admin',
+            'email' => 'branch@example.com',
+            'branch_id' => $branch->id,
+            'department_id' => $engineering->id,
+            'shift_id' => $shift->id,
         ]);
 
         $manager = User::factory()->manager()->create([

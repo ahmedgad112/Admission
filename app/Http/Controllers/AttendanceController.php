@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Concerns\RespondsWithInertiaOrJson;
-use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Exceptions\AttendanceException;
 use App\Http\Requests\Attendance\CheckInRequest;
@@ -206,13 +205,9 @@ class AttendanceController extends Controller
     {
         $people = User::query()
             ->visibleTo($user)
+            ->withoutSuperAdmins()
             ->where('status', UserStatus::Active)
             ->whereNotNull('branch_id')
-            ->whereIn('role', [
-                UserRole::BranchAdmin,
-                UserRole::Manager,
-                UserRole::Employee,
-            ])
             ->orderBy('name')
             ->get(['id', 'name', 'branch_id']);
 

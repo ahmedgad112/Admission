@@ -2,8 +2,9 @@
 
 namespace App\Enums;
 
-use App\Support\RolePermissionCatalog;
-
+/**
+ * Seed defaults for system roles. Runtime permissions live on App\Models\Role.
+ */
 enum UserRole: string
 {
     case SuperAdmin = 'super_admin';
@@ -40,19 +41,49 @@ enum UserRole: string
         return match ($this) {
             self::SuperAdmin => Permission::cases(),
             self::BranchAdmin => [
-                Permission::ManageKiosk,
+                Permission::ViewDashboard,
+                Permission::ScanAttendance,
+                Permission::ViewStaff,
                 Permission::ManageStaff,
-                Permission::ManageTasks,
+                Permission::ManageShifts,
+                Permission::ViewRoster,
+                Permission::ManageRoster,
+                Permission::ManageBranches,
+                Permission::ManageKiosk,
+                Permission::ViewAttendance,
                 Permission::ViewTeamAttendance,
+                Permission::ViewActivityLog,
+                Permission::ViewTasks,
+                Permission::ManageTasks,
+                Permission::ViewLeaveRequests,
                 Permission::ReviewLeaveRequests,
             ],
             self::Manager => [
-                Permission::ManageTasks,
+                Permission::ViewDashboard,
+                Permission::ScanAttendance,
+                Permission::ViewStaff,
+                Permission::ViewRoster,
+                Permission::ViewAttendance,
                 Permission::ViewTeamAttendance,
+                Permission::ViewTasks,
+                Permission::ManageTasks,
+                Permission::ViewLeaveRequests,
                 Permission::ReviewLeaveRequests,
             ],
-            self::Employee => [],
+            self::Employee => [
+                Permission::ViewDashboard,
+                Permission::ScanAttendance,
+                Permission::ViewRoster,
+                Permission::ViewAttendance,
+                Permission::ViewTasks,
+                Permission::ViewLeaveRequests,
+            ],
         };
+    }
+
+    public function defaultHomePage(): HomePage
+    {
+        return HomePage::Dashboard;
     }
 
     /**
@@ -64,58 +95,5 @@ enum UserRole: string
             fn (Permission $permission): string => $permission->value,
             $this->defaultPermissions(),
         );
-    }
-
-    /**
-     * @return list<Permission>
-     */
-    public function permissions(): array
-    {
-        if ($this === self::SuperAdmin || ! app()->bound(RolePermissionCatalog::class)) {
-            return $this->defaultPermissions();
-        }
-
-        return app(RolePermissionCatalog::class)->permissionsFor($this);
-    }
-
-    /**
-     * @return list<string>
-     */
-    public function permissionValues(): array
-    {
-        return array_map(
-            fn (Permission $permission): string => $permission->value,
-            $this->permissions(),
-        );
-    }
-
-    public function canManageKiosk(): bool
-    {
-        return $this->hasPermission(Permission::ManageKiosk);
-    }
-
-    public function canManageStaff(): bool
-    {
-        return $this->hasPermission(Permission::ManageStaff);
-    }
-
-    public function canManageTasks(): bool
-    {
-        return $this->hasPermission(Permission::ManageTasks);
-    }
-
-    public function canViewTeamAttendance(): bool
-    {
-        return $this->hasPermission(Permission::ViewTeamAttendance);
-    }
-
-    public function canReviewLeaveRequests(): bool
-    {
-        return $this->hasPermission(Permission::ReviewLeaveRequests);
-    }
-
-    public function hasPermission(Permission $permission): bool
-    {
-        return in_array($permission, $this->permissions(), true);
     }
 }

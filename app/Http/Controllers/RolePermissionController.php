@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Concerns\RespondsWithInertiaOrJson;
+use App\Enums\HomePage;
 use App\Enums\Permission;
-use App\Enums\UserRole;
+use App\Http\Requests\RolePermission\StoreRoleRequest;
 use App\Http\Requests\RolePermission\UpdateRolePermissionsRequest;
-use App\Models\RolePermissionSet;
+use App\Http\Requests\RolePermission\UpdateRoleRequest;
+use App\Models\Role;
 use App\Support\RolePermissionCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,26 +22,65 @@ class RolePermissionController extends Controller
 
     public function edit(): Response
     {
-        $this->authorize('viewAny', RolePermissionSet::class);
+        $this->authorize('viewAny', Role::class);
+
+        $catalog = app(RolePermissionCatalog::class);
+        $roles = Role::query()->ordered()->get();
 
         return Inertia::render('permissions/Edit', [
-            'permissionOptions' => array_map(fn (Permission $permission) => [
-                'value' => $permission->value,
-                'label' => $permission->label(),
-                'description' => $permission->description(),
-            ], Permission::cases()),
-            'roles' => array_map(fn (UserRole $role) => [
-                'value' => $role->value,
-                'locked' => $role === UserRole::SuperAdmin,
-            ], UserRole::cases()),
-            'rolePermissions' => app(RolePermissionCatalog::class)->permissionValuesByRole(),
+            'permissionOptions' => array_map(
+                fn (Permission $permission): array => $permission->toOption(),
+                Permission::cases(),
+            ),
+            'homePageOptions' => HomePage::options(),
+            'roles' => $roles->map(fn (Role $role) => $role->toOption())->values()->all(),
+            'rolePermissions' => $catalog->permissionValuesByRole(),
+            'roleHomes' => $catalog->homePagesByRole(),
         ]);
     }
 
     public function update(UpdateRolePermissionsRequest $request, RolePermissionCatalog $catalog): JsonResponse|RedirectResponse
     {
-        $catalog->sync($request->rolePermissions());
+        foreach ($request->roleNames() as $slug => $name) {
+            $role = Role::findBySlug($slug);
+
+            if ($role === null || $role->isLocked()) {
+                continue;
+            }
+
+            $role->update(['name' => $name]);
+        }
+
+        $catalog->sync($request->rolePermissions(), $request->roleHomes());
 
         return $this->flashRedirect($request, __('flash.permissions.updated'), route('permissions.edit'));
+    }
+
+    public function store(StoreRoleRequest $request, RolePermissionCatalog $catalog): JsonResponse|RedirectResponse
+    {
+        Role::query()->create($request->roleAttributes());
+        $catalog->forget();
+
+        return $this->flashRedirect($request, __('flash.permissions.role_created'), route('permissions.edit'));
+    }
+
+    public function updateRole(UpdateRoleRequest $request, Role $role, RolePermissionCatalog $catalog): JsonResponse|RedirectResponse
+    {
+        $role->update([
+            'name' => trim((string) $request->validated('name')),
+        ]);
+        $catalog->forget();
+
+        return $this->flashRedirect($request, __('flash.permissions.role_updated'), route('permissions.edit'));
+    }
+
+    public function destroy(Request $request, Role $role, RolePermissionCatalog $catalog): JsonResponse|RedirectResponse
+    {
+        $this->authorize('delete', $role);
+
+        $role->delete();
+        $catalog->forget();
+
+        return $this->flashRedirect($request, __('flash.permissions.role_deleted'), route('permissions.edit'));
     }
 }

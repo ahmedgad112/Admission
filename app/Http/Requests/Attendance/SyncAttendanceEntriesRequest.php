@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Attendance;
 
-use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\Attendance;
 use App\Models\User;
@@ -81,13 +80,9 @@ class SyncAttendanceEntriesRequest extends FormRequest
             $userIds = collect($entries)->pluck('user_id')->filter()->map(fn ($id) => (int) $id)->all();
             $visibleIds = User::query()
                 ->visibleTo($actor)
+                ->withoutSuperAdmins()
                 ->where('status', UserStatus::Active)
                 ->whereNotNull('branch_id')
-                ->whereIn('role', [
-                    UserRole::BranchAdmin,
-                    UserRole::Manager,
-                    UserRole::Employee,
-                ])
                 ->whereIn('id', $userIds)
                 ->pluck('id')
                 ->all();

@@ -4,14 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Concerns\RespondsWithInertiaOrJson;
 use App\Enums\Permission;
-use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Http\Requests\Staff\StoreStaffRequest;
 use App\Http\Requests\Staff\UpdateStaffRequest;
 use App\Models\Branch;
 use App\Models\Department;
+use App\Models\Role;
 use App\Models\Shift;
 use App\Models\User;
+use App\Support\RolePermissionCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ class StaffController extends Controller
 
         $staff = User::query()
             ->visibleTo($user)
-            ->with(['branch:id,name', 'department:id,name', 'shift:id,name'])
+            ->with(['branch:id,name', 'department:id,name', 'shift:id,name', 'role'])
             ->when($request->string('search')->isNotEmpty(), function ($query) use ($request): void {
                 $search = $request->string('search')->toString();
                 $query->where(function ($builder) use ($search): void {
@@ -40,11 +41,29 @@ class StaffController extends Controller
                         ->orWhere('phone', 'like', '%'.$search.'%');
                 });
             })
-            ->when($request->string('role')->isNotEmpty(), fn ($query) => $query->where('role', $request->string('role')))
+            ->when($request->string('role')->isNotEmpty(), function ($query) use ($request): void {
+                $query->whereHas(
+                    'role',
+                    fn ($builder) => $builder->where('slug', $request->string('role')->toString()),
+                );
+            })
             ->when($request->string('status')->isNotEmpty(), fn ($query) => $query->where('status', $request->string('status')))
             ->orderBy('name')
             ->paginate(15)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (User $member): array => [
+                'id' => $member->id,
+                'name' => $member->name,
+                'email' => $member->email,
+                'phone' => $member->phone,
+                'role' => $member->role?->slug ?? 'employee',
+                'role_label' => $member->role?->label() ?? '',
+                'status' => $member->status->value,
+                'branch' => $member->branch,
+                'department' => $member->department,
+                'shift' => $member->shift,
+                'leave_days' => $member->leave_days,
+            ]);
 
         return Inertia::render('staff/Index', [
             'staff' => $staff,
@@ -53,6 +72,10 @@ class StaffController extends Controller
                 'role' => $request->string('role')->toString(),
                 'status' => $request->string('status')->toString(),
             ],
+            'roleOptions' => Role::query()->ordered()->get()->map(fn (Role $role) => [
+                'value' => $role->slug,
+                'label' => $role->label(),
+            ]),
             'canCreate' => $user->can('create', User::class),
         ]);
     }
@@ -87,7 +110,7 @@ class StaffController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
-                'role' => $user->role->value,
+                'role' => $user->role?->slug,
                 'branch_id' => $user->branch_id,
                 'department_id' => $user->department_id,
                 'shift_id' => $user->shift_id,
@@ -131,9 +154,10 @@ class StaffController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
-        $roles = $user->isSuperAdmin()
-            ? UserRole::cases()
-            : [UserRole::BranchAdmin, UserRole::Manager, UserRole::Employee];
+        $roles = Role::query()
+            ->ordered()
+            ->when(! $user->isSuperAdmin(), fn ($query) => $query->where('slug', '!=', Role::SUPER_ADMIN))
+            ->get();
 
         return [
             'branches' => $user->isSuperAdmin()
@@ -145,18 +169,15 @@ class StaffController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'branch_id']),
             'shifts' => Shift::query()->orderBy('name')->get(['id', 'name']),
-            'roles' => array_map(fn (UserRole $role) => [
-                'value' => $role->value,
+            'roles' => $roles->map(fn (Role $role) => [
+                'value' => $role->slug,
                 'label' => $role->label(),
-            ], $roles),
-            'permissionOptions' => array_map(fn (Permission $permission) => [
-                'value' => $permission->value,
-                'label' => $permission->label(),
-                'description' => $permission->description(),
-            ], Permission::cases()),
-            'rolePermissions' => collect(UserRole::cases())
-                ->mapWithKeys(fn (UserRole $role) => [$role->value => $role->permissionValues()])
-                ->all(),
+            ])->values()->all(),
+            'permissionOptions' => array_map(
+                fn (Permission $permission): array => $permission->toOption(),
+                Permission::cases(),
+            ),
+            'rolePermissions' => app(RolePermissionCatalog::class)->permissionValuesByRole(),
             'grantablePermissions' => $user->grantablePermissionValues(),
             'statuses' => array_map(fn (UserStatus $status) => [
                 'value' => $status->value,

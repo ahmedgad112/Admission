@@ -28,11 +28,11 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         ->name('api.qr-sessions.close');
 
     Route::post('attendance/check-in', [AttendanceController::class, 'checkIn'])
-        ->middleware('throttle:qr-scan')
+        ->middleware(['permission:scan_attendance', 'throttle:qr-scan'])
         ->name('api.attendance.check-in');
 
     Route::post('attendance/check-out', [AttendanceController::class, 'checkOut'])
-        ->middleware('throttle:qr-scan')
+        ->middleware(['permission:scan_attendance', 'throttle:qr-scan'])
         ->name('api.attendance.check-out');
 
     Route::get('tasks', [TaskController::class, 'index'])->name('api.tasks.index');

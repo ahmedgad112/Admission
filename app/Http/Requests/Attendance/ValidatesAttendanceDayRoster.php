@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Attendance;
 
-use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\AttendanceDay;
+use App\Models\Role;
 use Closure;
 use Illuminate\Validation\Rule;
 
@@ -24,11 +24,12 @@ trait ValidatesAttendanceDayRoster
                     fn ($query) => $query
                         ->where('branch_id', $this->integer('branch_id'))
                         ->where('status', UserStatus::Active->value)
-                        ->whereIn('role', [
-                            UserRole::BranchAdmin->value,
-                            UserRole::Manager->value,
-                            UserRole::Employee->value,
-                        ]),
+                        ->whereIn(
+                            'role_id',
+                            Role::query()
+                                ->where('slug', '!=', Role::SUPER_ADMIN)
+                                ->select('id'),
+                        ),
                 ),
             ],
         ];

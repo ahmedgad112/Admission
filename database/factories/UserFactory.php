@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\Permission;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -21,19 +22,19 @@ class UserFactory extends Factory
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
+        Role::ensureSystemRoles();
+
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->numerify('01#########'),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
-            'role' => UserRole::Employee,
+            'role_id' => Role::requireBySlug(UserRole::Employee->value)->id,
             'status' => UserStatus::Active,
             'leave_days' => 21,
             'permissions' => [],
@@ -41,9 +42,6 @@ class UserFactory extends Factory
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -51,37 +49,41 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the model has two-factor authentication configured.
-     */
     public function withTwoFactor(): static {}
 
     public function superAdmin(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => UserRole::SuperAdmin,
-        ]);
+        return $this->forRole(UserRole::SuperAdmin);
     }
 
     public function branchAdmin(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => UserRole::BranchAdmin,
-        ]);
+        return $this->forRole(UserRole::BranchAdmin);
     }
 
     public function manager(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => UserRole::Manager,
-        ]);
+        return $this->forRole(UserRole::Manager);
     }
 
     public function employee(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => UserRole::Employee,
-        ]);
+        return $this->forRole(UserRole::Employee);
+    }
+
+    public function forRole(UserRole|Role|string $role): static
+    {
+        return $this->state(function (array $attributes) use ($role) {
+            Role::ensureSystemRoles();
+
+            $model = match (true) {
+                $role instanceof Role => $role,
+                $role instanceof UserRole => Role::requireBySlug($role->value),
+                default => Role::requireBySlug($role),
+            };
+
+            return ['role_id' => $model->id];
+        });
     }
 
     public function withPermissions(Permission ...$permissions): static

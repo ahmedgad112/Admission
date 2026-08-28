@@ -9,26 +9,26 @@ class AttendanceDayPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isSuperAdmin() || $user->branch_id !== null;
+        return $user->canViewRoster();
     }
 
     public function view(User $user, AttendanceDay $attendanceDay): bool
     {
-        return $user->canAccessBranch($attendanceDay->branch_id);
+        return $user->canViewRoster() && $user->canAccessBranch($attendanceDay->branch_id);
     }
 
     public function create(User $user): bool
     {
-        return $user->canManageKiosk();
+        return $user->canManageRoster();
     }
 
     public function update(User $user, AttendanceDay $attendanceDay): bool
     {
-        return $user->canManageKiosk() && $user->canAccessBranch($attendanceDay->branch_id);
+        return $user->canManageRoster() && $user->canAccessBranch($attendanceDay->branch_id);
     }
 
     public function delete(User $user, AttendanceDay $attendanceDay): bool
     {
-        return $user->canManageKiosk() && $user->canAccessBranch($attendanceDay->branch_id);
+        return $user->canManageRoster() && $user->canAccessBranch($attendanceDay->branch_id);
     }
 }

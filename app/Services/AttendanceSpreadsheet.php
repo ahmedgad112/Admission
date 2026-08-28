@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\AttendanceStatus;
-use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\Attendance;
 use App\Models\User;
@@ -54,14 +53,10 @@ class AttendanceSpreadsheet
     {
         $people = User::query()
             ->visibleTo($actor)
+            ->withoutSuperAdmins()
             ->with('branch:id,name')
             ->where('status', UserStatus::Active)
             ->whereNotNull('branch_id')
-            ->whereIn('role', [
-                UserRole::BranchAdmin,
-                UserRole::Manager,
-                UserRole::Employee,
-            ])
             ->orderBy('name')
             ->get(['id', 'name', 'branch_id']);
 

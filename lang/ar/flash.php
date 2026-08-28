@@ -24,6 +24,11 @@ return [
         'updated' => 'تم تحديث الفرع.',
         'deleted' => 'تم حذف الفرع.',
     ],
+    'department' => [
+        'created' => 'تم إنشاء القسم.',
+        'updated' => 'تم تحديث القسم.',
+        'deleted' => 'تم حذف القسم.',
+    ],
     'roster' => [
         'created' => 'تم إنشاء جلسة الحضور.',
         'updated' => 'تم تحديث جلسة الحضور.',
@@ -50,5 +55,12 @@ return [
     ],
     'permissions' => [
         'updated' => 'تم تحديث صلاحيات الأدوار.',
+        'role_created' => 'تم إنشاء الدور.',
+        'role_updated' => 'تم تحديث الدور.',
+        'role_deleted' => 'تم حذف الدور.',
+    ],
+    'impersonation' => [
+        'started' => 'تم تسجيل الدخول كـ :name.',
+        'stopped' => 'رجعت لحسابك كـ :name.',
     ],
 ];

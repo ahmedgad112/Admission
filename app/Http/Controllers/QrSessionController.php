@@ -8,6 +8,7 @@ use App\Models\Attendance;
 use App\Models\AttendanceDay;
 use App\Models\Branch;
 use App\Services\QrSessionService;
+use App\Support\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -79,6 +80,12 @@ class QrSessionController extends Controller
         $day->setSessionOpen($type, true);
         $session = $this->qrSessions->currentOrCreate($branch, $type);
 
+        ActivityLogger::record('session_opened', $day, [
+            'name' => $day->date->toDateString(),
+            'type' => $type->value,
+            'branch' => $branch->name,
+        ]);
+
         return response()->json([
             'message' => 'Session opened.',
             ...$this->qrSessions->payload($session),
@@ -99,6 +106,12 @@ class QrSessionController extends Controller
         $this->authorize('update', $day);
         $day->setSessionOpen($type, false);
         $this->qrSessions->expireActive($branch, $type);
+
+        ActivityLogger::record('session_closed', $day, [
+            'name' => $day->date->toDateString(),
+            'type' => $type->value,
+            'branch' => $branch->name,
+        ]);
 
         return response()->json([
             'message' => 'Session closed.',

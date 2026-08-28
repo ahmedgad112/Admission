@@ -9,7 +9,7 @@ class AttendancePolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->canViewAttendance();
     }
 
     public function view(User $user, Attendance $attendance): bool
@@ -31,6 +31,10 @@ class AttendancePolicy
 
     public function create(User $user): bool
     {
+        if (! $user->canScanAttendance()) {
+            return false;
+        }
+
         return $user->branch_id !== null || $user->isSuperAdmin();
     }
 

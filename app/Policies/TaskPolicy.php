@@ -9,7 +9,7 @@ class TaskPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->canViewTasks();
     }
 
     public function view(User $user, Task $task): bool

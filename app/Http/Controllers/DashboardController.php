@@ -15,6 +15,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         abort_unless($user !== null, 403);
+        abort_unless($user->canViewDashboard(), 403);
 
         return Inertia::render('Dashboard', [
             'metrics' => $this->attendanceService->dashboardMetrics($user),
