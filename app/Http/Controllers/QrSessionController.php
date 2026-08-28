@@ -38,6 +38,8 @@ class QrSessionController extends Controller
                 ->get()
                 ->map->toWindowArray()
                 ->values(),
+            'qrTtlSeconds' => (int) config('attendance.qr_ttl_seconds', 20),
+            'entryCodeLength' => (int) config('attendance.entry_code_length', 6),
         ]);
     }
 

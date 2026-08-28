@@ -77,7 +77,7 @@ export function drawVideoFrame(video: HTMLVideoElement, canvas: HTMLCanvasElemen
         return false;
     }
 
-    const maxWidth = 720;
+    const maxWidth = 1280;
     const scale = Math.min(1, maxWidth / video.videoWidth);
     canvas.width = Math.max(1, Math.floor(video.videoWidth * scale));
     canvas.height = Math.max(1, Math.floor(video.videoHeight * scale));

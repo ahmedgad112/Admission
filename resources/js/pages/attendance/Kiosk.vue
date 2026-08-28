@@ -33,6 +33,8 @@ const props = defineProps<{
     branches: BranchOption[];
     defaultBranchId: number | null;
     todaySessions: DaySession[];
+    qrTtlSeconds: number;
+    entryCodeLength: number;
 }>();
 
 defineOptions({
@@ -96,9 +98,9 @@ function clearQr(): void {
     remaining.value = 0;
 }
 
-function renderQr(payload: QrPayload): void {
+async function renderQr(payload: QrPayload): Promise<void> {
     session.value = payload;
-    qrSvg.value = encodeQrSvg(payload.entry_code || payload.token);
+    qrSvg.value = await encodeQrSvg(payload.entry_code || payload.token);
     remaining.value = Math.max(0, Math.ceil(payload.refresh_in_seconds));
     error.value = '';
 }
@@ -158,7 +160,7 @@ async function loadSession(): Promise<void> {
         return;
     }
 
-    renderQr(body);
+    await renderQr(body);
 }
 
 async function toggleSession(open: boolean): Promise<void> {
@@ -181,7 +183,7 @@ async function toggleSession(open: boolean): Promise<void> {
         }
 
         if (open && (body.entry_code || body.token)) {
-            renderQr(body);
+            await renderQr(body);
 
             return;
         }
@@ -276,9 +278,14 @@ watch([type, branchId], () => {
                         {{ session.entry_code }}
                     </p>
                 </div>
-                <div v-if="isOpen && session" class="mt-4 flex items-center gap-3 text-sm text-muted-foreground">
-                    <span class="size-2 rounded-full bg-primary" />
-                    {{ trans('kiosk.refreshes', { seconds: remaining }) }}
+                <div v-if="isOpen && session" class="mt-4 space-y-1 text-sm text-muted-foreground">
+                    <div class="flex items-center gap-3">
+                        <span class="size-2 rounded-full bg-primary" />
+                        {{ trans('kiosk.refreshes', { seconds: remaining }) }}
+                    </div>
+                    <p class="text-xs">
+                        {{ trans('kiosk.ttl_hint', { seconds: props.qrTtlSeconds, digits: props.entryCodeLength }) }}
+                    </p>
                 </div>
                 <p v-if="error" class="mt-3 text-sm text-destructive">{{ error }}</p>
             </div>
