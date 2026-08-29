@@ -45,6 +45,35 @@ class AttendanceDayController extends Controller
         ]);
     }
 
+    public function show(Request $request, AttendanceDay $attendanceDay): Response
+    {
+        $this->authorize('view', $attendanceDay);
+
+        $user = $request->user();
+        abort_unless($user !== null, 403);
+
+        $attendanceDay->load([
+            'branch:id,name',
+            'creator:id,name',
+            'staff:id,name,department_id',
+            'staff.department:id,name',
+        ]);
+
+        return Inertia::render('attendance/days/Show', [
+            'day' => [
+                ...$attendanceDay->toWindowArray(),
+                'branch' => $attendanceDay->branch,
+                'creator' => $attendanceDay->creator,
+                'staff' => $attendanceDay->staff->map(fn (User $member) => [
+                    'id' => $member->id,
+                    'name' => $member->name,
+                    'department' => $member->department,
+                ])->values()->all(),
+            ],
+            'canUpdate' => $user->can('update', $attendanceDay),
+        ]);
+    }
+
     public function create(Request $request): Response
     {
         $this->authorize('create', AttendanceDay::class);

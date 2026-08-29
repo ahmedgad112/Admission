@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\AttendanceController::clear
- * @see app/Http/Controllers/AttendanceController.php:76
+ * @see app/Http/Controllers/AttendanceController.php:83
  * @route '/attendance/records'
  */
 export const clear = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -16,7 +16,7 @@ clear.definition = {
 
 /**
 * @see \App\Http\Controllers\AttendanceController::clear
- * @see app/Http/Controllers/AttendanceController.php:76
+ * @see app/Http/Controllers/AttendanceController.php:83
  * @route '/attendance/records'
  */
 clear.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ clear.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\AttendanceController::clear
- * @see app/Http/Controllers/AttendanceController.php:76
+ * @see app/Http/Controllers/AttendanceController.php:83
  * @route '/attendance/records'
  */
 clear.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -35,7 +35,7 @@ clear.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
 
     /**
 * @see \App\Http\Controllers\AttendanceController::clear
- * @see app/Http/Controllers/AttendanceController.php:76
+ * @see app/Http/Controllers/AttendanceController.php:83
  * @route '/attendance/records'
  */
     const clearForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -50,7 +50,7 @@ clear.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
 
             /**
 * @see \App\Http\Controllers\AttendanceController::clear
- * @see app/Http/Controllers/AttendanceController.php:76
+ * @see app/Http/Controllers/AttendanceController.php:83
  * @route '/attendance/records'
  */
         clearForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

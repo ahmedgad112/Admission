@@ -55,6 +55,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('attendance/days', [AttendanceDayController::class, 'store'])
         ->middleware('permission:manage_roster')
         ->name('attendance.days.store');
+    Route::get('attendance/days/{attendanceDay}', [AttendanceDayController::class, 'show'])
+        ->middleware('permission:view_roster,manage_roster')
+        ->name('attendance.days.show');
     Route::get('attendance/days/{attendanceDay}/edit', [AttendanceDayController::class, 'edit'])
         ->middleware('permission:manage_roster')
         ->name('attendance.days.edit');

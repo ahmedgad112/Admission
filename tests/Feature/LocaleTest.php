@@ -54,6 +54,31 @@ test('arabic leave request form shares translated field strings', function () {
         });
 });
 
+test('arabic dashboard shares rtl direction and sidebar navigation labels', function () {
+    $user = User::factory()->superAdmin()->create();
+
+    $this->actingAs($user)
+        ->withUnencryptedCookie('locale', AppLocale::Arabic)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(function (Assert $page) {
+            $page->component('Dashboard')
+                ->where('locale', AppLocale::Arabic)
+                ->where('dir', 'rtl')
+                ->where('can.viewDashboard', true)
+                ->has('translations');
+
+            /** @var array<string, string> $translations */
+            $translations = $page->toArray()['props']['translations'];
+
+            expect($translations['nav.workspace'])->toBe('مساحة العمل')
+                ->and($translations['nav.attendance'])->toBe('الحضور')
+                ->and($translations['nav.organization'])->toBe('التنظيم')
+                ->and($translations['nav.settings'])->toBe('الإعدادات')
+                ->and($translations['nav.dashboard'])->toBe('لوحة التحكم');
+        });
+});
+
 test('leave type labels follow the active locale', function () {
     app()->setLocale(AppLocale::Arabic);
 

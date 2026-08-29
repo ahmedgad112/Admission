@@ -6,11 +6,13 @@ import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { trans, useDocumentLocale } from '@/composables/useTrans';
 import { dashboard, login } from '@/routes';
 
+const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
 useDocumentLocale();
 </script>
 
 <template>
-    <Head title="Hadir" />
+    <Head />
 
     <div class="relative min-h-screen bg-background text-foreground">
         <div
@@ -25,7 +27,7 @@ useDocumentLocale();
                         <AppLogoIcon class="size-6" />
                     </div>
                     <div>
-                        <p class="font-semibold">Hadir</p>
+                        <p class="font-semibold">{{ appName }}</p>
                         <p class="text-xs text-muted-foreground">{{ trans('welcome.tagline') }}</p>
                     </div>
                 </div>

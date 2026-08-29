@@ -5,6 +5,8 @@ import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { trans } from '@/composables/useTrans';
 import { home } from '@/routes';
 
+const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
 defineProps<{
     title?: string;
     description?: string;
@@ -28,7 +30,7 @@ defineProps<{
                             <AppLogoIcon class="size-7" />
                         </div>
                         <span class="text-sm font-semibold tracking-[0.2em] text-primary uppercase">
-                            Hadir
+                            {{ appName }}
                         </span>
                     </Link>
                     <div class="space-y-2">

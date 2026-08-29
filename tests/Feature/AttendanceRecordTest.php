@@ -421,6 +421,59 @@ test('employees cannot clear attendance records', function () {
     expect(Attendance::query()->count())->toBe(1);
 });
 
+test('employees can view their attendance table across a date range', function () {
+    $branch = Branch::factory()->create(['name' => 'Nasr City']);
+    $employee = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $other = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+    ]);
+
+    $first = Attendance::factory()->create([
+        'user_id' => $employee->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-10',
+        'check_in' => '2026-08-10 09:00:00',
+        'check_out' => '2026-08-10 17:00:00',
+    ]);
+    $second = Attendance::factory()->create([
+        'user_id' => $employee->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-15',
+        'check_in' => '2026-08-15 09:20:00',
+        'check_out' => '2026-08-15 17:10:00',
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $employee->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-07-20',
+        'check_in' => '2026-07-20 09:00:00',
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $other->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-12',
+        'check_in' => '2026-08-12 09:00:00',
+    ]);
+
+    $this->actingAs($employee)
+        ->get(route('attendance.index', [
+            'from' => '2026-08-01',
+            'to' => '2026-08-31',
+        ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('attendance/Index')
+            ->where('canRecord', false)
+            ->where('from', '2026-08-01')
+            ->where('to', '2026-08-31')
+            ->has('attendances.data', 2)
+            ->where('attendances.data.0.id', $second->id)
+            ->where('attendances.data.1.id', $first->id)
+            ->where('attendances.data.0.branch.name', 'Nasr City'));
+});
+
 function excelSheetXml(string $binary): string
 {
     $path = tempnam(sys_get_temp_dir(), 'xlsx');

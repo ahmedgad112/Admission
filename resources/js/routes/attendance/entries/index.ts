@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\AttendanceController::sync
- * @see app/Http/Controllers/AttendanceController.php:61
+ * @see app/Http/Controllers/AttendanceController.php:68
  * @route '/attendance/entries'
  */
 export const sync = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -16,7 +16,7 @@ sync.definition = {
 
 /**
 * @see \App\Http\Controllers\AttendanceController::sync
- * @see app/Http/Controllers/AttendanceController.php:61
+ * @see app/Http/Controllers/AttendanceController.php:68
  * @route '/attendance/entries'
  */
 sync.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ sync.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\AttendanceController::sync
- * @see app/Http/Controllers/AttendanceController.php:61
+ * @see app/Http/Controllers/AttendanceController.php:68
  * @route '/attendance/entries'
  */
 sync.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -35,7 +35,7 @@ sync.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
     /**
 * @see \App\Http\Controllers\AttendanceController::sync
- * @see app/Http/Controllers/AttendanceController.php:61
+ * @see app/Http/Controllers/AttendanceController.php:68
  * @route '/attendance/entries'
  */
     const syncForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -50,7 +50,7 @@ sync.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
             /**
 * @see \App\Http\Controllers\AttendanceController::sync
- * @see app/Http/Controllers/AttendanceController.php:61
+ * @see app/Http/Controllers/AttendanceController.php:68
  * @route '/attendance/entries'
  */
         syncForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

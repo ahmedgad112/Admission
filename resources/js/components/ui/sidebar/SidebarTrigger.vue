@@ -21,8 +21,8 @@ const { isMobile, state, toggleSidebar } = useSidebar()
     :class="cn('h-7 w-7', props.class)"
     @click="toggleSidebar"
   >
-    <PanelLeftOpen v-if="isMobile || state === 'collapsed'" />
-    <PanelLeftClose v-else />
+    <PanelLeftOpen v-if="isMobile || state === 'collapsed'" class="rtl:rotate-180" />
+    <PanelLeftClose v-else class="rtl:rotate-180" />
     <span class="sr-only">Toggle sidebar</span>
   </Button>
 </template>

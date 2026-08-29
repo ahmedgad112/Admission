@@ -41,17 +41,24 @@ class AttendanceController extends Controller
 
         $date = $this->requestedDate($request);
         $canRecord = $user->can('record', Attendance::class);
+        [$from, $to] = $canRecord
+            ? [$date, $date]
+            : $this->requestedHistoryRange($request);
 
         $attendances = Attendance::query()
             ->with(['user:id,name,email', 'branch:id,name'])
             ->tap(fn ($query) => $user->constrainAttendanceVisibility($query))
-            ->whereDate('date', $date)
-            ->latest('date')
-            ->paginate(15)
+            ->whereDate('date', '>=', $from)
+            ->whereDate('date', '<=', $to)
+            ->orderByDesc('date')
+            ->orderBy('id')
+            ->paginate($canRecord ? 15 : 31)
             ->withQueryString();
 
         return Inertia::render('attendance/Index', [
             'date' => $date,
+            'from' => $from,
+            'to' => $to,
             'canRecord' => $canRecord,
             'people' => $canRecord ? $this->peopleForDate($user, $date) : [],
             'attendances' => $attendances,
@@ -197,6 +204,29 @@ class AttendanceController extends Controller
             ?? now()->toDateString();
         $to = $this->parseDate($request, 'to') ?? $from;
 
+        return $this->normalizeDateRange($from, $to);
+    }
+
+    /**
+     * Default history window for self-service attendance tables: current month through today.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function requestedHistoryRange(Request $request): array
+    {
+        $from = $this->parseDate($request, 'from')
+            ?? now()->startOfMonth()->toDateString();
+        $to = $this->parseDate($request, 'to')
+            ?? now()->toDateString();
+
+        return $this->normalizeDateRange($from, $to);
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function normalizeDateRange(string $from, string $to): array
+    {
         if ($to < $from) {
             [$from, $to] = [$to, $from];
         }

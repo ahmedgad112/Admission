@@ -35,6 +35,8 @@ type AttendanceRow = {
 
 const props = defineProps<{
     date: string;
+    from: string;
+    to: string;
     canRecord: boolean;
     people: PersonRow[];
     attendances: {
@@ -52,18 +54,22 @@ const form = useForm({
 });
 
 const firstError = computed(() => Object.values(form.errors)[0] ?? '');
-const exportFrom = ref(props.date);
-const exportTo = ref(props.date);
+const exportFrom = ref(props.from);
+const exportTo = ref(props.to);
+const historyFrom = ref(props.from);
+const historyTo = ref(props.to);
 const exportUrl = computed(() => `/attendance/export?from=${exportFrom.value}&to=${exportTo.value}`);
 const filledCount = computed(
     () => form.entries.filter((entry) => entry.check_in || entry.check_out).length,
 );
 
 watch(
-    () => props.date,
-    (date) => {
-        exportFrom.value = date;
-        exportTo.value = date;
+    () => [props.from, props.to] as const,
+    ([from, to]) => {
+        exportFrom.value = from;
+        exportTo.value = to;
+        historyFrom.value = from;
+        historyTo.value = to;
     },
 );
 
@@ -78,6 +84,17 @@ defineOptions({
 
 function changeDate(value: string): void {
     router.get('/attendance', { date: value || undefined }, { replace: true });
+}
+
+function applyHistoryRange(): void {
+    router.get(
+        '/attendance',
+        {
+            from: historyFrom.value || undefined,
+            to: historyTo.value || undefined,
+        },
+        { replace: true },
+    );
 }
 
 function saveTimes(): void {
@@ -160,7 +177,7 @@ function clock(value: string | null): string {
 
         <Card class="shadow-sm">
             <CardContent class="flex flex-col gap-4 pt-5 sm:gap-5 sm:pt-6 lg:flex-row lg:items-end lg:justify-between">
-                <div class="w-full space-y-2 lg:w-auto">
+                <div v-if="canRecord" class="w-full space-y-2 lg:w-auto">
                     <p class="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
                         {{ trans('attendance.timesheet') }}
                     </p>
@@ -173,6 +190,24 @@ function clock(value: string | null): string {
                             :model-value="date"
                             @update:model-value="changeDate(String($event))"
                         />
+                    </div>
+                </div>
+                <div v-else class="w-full space-y-2 lg:w-auto">
+                    <p class="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                        {{ trans('attendance.history_range') }}
+                    </p>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end">
+                        <div class="space-y-1">
+                            <Label for="history-from">{{ trans('common.from') }}</Label>
+                            <Input id="history-from" v-model="historyFrom" type="date" class="w-full min-w-0 sm:w-44" />
+                        </div>
+                        <div class="space-y-1">
+                            <Label for="history-to">{{ trans('common.to') }}</Label>
+                            <Input id="history-to" v-model="historyTo" type="date" class="w-full min-w-0 sm:w-44" />
+                        </div>
+                        <Button class="w-full rounded-full sm:col-span-2 sm:w-auto" @click="applyHistoryRange">
+                            {{ trans('attendance.show_table') }}
+                        </Button>
                     </div>
                 </div>
                 <div class="w-full space-y-2 lg:w-auto">
@@ -290,35 +325,51 @@ function clock(value: string | null): string {
         <Card v-else class="shadow-sm">
             <CardHeader class="border-b">
                 <CardTitle>{{ trans('attendance.your_records') }}</CardTitle>
-                <p class="text-sm text-muted-foreground">{{ dayLabel(date) }}</p>
+                <p class="text-sm text-muted-foreground">
+                    {{
+                        trans('attendance.range_label', {
+                            from: dayLabel(from),
+                            to: dayLabel(to),
+                        })
+                    }}
+                </p>
             </CardHeader>
             <CardContent class="pt-4 sm:pt-6">
                 <div
                     v-if="attendances.data.length === 0"
                     class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground sm:p-8"
                 >
-                    {{ trans('attendance.empty_day') }}
+                    {{ trans('attendance.empty_range') }}
                 </div>
-                <div v-else class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    <div
-                        v-for="row in attendances.data"
-                        :key="row.id"
-                        class="rounded-2xl border bg-muted/20 p-4"
-                    >
-                        <div class="mb-2 flex items-start justify-between gap-2">
-                            <div class="min-w-0">
-                                <p class="text-sm font-medium">{{ row.user?.name }}</p>
-                                <p class="text-xs text-muted-foreground">
-                                    {{ dayLabel(row.date) }} · {{ row.branch?.name }}
-                                </p>
-                            </div>
-                            <StatusBadge :value="row.status" :tone="attendanceTone(row.status)" />
-                        </div>
-                        <p class="text-sm tabular-nums text-muted-foreground">
-                            {{ clock(row.check_in) }} – {{ clock(row.check_out) }}
-                            · {{ row.work_hours }}h
-                        </p>
-                    </div>
+                <div v-else class="overflow-x-auto rounded-2xl border">
+                    <table class="w-full min-w-[36rem] text-start text-sm">
+                        <thead class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
+                            <tr>
+                                <th class="px-4 py-3 font-semibold">{{ trans('common.date') }}</th>
+                                <th class="px-4 py-3 font-semibold">{{ trans('common.branch') }}</th>
+                                <th class="px-4 py-3 font-semibold">{{ trans('common.in') }}</th>
+                                <th class="px-4 py-3 font-semibold">{{ trans('common.out') }}</th>
+                                <th class="px-4 py-3 font-semibold">{{ trans('common.hours') }}</th>
+                                <th class="px-4 py-3 font-semibold">{{ trans('common.status') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="row in attendances.data"
+                                :key="row.id"
+                                class="border-t"
+                            >
+                                <td class="px-4 py-3 font-medium tabular-nums">{{ dayLabel(row.date) }}</td>
+                                <td class="px-4 py-3 text-muted-foreground">{{ row.branch?.name ?? '—' }}</td>
+                                <td class="px-4 py-3 tabular-nums">{{ clock(row.check_in) }}</td>
+                                <td class="px-4 py-3 tabular-nums">{{ clock(row.check_out) }}</td>
+                                <td class="px-4 py-3 tabular-nums">{{ row.work_hours ?? '—' }}</td>
+                                <td class="px-4 py-3">
+                                    <StatusBadge :value="row.status" :tone="attendanceTone(row.status)" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </CardContent>
         </Card>

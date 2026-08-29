@@ -17,7 +17,7 @@ import {
     Users,
 } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
-import NavFooter from '@/components/NavFooter.vue';
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import {
@@ -28,80 +28,100 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarRail,
 } from '@/components/ui/sidebar';
-import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { trans } from '@/composables/useTrans';
 import type { NavItem } from '@/types';
 
+type NavGroup = {
+    label: string;
+    items: NavItem[];
+};
+
 const page = usePage();
-const sidebarSide = computed(() => (page.props.dir === 'rtl' ? 'right' : 'left'));
+const documentDir = computed<'ltr' | 'rtl'>(() => (page.props.dir === 'rtl' ? 'rtl' : 'ltr'));
+const sidebarSide = computed(() => (documentDir.value === 'rtl' ? 'right' : 'left'));
 const home = computed(() => page.props.home || '/dashboard');
 
-const mainNavItems = computed<NavItem[]>(() => {
+const navGroups = computed<NavGroup[]>(() => {
     page.props.locale;
     page.props.translations;
 
     const can = page.props.can;
-    const items: NavItem[] = [];
+
+    const workspace: NavItem[] = [];
+    const attendance: NavItem[] = [];
+    const organization: NavItem[] = [];
+    const settings: NavItem[] = [];
 
     if (can?.viewDashboard) {
-        items.push({ title: trans('nav.dashboard'), href: '/dashboard', icon: LayoutGrid });
+        workspace.push({ title: trans('nav.dashboard'), href: '/dashboard', icon: LayoutGrid });
     }
 
     if (can?.scanAttendance) {
-        items.push({ title: trans('nav.scan'), href: '/attendance/scan', icon: ScanLine });
-    }
-
-    if (can?.viewStaff) {
-        items.push({ title: trans('nav.staff'), href: '/staff', icon: Users });
-    }
-
-    if (can?.manageStaff) {
-        items.push({ title: trans('nav.departments'), href: '/departments', icon: Building2 });
-    }
-
-    if (can?.managePermissions) {
-        items.push({ title: trans('nav.permissions'), href: '/permissions', icon: ShieldCheck });
-    }
-
-    if (can?.manageShifts) {
-        items.push({ title: trans('nav.shifts'), href: '/shifts', icon: Clock });
+        attendance.push({ title: trans('nav.scan'), href: '/attendance/scan', icon: ScanLine });
     }
 
     if (can?.viewRoster) {
-        items.push({ title: trans('nav.roster'), href: '/attendance/days', icon: CalendarDays });
-    }
-
-    if (can?.manageBranches) {
-        items.push({ title: trans('nav.branches'), href: '/branches', icon: MapPin });
-    }
-
-    if (can?.manageKiosk) {
-        items.push({ title: trans('nav.kiosk'), href: '/attendance/kiosk', icon: QrCode });
+        attendance.push({ title: trans('nav.roster'), href: '/attendance/days', icon: CalendarDays });
     }
 
     if (can?.viewAttendance) {
-        items.push({ title: trans('nav.records'), href: '/attendance', icon: Timer });
+        attendance.push({ title: trans('nav.records'), href: '/attendance', icon: Timer });
     }
 
-    if (can?.viewActivityLog) {
-        items.push({ title: trans('nav.activity_log'), href: '/activity-logs', icon: History });
+    if (can?.manageKiosk) {
+        attendance.push({ title: trans('nav.kiosk'), href: '/attendance/kiosk', icon: QrCode });
+    }
+
+    if (can?.viewStaff) {
+        organization.push({ title: trans('nav.staff'), href: '/staff', icon: Users });
+    }
+
+    if (can?.manageStaff) {
+        organization.push({ title: trans('nav.departments'), href: '/departments', icon: Building2 });
+    }
+
+    if (can?.manageShifts) {
+        organization.push({ title: trans('nav.shifts'), href: '/shifts', icon: Clock });
+    }
+
+    if (can?.manageBranches) {
+        organization.push({ title: trans('nav.branches'), href: '/branches', icon: MapPin });
     }
 
     if (can?.viewTasks) {
-        items.push({ title: trans('nav.tasks'), href: '/tasks', icon: ClipboardList });
+        organization.push({ title: trans('nav.tasks'), href: '/tasks', icon: ClipboardList });
     }
 
     if (can?.viewLeaveRequests) {
-        items.push({ title: trans('nav.leave'), href: '/leave-requests', icon: CalendarOff });
+        organization.push({ title: trans('nav.leave'), href: '/leave-requests', icon: CalendarOff });
     }
 
-    return items;
+    if (can?.managePermissions) {
+        settings.push({ title: trans('nav.permissions'), href: '/permissions', icon: ShieldCheck });
+    }
+
+    if (can?.viewActivityLog) {
+        settings.push({ title: trans('nav.activity_log'), href: '/activity-logs', icon: History });
+    }
+
+    return [
+        { label: trans('nav.workspace'), items: workspace },
+        { label: trans('nav.attendance'), items: attendance },
+        { label: trans('nav.organization'), items: organization },
+        { label: trans('nav.settings'), items: settings },
+    ].filter((group) => group.items.length > 0);
 });
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="inset" :side="sidebarSide">
+    <Sidebar
+        collapsible="icon"
+        variant="inset"
+        :side="sidebarSide"
+        :dir="documentDir"
+    >
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
@@ -114,17 +134,23 @@ const mainNavItems = computed<NavItem[]>(() => {
             </SidebarMenu>
         </SidebarHeader>
 
-        <SidebarContent>
-            <NavMain :items="mainNavItems" />
+        <SidebarContent class="gap-0">
+            <NavMain
+                v-for="(group, index) in navGroups"
+                :key="group.label"
+                :label="group.label"
+                :items="group.items"
+                :show-separator="index > 0"
+            />
         </SidebarContent>
 
         <SidebarFooter>
             <div class="px-2 pb-1 group-data-[collapsible=icon]:hidden">
                 <LanguageSwitcher />
             </div>
-            <NavFooter :items="[]" />
             <NavUser />
         </SidebarFooter>
+        <SidebarRail />
     </Sidebar>
     <slot />
 </template>

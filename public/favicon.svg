@@ -1,17 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Hadir">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ASM">
     <defs>
-        <linearGradient id="hadir-bg" x1="16" y1="2" x2="52" y2="64" gradientUnits="userSpaceOnUse">
+        <linearGradient id="app-bg" x1="16" y1="2" x2="52" y2="64" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stop-color="#2FAF96"/>
             <stop offset="48%" stop-color="#1A8A78"/>
             <stop offset="100%" stop-color="#0E4A52"/>
         </linearGradient>
-        <radialGradient id="hadir-glow" cx="50%" cy="30%" r="58%">
+        <radialGradient id="app-glow" cx="50%" cy="30%" r="58%">
             <stop offset="0%" stop-color="#7EE0D0" stop-opacity="0.28"/>
             <stop offset="100%" stop-color="#0E4A52" stop-opacity="0"/>
         </radialGradient>
     </defs>
-    <rect width="64" height="64" rx="14" fill="url(#hadir-bg)"/>
-    <rect width="64" height="64" rx="14" fill="url(#hadir-glow)"/>
+    <rect width="64" height="64" rx="14" fill="url(#app-bg)"/>
+    <rect width="64" height="64" rx="14" fill="url(#app-glow)"/>
     <path
         d="M18 33.5 28 43.5 47 22"
         fill="none"

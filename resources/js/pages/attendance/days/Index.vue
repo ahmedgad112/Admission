@@ -93,11 +93,15 @@ function staffLabel(staff: { id: number; name: string }[] | undefined): string {
                         {{ staffLabel(day.staff) }}
                     </p>
                 </CardContent>
-                <CardFooter v-if="canCreate" class="mt-auto flex flex-wrap gap-2 border-t">
+                <CardFooter class="mt-auto flex flex-wrap gap-2 border-t">
                     <Button variant="outline" size="sm" class="rounded-full" as-child>
+                        <Link :href="`/attendance/days/${day.id}`">{{ trans('common.view') }}</Link>
+                    </Button>
+                    <Button v-if="canCreate" variant="outline" size="sm" class="rounded-full" as-child>
                         <Link :href="`/attendance/days/${day.id}/edit`">{{ trans('common.edit') }}</Link>
                     </Button>
                     <Button
+                        v-if="canCreate"
                         variant="destructive"
                         size="sm"
                         class="rounded-full"
