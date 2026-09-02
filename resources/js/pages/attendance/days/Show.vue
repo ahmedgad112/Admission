@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { Download } from '@lucide/vue';
 import PageHeader from '@/components/PageHeader.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -10,11 +12,16 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { trans } from '@/composables/useTrans';
+import { attendanceTone } from '@/lib/status';
 
-type StaffMember = {
+type AttendanceRow = {
     id: number;
-    name: string;
+    name: string | null;
     department?: { id: number; name: string } | null;
+    check_in: string | null;
+    check_out: string | null;
+    status: string | null;
+    work_hours: string | number | null;
 };
 
 type Day = {
@@ -28,7 +35,7 @@ type Day = {
     check_out_is_open: boolean;
     branch?: { id: number; name: string } | null;
     creator?: { id: number; name: string } | null;
-    staff: StaffMember[];
+    attendances: AttendanceRow[];
 };
 
 const props = defineProps<{
@@ -65,6 +72,12 @@ function windowLabel(start: string, end: string): string {
         >
             <template #actions>
                 <Button variant="outline" class="rounded-full" as-child>
+                    <a :href="`/attendance/days/${day.id}/export`">
+                        <Download class="size-4" />
+                        {{ trans('attendance.download') }}
+                    </a>
+                </Button>
+                <Button variant="outline" class="rounded-full" as-child>
                     <Link href="/attendance/days">{{ trans('common.back') }}</Link>
                 </Button>
                 <Button v-if="canUpdate" class="rounded-full" as-child>
@@ -84,35 +97,44 @@ function windowLabel(start: string, end: string): string {
         <div class="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
             <Card class="shadow-sm">
                 <CardHeader class="border-b">
-                    <CardTitle>{{ trans('roster.staff_on_duty') }}</CardTitle>
+                    <CardTitle>{{ trans('roster.todays_attendance') }}</CardTitle>
                     <CardDescription>
-                        {{ trans('common.staff') }} · {{ day.staff.length }}
+                        {{ trans('common.staff') }} · {{ day.attendances.length }}
                     </CardDescription>
                 </CardHeader>
                 <CardContent class="pt-4 sm:pt-6">
                     <div
-                        v-if="day.staff.length === 0"
+                        v-if="day.attendances.length === 0"
                         class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground"
                     >
-                        {{ trans('roster.empty_staff') }}
+                        {{ trans('roster.empty_attendance') }}
                     </div>
                     <div v-else class="overflow-x-auto rounded-2xl border">
-                        <table class="w-full min-w-[20rem] text-start text-sm">
+                        <table class="w-full min-w-[28rem] text-start text-sm">
                             <thead class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
                                 <tr>
                                     <th class="px-4 py-3 font-semibold">{{ trans('common.name') }}</th>
-                                    <th class="px-4 py-3 font-semibold">{{ trans('common.department') }}</th>
+                                    <th class="px-4 py-3 font-semibold">{{ trans('common.in') }}</th>
+                                    <th class="px-4 py-3 font-semibold">{{ trans('common.out') }}</th>
+                                    <th class="px-4 py-3 font-semibold">{{ trans('common.status') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr
-                                    v-for="member in day.staff"
-                                    :key="member.id"
+                                    v-for="record in day.attendances"
+                                    :key="record.id"
                                     class="border-t"
                                 >
-                                    <td class="px-4 py-3 font-medium">{{ member.name }}</td>
-                                    <td class="px-4 py-3 text-muted-foreground">
-                                        {{ member.department?.name ?? '—' }}
+                                    <td class="px-4 py-3 font-medium">{{ record.name ?? '—' }}</td>
+                                    <td class="px-4 py-3 tabular-nums">{{ record.check_in ?? '—' }}</td>
+                                    <td class="px-4 py-3 tabular-nums">{{ record.check_out ?? '—' }}</td>
+                                    <td class="px-4 py-3">
+                                        <StatusBadge
+                                            v-if="record.status"
+                                            :value="record.status"
+                                            :tone="attendanceTone(record.status)"
+                                        />
+                                        <span v-else>—</span>
                                     </td>
                                 </tr>
                             </tbody>

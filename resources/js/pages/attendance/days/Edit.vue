@@ -5,24 +5,15 @@ import PageHeader from '@/components/PageHeader.vue';
 import { trans } from '@/composables/useTrans';
 
 type BranchOption = { id: number; name: string };
-type StaffOption = {
-    id: number;
-    name: string;
-    branch_id: number | null;
-    role: string;
-    department?: { id: number; name: string } | null;
-};
 type Day = {
     id: number;
     branch_id: number;
     date: string;
-    staff_ids: number[];
 };
 
 defineProps<{
     day: Day;
     branches: BranchOption[];
-    staff: StaffOption[];
 }>();
 
 defineOptions({
@@ -45,6 +36,6 @@ defineOptions({
             :description="trans('roster.description')"
         />
 
-        <AttendanceDayForm :day="day" :branches="branches" :staff="staff" />
+        <AttendanceDayForm :day="day" :branches="branches" />
     </div>
 </template>

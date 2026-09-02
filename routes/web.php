@@ -39,6 +39,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('attendance/scan', [AttendanceController::class, 'scan'])
         ->middleware('permission:scan_attendance')
         ->name('attendance.scan');
+    Route::post('attendance/scan', [AttendanceController::class, 'recordScan'])
+        ->middleware(['permission:scan_attendance', 'throttle:qr-scan'])
+        ->name('attendance.scan.store');
     Route::post('attendance/check-in', [AttendanceController::class, 'checkIn'])
         ->middleware(['permission:scan_attendance', 'throttle:qr-scan'])
         ->name('attendance.check-in');
@@ -58,6 +61,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('attendance/days/{attendanceDay}', [AttendanceDayController::class, 'show'])
         ->middleware('permission:view_roster,manage_roster')
         ->name('attendance.days.show');
+    Route::get('attendance/days/{attendanceDay}/export', [AttendanceDayController::class, 'export'])
+        ->middleware('permission:view_roster,manage_roster')
+        ->name('attendance.days.export');
     Route::get('attendance/days/{attendanceDay}/edit', [AttendanceDayController::class, 'edit'])
         ->middleware('permission:manage_roster')
         ->name('attendance.days.edit');

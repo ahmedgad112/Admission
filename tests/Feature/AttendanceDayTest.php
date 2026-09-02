@@ -11,19 +11,10 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 function attendanceDayPayload(Branch $branch, array $overrides = []): array
 {
-    $employee = $overrides['employee'] ?? User::factory()->employee()->create([
-        'branch_id' => $branch->id,
-    ]);
-
     return [
         'branch_id' => $branch->id,
         'date' => now()->toDateString(),
-        'check_in_starts_at' => '08:00',
-        'check_in_ends_at' => '10:30',
-        'check_out_starts_at' => '16:00',
-        'check_out_ends_at' => '18:30',
-        'staff_ids' => [$employee->id],
-        ...collect($overrides)->except('employee')->all(),
+        ...$overrides,
     ];
 }
 
@@ -32,14 +23,9 @@ test('admins can create a daily check-in and check-out session', function () {
     $admin = User::factory()->superAdmin()->create([
         'branch_id' => $branch->id,
     ]);
-    $employee = User::factory()->employee()->create([
-        'branch_id' => $branch->id,
-    ]);
 
     $this->actingAs($admin)
-        ->post(route('attendance.days.store'), attendanceDayPayload($branch, [
-            'employee' => $employee,
-        ]))
+        ->post(route('attendance.days.store'), attendanceDayPayload($branch))
         ->assertRedirect(route('attendance.days.index'));
 
     $day = AttendanceDay::query()->first();
@@ -47,7 +33,7 @@ test('admins can create a daily check-in and check-out session', function () {
     expect($day)->not->toBeNull()
         ->and($day->branch_id)->toBe($branch->id)
         ->and($day->created_by)->toBe($admin->id)
-        ->and($day->staff->pluck('id')->all())->toBe([$employee->id])
+        ->and($day->staff)->toBeEmpty()
         ->and($day->check_in_is_open)->toBeFalse()
         ->and($day->check_out_is_open)->toBeFalse();
 });
@@ -74,7 +60,7 @@ test('employees can view the roster for their branch', function () {
             ->where('canCreate', false)
             ->has('days.data', 1)
             ->where('days.data.0.id', $ownDay->id)
-            ->where('days.data.0.staff.0.id', $employee->id));
+            ->where('days.data.0.present_count', 0));
 });
 
 test('a roster can be created without check-in and check-out windows', function () {
@@ -82,22 +68,18 @@ test('a roster can be created without check-in and check-out windows', function 
     $admin = User::factory()->superAdmin()->create([
         'branch_id' => $branch->id,
     ]);
-    $employee = User::factory()->employee()->create([
-        'branch_id' => $branch->id,
-    ]);
 
     $this->actingAs($admin)
         ->post(route('attendance.days.store'), [
             'branch_id' => $branch->id,
             'date' => now()->toDateString(),
-            'staff_ids' => [$employee->id],
         ])
         ->assertRedirect(route('attendance.days.index'));
 
     $day = AttendanceDay::query()->first();
 
     expect($day)->not->toBeNull()
-        ->and($day->staff->pluck('id')->all())->toBe([$employee->id]);
+        ->and($day->staff)->toBeEmpty();
 });
 
 test('employees cannot create attendance sessions', function () {
@@ -107,18 +89,13 @@ test('employees cannot create attendance sessions', function () {
     ]);
 
     $this->actingAs($employee)
-        ->post(route('attendance.days.store'), attendanceDayPayload($branch, [
-            'employee' => $employee,
-        ]))
+        ->post(route('attendance.days.store'), attendanceDayPayload($branch))
         ->assertForbidden();
 });
 
 test('a branch cannot have two sessions on the same day', function () {
     $branch = Branch::factory()->create();
     $admin = User::factory()->superAdmin()->create();
-    $employee = User::factory()->employee()->create([
-        'branch_id' => $branch->id,
-    ]);
     AttendanceDay::factory()->create([
         'branch_id' => $branch->id,
         'date' => now()->toDateString(),
@@ -126,9 +103,7 @@ test('a branch cannot have two sessions on the same day', function () {
     ]);
 
     $this->actingAs($admin)
-        ->post(route('attendance.days.store'), attendanceDayPayload($branch, [
-            'employee' => $employee,
-        ]))
+        ->post(route('attendance.days.store'), attendanceDayPayload($branch))
         ->assertSessionHasErrors('date');
 });
 
@@ -206,7 +181,7 @@ test('check in is allowed inside the session window', function () {
         ->assertOk();
 });
 
-test('check in is rejected when the employee is not on the roster', function () {
+test('staff can check in even when they were not preselected on a roster', function () {
     $this->travelTo(now()->setTime(9, 5));
 
     $branch = Branch::factory()->create();
@@ -230,72 +205,18 @@ test('check in is rejected when the employee is not on the roster', function () 
             'longitude' => $branch->longitude,
             'device_uuid' => (string) Str::uuid(),
         ])
-        ->assertStatus(422)
-        ->assertJsonPath('message', 'You are not on today\'s roster.');
+        ->assertOk();
+
+    expect(Attendance::query()->where('user_id', $user->id)->exists())->toBeTrue();
 });
 
-test('a roster must include at least one staff member', function () {
-    $branch = Branch::factory()->create();
-    $admin = User::factory()->branchAdmin()->create(['branch_id' => $branch->id]);
-
-    $this->actingAs($admin)
-        ->from(route('attendance.days.create'))
-        ->post(route('attendance.days.store'), attendanceDayPayload($branch, [
-            'staff_ids' => [],
-        ]))
-        ->assertRedirect(route('attendance.days.create'))
-        ->assertSessionHasErrors('staff_ids');
-});
-
-test('staff from another branch cannot be assigned to a roster', function () {
-    $branch = Branch::factory()->create();
-    $otherBranch = Branch::factory()->create();
-    $admin = User::factory()->branchAdmin()->create(['branch_id' => $branch->id]);
-    $foreignStaff = User::factory()->employee()->create(['branch_id' => $otherBranch->id]);
-
-    $this->actingAs($admin)
-        ->from(route('attendance.days.create'))
-        ->post(route('attendance.days.store'), attendanceDayPayload($branch, [
-            'staff_ids' => [$foreignStaff->id],
-        ]))
-        ->assertRedirect(route('attendance.days.create'))
-        ->assertSessionHasErrors('staff_ids.0');
-});
-
-test('admins can replace the staff assigned to a roster', function () {
-    $branch = Branch::factory()->create();
-    $admin = User::factory()->superAdmin()->create(['branch_id' => $branch->id]);
-    $original = User::factory()->employee()->create(['branch_id' => $branch->id]);
-    $replacement = User::factory()->employee()->create(['branch_id' => $branch->id]);
-    $day = AttendanceDay::factory()->create([
-        'branch_id' => $branch->id,
-        'created_by' => $admin->id,
-    ]);
-    $day->staff()->sync([$original->id]);
-
-    $this->actingAs($admin)
-        ->put(route('attendance.days.update', $day), attendanceDayPayload($branch, [
-            'employee' => $replacement,
-            'date' => $day->date->toDateString(),
-        ]))
-        ->assertRedirect(route('attendance.days.index'));
-
-    expect($day->staff()->pluck('users.id')->all())->toBe([$replacement->id]);
-});
-
-test('the create form lists staff from the admin branch', function () {
-    $branch = Branch::factory()->create();
+test('the create form lists the admin branch', function () {
+    $branch = Branch::factory()->create(['name' => 'Dokki']);
     $otherBranch = Branch::factory()->create();
     $admin = User::factory()->branchAdmin()->create([
-        'name' => 'Amina Admin',
         'branch_id' => $branch->id,
     ]);
     User::factory()->employee()->create([
-        'name' => 'Local Nurse',
-        'branch_id' => $branch->id,
-    ]);
-    User::factory()->employee()->create([
-        'name' => 'Other Clinic',
         'branch_id' => $otherBranch->id,
     ]);
 
@@ -304,9 +225,9 @@ test('the create form lists staff from the admin branch', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('attendance/days/Create')
-            ->has('staff', 2)
-            ->where('staff.0.name', 'Amina Admin')
-            ->where('staff.1.name', 'Local Nurse'));
+            ->has('branches', 1)
+            ->where('branches.0.name', 'Dokki')
+            ->missing('staff'));
 });
 
 test('admins can open and close a kiosk session', function () {
@@ -375,15 +296,21 @@ test('the kiosk cannot generate a qr code without an open session', function () 
     $this->actingAs($admin)
         ->getJson(route('api.qr-sessions.current', ['type' => 'check_in']))
         ->assertStatus(422)
-        ->assertJsonPath('message', 'Create an attendance session for today before opening the kiosk.');
+        ->assertJsonPath('message', 'This session is closed.');
+
+    expect(AttendanceDay::query()
+        ->where('branch_id', $branch->id)
+        ->whereDate('date', now()->toDateString())
+        ->exists())->toBeTrue();
 });
 
-test('the kiosk pending list shows roster staff who have not checked in', function () {
+test('the kiosk pending list shows branch staff who have not checked in', function () {
     $this->travelTo(now()->setTime(9, 5));
 
     $branch = Branch::factory()->create();
     $admin = User::factory()->branchAdmin()->create([
         'branch_id' => $branch->id,
+        'name' => 'Branch Admin',
     ]);
     $checkedIn = User::factory()->employee()->create([
         'branch_id' => $branch->id,
@@ -393,11 +320,10 @@ test('the kiosk pending list shows roster staff who have not checked in', functi
         'branch_id' => $branch->id,
         'name' => 'Pending Staff',
     ]);
-    $day = AttendanceDay::factory()->create([
+    AttendanceDay::factory()->create([
         'branch_id' => $branch->id,
         'date' => now()->toDateString(),
     ]);
-    $day->staff()->sync([$checkedIn->id, $pending->id]);
 
     Attendance::factory()->create([
         'user_id' => $checkedIn->id,
@@ -406,11 +332,14 @@ test('the kiosk pending list shows roster staff who have not checked in', functi
         'check_in' => now(),
     ]);
 
-    $this->actingAs($admin)
+    $names = $this->actingAs($admin)
         ->getJson(route('api.kiosk.pending', ['type' => 'check_in']))
         ->assertOk()
-        ->assertJsonCount(1, 'pending')
-        ->assertJsonPath('pending.0.name', 'Pending Staff');
+        ->json('pending');
+
+    expect(collect($names)->pluck('name'))
+        ->toContain('Pending Staff')
+        ->not->toContain('Checked In Staff');
 });
 
 test('the kiosk pending list shows roster staff who have not checked out', function () {
@@ -428,11 +357,10 @@ test('the kiosk pending list shows roster staff who have not checked out', funct
         'branch_id' => $branch->id,
         'name' => 'Awaiting Checkout',
     ]);
-    $day = AttendanceDay::factory()->create([
+    AttendanceDay::factory()->create([
         'branch_id' => $branch->id,
         'date' => now()->toDateString(),
     ]);
-    $day->staff()->sync([$checkedOut->id, $pending->id]);
 
     Attendance::factory()->create([
         'user_id' => $checkedOut->id,

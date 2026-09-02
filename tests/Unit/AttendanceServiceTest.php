@@ -16,6 +16,10 @@ function attendanceService(): AttendanceService
     return new AttendanceService(new QrSessionService);
 }
 
+test('the application timezone is africa cairo', function () {
+    expect(config('app.timezone'))->toBe('Africa/Cairo');
+});
+
 test('haversine distance is zero for the same coordinates', function () {
     expect(attendanceService()->distanceInMeters(30.0444, 31.2357, 30.0444, 31.2357))->toBe(0.0);
 });

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Concerns\LogsActivity;
 use App\Enums\QrSessionType;
+use App\Enums\UserStatus;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Database\Factories\AttendanceDayFactory;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use Throwable;
 
 /**
  * @property int $id
@@ -81,7 +83,7 @@ class AttendanceDay extends Model
     }
 
     /**
-     * @return array{check_in_starts_at: string, check_in_ends_at: string, check_out_starts_at: string, check_out_ends_at: string}
+     * @return array{check_in_starts_at: string, check_in_ends_at: string, check_out_starts_at: string, check_out_ends_at: string, check_in_is_open: bool, check_out_is_open: bool}
      */
     public static function defaultSessionHours(): array
     {
@@ -90,6 +92,8 @@ class AttendanceDay extends Model
             'check_in_ends_at' => '23:59',
             'check_out_starts_at' => '00:00',
             'check_out_ends_at' => '23:59',
+            'check_in_is_open' => false,
+            'check_out_is_open' => false,
         ];
     }
 
@@ -121,6 +125,32 @@ class AttendanceDay extends Model
             ->first();
     }
 
+    public static function ensureForBranch(int $branchId, int $createdBy): self
+    {
+        $existing = self::forBranchOnDate($branchId, now());
+
+        if ($existing instanceof self) {
+            return $existing;
+        }
+
+        try {
+            return self::query()->create([
+                ...self::defaultSessionHours(),
+                'branch_id' => $branchId,
+                'date' => now()->toDateString(),
+                'created_by' => $createdBy,
+            ]);
+        } catch (Throwable $exception) {
+            $existing = self::forBranchOnDate($branchId, now());
+
+            if ($existing instanceof self) {
+                return $existing;
+            }
+
+            throw $exception;
+        }
+    }
+
     public function isCheckInOpen(?CarbonInterface $at = null): bool
     {
         return $this->isWindowOpen($this->check_in_starts_at, $this->check_in_ends_at, $at);
@@ -134,8 +164,8 @@ class AttendanceDay extends Model
     public function isSessionOpen(QrSessionType $type): bool
     {
         return $type === QrSessionType::CheckIn
-            ? $this->check_in_is_open
-            : $this->check_out_is_open;
+            ? (bool) $this->check_in_is_open
+            : (bool) $this->check_out_is_open;
     }
 
     public function isOpenFor(QrSessionType $type): bool
@@ -206,13 +236,19 @@ class AttendanceDay extends Model
      */
     public function pendingStaff(QrSessionType $type): array
     {
-        $staff = $this->staff()->orderBy('name')->get(['users.id', 'users.name']);
+        $staff = User::query()
+            ->withoutSuperAdmins()
+            ->where('status', UserStatus::Active)
+            ->where('branch_id', $this->branch_id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         if ($staff->isEmpty()) {
             return [];
         }
 
         $attendances = Attendance::query()
+            ->where('branch_id', $this->branch_id)
             ->whereDate('date', $this->date)
             ->whereIn('user_id', $staff->modelKeys())
             ->get()

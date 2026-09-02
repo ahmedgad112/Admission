@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Button } from '@/components/ui/button';
@@ -311,7 +311,7 @@ watch([type, branchId], () => {
                     v-else
                     class="flex aspect-square w-full max-w-md items-center justify-center rounded-[1.7rem] border border-dashed text-sm text-muted-foreground"
                 >
-                    {{ todaySession ? trans('kiosk.open_to_show') : trans('kiosk.create_roster_first') }}
+                    {{ trans('kiosk.open_to_show') }}
                 </div>
                 <div v-if="session?.entry_code" class="mt-6 space-y-2">
                     <p class="text-xs tracking-[0.2em] text-muted-foreground uppercase">
@@ -353,11 +353,8 @@ watch([type, branchId], () => {
                         </option>
                     </select>
                 </div>
-                <Button v-if="!todaySession" variant="outline" class="w-full rounded-full" as-child>
-                    <Link href="/attendance/days/create">{{ trans('kiosk.create_today') }}</Link>
-                </Button>
                 <Button
-                    v-if="todaySession && !isOpen"
+                    v-if="!isOpen"
                     class="w-full rounded-full"
                     :disabled="processing"
                     @click="toggleSession(true)"
@@ -365,7 +362,7 @@ watch([type, branchId], () => {
                     {{ trans('kiosk.open_session') }}
                 </Button>
                 <Button
-                    v-if="todaySession && isOpen"
+                    v-if="isOpen"
                     variant="destructive"
                     class="w-full rounded-full"
                     :disabled="processing"

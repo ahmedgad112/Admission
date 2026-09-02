@@ -7,6 +7,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarSeparator,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import type { NavItem } from '@/types';
@@ -23,6 +24,7 @@ withDefaults(
 );
 
 const { isCurrentUrl } = useCurrentUrl();
+const { setOpenMobile } = useSidebar();
 </script>
 
 <template>
@@ -42,7 +44,7 @@ const { isCurrentUrl } = useCurrentUrl();
                         :tooltip="item.title"
                         class="h-10 rounded-xl data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
                     >
-                        <Link :href="item.href">
+                        <Link :href="item.href" @click="setOpenMobile(false)">
                             <component :is="item.icon" />
                             <span>{{ item.title }}</span>
                         </Link>

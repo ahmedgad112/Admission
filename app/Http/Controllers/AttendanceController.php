@@ -130,9 +130,28 @@ class AttendanceController extends Controller
 
         return Inertia::render('attendance/Scan', [
             'day' => $day instanceof AttendanceDay ? $day->toWindowArray() : null,
-            'isScheduled' => $day instanceof AttendanceDay
-                && (! $day->hasScheduledStaff() || $day->isStaffScheduled($user)),
+            'recorded' => $this->pulledRecordedType($request),
         ]);
+    }
+
+    public function recordScan(CheckInRequest $request): JsonResponse|RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user !== null, 403);
+
+        try {
+            $attendance = $this->attendanceService->recordFromKiosk($user, $this->scanPayload($request));
+        } catch (AttendanceException $exception) {
+            return $this->attendanceError($request, $exception);
+        }
+
+        $checkedOut = $attendance->check_out !== null;
+
+        return $this->scanSuccessRedirect(
+            $request,
+            $checkedOut ? 'check_out' : 'check_in',
+            $attendance,
+        );
     }
 
     public function checkIn(CheckInRequest $request): JsonResponse|RedirectResponse
@@ -146,12 +165,7 @@ class AttendanceController extends Controller
             return $this->attendanceError($request, $exception);
         }
 
-        return $this->flashRedirect(
-            $request,
-            __('flash.attendance.checked_in'),
-            route('attendance.scan'),
-            ['attendance' => $attendance],
-        );
+        return $this->scanSuccessRedirect($request, 'check_in', $attendance);
     }
 
     public function checkOut(CheckOutRequest $request): JsonResponse|RedirectResponse
@@ -165,12 +179,34 @@ class AttendanceController extends Controller
             return $this->attendanceError($request, $exception);
         }
 
-        return $this->flashRedirect(
+        return $this->scanSuccessRedirect($request, 'check_out', $attendance);
+    }
+
+    private function scanSuccessRedirect(Request $request, string $type, Attendance $attendance): JsonResponse|RedirectResponse
+    {
+        $message = $type === 'check_out'
+            ? __('flash.attendance.checked_out')
+            : __('flash.attendance.checked_in');
+
+        $response = $this->flashRedirect(
             $request,
-            __('flash.attendance.checked_out'),
+            $message,
             route('attendance.scan'),
             ['attendance' => $attendance],
         );
+
+        if ($response instanceof RedirectResponse) {
+            return $response->with('attendance_recorded', $type);
+        }
+
+        return $response;
+    }
+
+    private function pulledRecordedType(Request $request): ?string
+    {
+        $recorded = $request->session()->pull('attendance_recorded');
+
+        return in_array($recorded, ['check_in', 'check_out'], true) ? $recorded : null;
     }
 
     /**

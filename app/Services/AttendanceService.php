@@ -129,6 +129,24 @@ class AttendanceService
     }
 
     /**
+     * Record check-in or check-out from the scanned kiosk code.
+     *
+     * @param  array{token: string, latitude: float, longitude: float, device_uuid: string}  $payload
+     */
+    public function recordFromKiosk(User $user, array $payload): Attendance
+    {
+        $session = $this->qrSessions->findValid($payload['token']);
+
+        if (! $session instanceof QrSession) {
+            throw new AttendanceException(__('attendance.error.invalid_qr'));
+        }
+
+        return $session->type === QrSessionType::CheckIn
+            ? $this->checkIn($user, $payload)
+            : $this->checkOut($user, $payload);
+    }
+
+    /**
      * @param  array{token: string, latitude: float, longitude: float, device_uuid: string}  $payload
      */
     public function checkIn(User $user, array $payload): Attendance
@@ -383,19 +401,6 @@ class AttendanceService
                 : __('attendance.session.check_out');
 
             throw new AttendanceException(__('attendance.error.session_closed', ['label' => $label]));
-        }
-
-        $this->assertScheduledStaff($day, $user);
-    }
-
-    private function assertScheduledStaff(AttendanceDay $day, User $user): void
-    {
-        if (! $day->hasScheduledStaff()) {
-            return;
-        }
-
-        if (! $day->isStaffScheduled($user)) {
-            throw new AttendanceException(__('attendance.error.not_rostered'));
         }
     }
 

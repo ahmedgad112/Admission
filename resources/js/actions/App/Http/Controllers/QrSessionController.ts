@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/api/qr-sessions/current'
  */
 const current6dfe566976c63242076e67ab7bdf1724 = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ current6dfe566976c63242076e67ab7bdf1724.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/api/qr-sessions/current'
  */
 current6dfe566976c63242076e67ab7bdf1724.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ current6dfe566976c63242076e67ab7bdf1724.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/api/qr-sessions/current'
  */
 current6dfe566976c63242076e67ab7bdf1724.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ current6dfe566976c63242076e67ab7bdf1724.get = (options?: RouteQueryOptions): Rou
 })
 /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/api/qr-sessions/current'
  */
 current6dfe566976c63242076e67ab7bdf1724.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ current6dfe566976c63242076e67ab7bdf1724.head = (options?: RouteQueryOptions): Ro
 
     /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/api/qr-sessions/current'
  */
     const current6dfe566976c63242076e67ab7bdf1724Form = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ current6dfe566976c63242076e67ab7bdf1724.head = (options?: RouteQueryOptions): Ro
 
             /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/api/qr-sessions/current'
  */
         current6dfe566976c63242076e67ab7bdf1724Form.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ current6dfe566976c63242076e67ab7bdf1724.head = (options?: RouteQueryOptions): Ro
         })
             /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/api/qr-sessions/current'
  */
         current6dfe566976c63242076e67ab7bdf1724Form.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ current6dfe566976c63242076e67ab7bdf1724.head = (options?: RouteQueryOptions): Ro
     current6dfe566976c63242076e67ab7bdf1724.form = current6dfe566976c63242076e67ab7bdf1724Form
     /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
 const current0042797756c5989d7db96685a4891319 = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ current0042797756c5989d7db96685a4891319.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
 current0042797756c5989d7db96685a4891319.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ current0042797756c5989d7db96685a4891319.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
 current0042797756c5989d7db96685a4891319.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +112,7 @@ current0042797756c5989d7db96685a4891319.get = (options?: RouteQueryOptions): Rou
 })
 /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
 current0042797756c5989d7db96685a4891319.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +122,7 @@ current0042797756c5989d7db96685a4891319.head = (options?: RouteQueryOptions): Ro
 
     /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
     const current0042797756c5989d7db96685a4891319Form = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +132,7 @@ current0042797756c5989d7db96685a4891319.head = (options?: RouteQueryOptions): Ro
 
             /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
         current0042797756c5989d7db96685a4891319Form.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +141,7 @@ current0042797756c5989d7db96685a4891319.head = (options?: RouteQueryOptions): Ro
         })
             /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
         current0042797756c5989d7db96685a4891319Form.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -168,7 +168,7 @@ export const current = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/api/qr-sessions/open'
  */
 const open51c896037c0c951e29a6ea1983f91919 = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -183,7 +183,7 @@ open51c896037c0c951e29a6ea1983f91919.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/api/qr-sessions/open'
  */
 open51c896037c0c951e29a6ea1983f91919.url = (options?: RouteQueryOptions) => {
@@ -192,7 +192,7 @@ open51c896037c0c951e29a6ea1983f91919.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/api/qr-sessions/open'
  */
 open51c896037c0c951e29a6ea1983f91919.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -202,7 +202,7 @@ open51c896037c0c951e29a6ea1983f91919.post = (options?: RouteQueryOptions): Route
 
     /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/api/qr-sessions/open'
  */
     const open51c896037c0c951e29a6ea1983f91919Form = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -212,7 +212,7 @@ open51c896037c0c951e29a6ea1983f91919.post = (options?: RouteQueryOptions): Route
 
             /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/api/qr-sessions/open'
  */
         open51c896037c0c951e29a6ea1983f91919Form.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -223,7 +223,7 @@ open51c896037c0c951e29a6ea1983f91919.post = (options?: RouteQueryOptions): Route
     open51c896037c0c951e29a6ea1983f91919.form = open51c896037c0c951e29a6ea1983f91919Form
     /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/attendance/qr-sessions/open'
  */
 const open25defd8c0a7369fae90afd3ae00238dc = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -238,7 +238,7 @@ open25defd8c0a7369fae90afd3ae00238dc.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/attendance/qr-sessions/open'
  */
 open25defd8c0a7369fae90afd3ae00238dc.url = (options?: RouteQueryOptions) => {
@@ -247,7 +247,7 @@ open25defd8c0a7369fae90afd3ae00238dc.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/attendance/qr-sessions/open'
  */
 open25defd8c0a7369fae90afd3ae00238dc.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -257,7 +257,7 @@ open25defd8c0a7369fae90afd3ae00238dc.post = (options?: RouteQueryOptions): Route
 
     /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/attendance/qr-sessions/open'
  */
     const open25defd8c0a7369fae90afd3ae00238dcForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -267,7 +267,7 @@ open25defd8c0a7369fae90afd3ae00238dc.post = (options?: RouteQueryOptions): Route
 
             /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/attendance/qr-sessions/open'
  */
         open25defd8c0a7369fae90afd3ae00238dcForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -289,7 +289,7 @@ export const open = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/api/qr-sessions/close'
  */
 const closedf57ecbc0063c3f8b8ad1aaba0d19ff3 = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -304,7 +304,7 @@ closedf57ecbc0063c3f8b8ad1aaba0d19ff3.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/api/qr-sessions/close'
  */
 closedf57ecbc0063c3f8b8ad1aaba0d19ff3.url = (options?: RouteQueryOptions) => {
@@ -313,7 +313,7 @@ closedf57ecbc0063c3f8b8ad1aaba0d19ff3.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/api/qr-sessions/close'
  */
 closedf57ecbc0063c3f8b8ad1aaba0d19ff3.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -323,7 +323,7 @@ closedf57ecbc0063c3f8b8ad1aaba0d19ff3.post = (options?: RouteQueryOptions): Rout
 
     /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/api/qr-sessions/close'
  */
     const closedf57ecbc0063c3f8b8ad1aaba0d19ff3Form = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -333,7 +333,7 @@ closedf57ecbc0063c3f8b8ad1aaba0d19ff3.post = (options?: RouteQueryOptions): Rout
 
             /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/api/qr-sessions/close'
  */
         closedf57ecbc0063c3f8b8ad1aaba0d19ff3Form.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -344,7 +344,7 @@ closedf57ecbc0063c3f8b8ad1aaba0d19ff3.post = (options?: RouteQueryOptions): Rout
     closedf57ecbc0063c3f8b8ad1aaba0d19ff3.form = closedf57ecbc0063c3f8b8ad1aaba0d19ff3Form
     /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/attendance/qr-sessions/close'
  */
 const close14034728e367841c0e5d2bf6a8a2caa2 = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -359,7 +359,7 @@ close14034728e367841c0e5d2bf6a8a2caa2.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/attendance/qr-sessions/close'
  */
 close14034728e367841c0e5d2bf6a8a2caa2.url = (options?: RouteQueryOptions) => {
@@ -368,7 +368,7 @@ close14034728e367841c0e5d2bf6a8a2caa2.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/attendance/qr-sessions/close'
  */
 close14034728e367841c0e5d2bf6a8a2caa2.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -378,7 +378,7 @@ close14034728e367841c0e5d2bf6a8a2caa2.post = (options?: RouteQueryOptions): Rout
 
     /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/attendance/qr-sessions/close'
  */
     const close14034728e367841c0e5d2bf6a8a2caa2Form = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -388,7 +388,7 @@ close14034728e367841c0e5d2bf6a8a2caa2.post = (options?: RouteQueryOptions): Rout
 
             /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/attendance/qr-sessions/close'
  */
         close14034728e367841c0e5d2bf6a8a2caa2Form.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -410,7 +410,7 @@ export const close = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/api/kiosk/pending'
  */
 const pending20ec7ba42621e3f1d2f1f8a8343aaa3b = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -425,7 +425,7 @@ pending20ec7ba42621e3f1d2f1f8a8343aaa3b.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/api/kiosk/pending'
  */
 pending20ec7ba42621e3f1d2f1f8a8343aaa3b.url = (options?: RouteQueryOptions) => {
@@ -434,7 +434,7 @@ pending20ec7ba42621e3f1d2f1f8a8343aaa3b.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/api/kiosk/pending'
  */
 pending20ec7ba42621e3f1d2f1f8a8343aaa3b.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -443,7 +443,7 @@ pending20ec7ba42621e3f1d2f1f8a8343aaa3b.get = (options?: RouteQueryOptions): Rou
 })
 /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/api/kiosk/pending'
  */
 pending20ec7ba42621e3f1d2f1f8a8343aaa3b.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -453,7 +453,7 @@ pending20ec7ba42621e3f1d2f1f8a8343aaa3b.head = (options?: RouteQueryOptions): Ro
 
     /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/api/kiosk/pending'
  */
     const pending20ec7ba42621e3f1d2f1f8a8343aaa3bForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -463,7 +463,7 @@ pending20ec7ba42621e3f1d2f1f8a8343aaa3b.head = (options?: RouteQueryOptions): Ro
 
             /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/api/kiosk/pending'
  */
         pending20ec7ba42621e3f1d2f1f8a8343aaa3bForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -472,7 +472,7 @@ pending20ec7ba42621e3f1d2f1f8a8343aaa3b.head = (options?: RouteQueryOptions): Ro
         })
             /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/api/kiosk/pending'
  */
         pending20ec7ba42621e3f1d2f1f8a8343aaa3bForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -488,7 +488,7 @@ pending20ec7ba42621e3f1d2f1f8a8343aaa3b.head = (options?: RouteQueryOptions): Ro
     pending20ec7ba42621e3f1d2f1f8a8343aaa3b.form = pending20ec7ba42621e3f1d2f1f8a8343aaa3bForm
     /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
 const pending504d1f22973f60f6d1e37320f34e440d = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -503,7 +503,7 @@ pending504d1f22973f60f6d1e37320f34e440d.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
 pending504d1f22973f60f6d1e37320f34e440d.url = (options?: RouteQueryOptions) => {
@@ -512,7 +512,7 @@ pending504d1f22973f60f6d1e37320f34e440d.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
 pending504d1f22973f60f6d1e37320f34e440d.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -521,7 +521,7 @@ pending504d1f22973f60f6d1e37320f34e440d.get = (options?: RouteQueryOptions): Rou
 })
 /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
 pending504d1f22973f60f6d1e37320f34e440d.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -531,7 +531,7 @@ pending504d1f22973f60f6d1e37320f34e440d.head = (options?: RouteQueryOptions): Ro
 
     /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
     const pending504d1f22973f60f6d1e37320f34e440dForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -541,7 +541,7 @@ pending504d1f22973f60f6d1e37320f34e440d.head = (options?: RouteQueryOptions): Ro
 
             /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
         pending504d1f22973f60f6d1e37320f34e440dForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -550,7 +550,7 @@ pending504d1f22973f60f6d1e37320f34e440d.head = (options?: RouteQueryOptions): Ro
         })
             /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
         pending504d1f22973f60f6d1e37320f34e440dForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

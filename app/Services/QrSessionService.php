@@ -109,13 +109,13 @@ class QrSessionService
         return Branch::query()->findOrFail($user->branch_id);
     }
 
-    public function findValid(string $token, QrSessionType $type): ?QrSession
+    public function findValid(string $token, ?QrSessionType $type = null): ?QrSession
     {
         $normalized = strtolower(preg_replace('/\s+/', '', $token) ?? '');
 
         $session = QrSession::query()
             ->with('branch')
-            ->where('type', $type)
+            ->when($type instanceof QrSessionType, fn ($query) => $query->where('type', $type))
             ->where('expires_at', '>', now())
             ->where(function ($query) use ($normalized): void {
                 $query->where('token', $normalized)

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\AttendanceStatus;
 use App\Enums\UserStatus;
 use App\Models\Attendance;
+use App\Models\AttendanceDay;
 use App\Models\User;
 use App\Support\SimpleXlsx;
 use Illuminate\Support\Str;
@@ -19,18 +20,41 @@ class AttendanceSpreadsheet
         return $this->xlsx->download(
             $this->filename($from, $to),
             'Attendance',
-            [
-                'Date',
-                'Employee',
-                'Branch',
-                'Check in',
-                'Check out',
-                'Hours',
-                'Status',
-                'Late minutes',
-                'Early leave minutes',
-            ],
+            $this->headers(),
             $this->rows($actor, $from, $to),
+        );
+    }
+
+    public function downloadForDay(AttendanceDay $day): StreamedResponse
+    {
+        $day->loadMissing('branch:id,name');
+        $date = $day->date->toDateString();
+        $branchName = $day->branch?->name;
+        $slug = Str::slug((string) $branchName);
+
+        $filename = $slug === ''
+            ? 'attendance-'.$date.'.xlsx'
+            : 'attendance-'.$slug.'-'.$date.'.xlsx';
+
+        $rows = Attendance::query()
+            ->with(['user:id,name', 'branch:id,name'])
+            ->where('branch_id', $day->branch_id)
+            ->whereDate('date', $date)
+            ->orderBy('check_in')
+            ->get()
+            ->map(fn (Attendance $attendance): array => $this->row(
+                $date,
+                $attendance->user?->name,
+                $attendance->branch?->name ?? $branchName,
+                $attendance,
+            ))
+            ->all();
+
+        return $this->xlsx->download(
+            $filename,
+            'Attendance',
+            $this->headers(),
+            $rows,
         );
     }
 
@@ -123,6 +147,24 @@ class AttendanceSpreadsheet
         }
 
         return 'attendance-'.$from.'-to-'.$to.'.xlsx';
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function headers(): array
+    {
+        return [
+            'Date',
+            'Employee',
+            'Branch',
+            'Check in',
+            'Check out',
+            'Hours',
+            'Status',
+            'Late minutes',
+            'Early leave minutes',
+        ];
     }
 
     /**

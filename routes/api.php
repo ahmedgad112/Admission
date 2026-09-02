@@ -30,6 +30,9 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         ->middleware('permission:manage_kiosk')
         ->name('api.kiosk.pending');
 
+    Route::post('attendance/scan', [AttendanceController::class, 'recordScan'])
+        ->middleware(['permission:scan_attendance', 'throttle:qr-scan'])
+        ->name('api.attendance.scan');
     Route::post('attendance/check-in', [AttendanceController::class, 'checkIn'])
         ->middleware(['permission:scan_attendance', 'throttle:qr-scan'])
         ->name('api.attendance.check-in');

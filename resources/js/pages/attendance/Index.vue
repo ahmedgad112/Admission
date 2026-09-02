@@ -318,6 +318,12 @@ function clock(value: string | null): string {
                     <Button class="w-full rounded-full sm:w-auto" :disabled="form.processing" @click="saveTimes">
                         {{ trans('attendance.save_times') }}
                     </Button>
+                    <Button variant="outline" class="w-full rounded-full sm:w-auto" as-child>
+                        <a :href="`/attendance/export?date=${date}`">
+                            <Download class="size-4" />
+                            {{ trans('attendance.download') }}
+                        </a>
+                    </Button>
                 </div>
             </CardFooter>
         </Card>

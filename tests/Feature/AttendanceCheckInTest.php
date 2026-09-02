@@ -9,7 +9,9 @@ use App\Models\QrSession;
 use App\Models\Shift;
 use App\Models\User;
 use App\Services\QrSessionService;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
+use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->travelTo(now()->setTime(9, 5));
@@ -159,7 +161,7 @@ test('employees can check out with a valid checkout token', function () {
     expect(Attendance::query()->first()->check_out)->not->toBeNull();
 });
 
-test('staff who are not on the roster cannot check in', function () {
+test('staff who are not on the roster can still check in', function () {
     $branch = Branch::factory()->create();
     $onDuty = staffedEmployee(['branch' => $branch]);
     $offDuty = staffedEmployee(['branch' => $branch]);
@@ -174,8 +176,8 @@ test('staff who are not on the roster cannot check in', function () {
             'longitude' => $branch->longitude,
             'device_uuid' => (string) Str::uuid(),
         ])
-        ->assertStatus(422)
-        ->assertJsonPath('message', "You are not on today's roster.");
+        ->assertOk()
+        ->assertJsonPath('message', 'Checked in successfully.');
 });
 
 test('staff on the roster can check in', function () {
@@ -301,7 +303,10 @@ test('employees can open the scan page', function () {
 
     $this->actingAs($user)
         ->get(route('attendance.scan'))
-        ->assertOk();
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('attendance/Scan')
+            ->where('recorded', null));
 });
 
 test('employees can check in from the scan page with the kiosk entry code', function () {
@@ -312,15 +317,74 @@ test('employees can check in from the scan page with the kiosk entry code', func
 
     $this->actingAs($user)
         ->from(route('attendance.scan'))
-        ->post(route('attendance.check-in'), [
+        ->post(route('attendance.scan.store'), [
             'token' => $session->entry_code,
             'latitude' => $branch->latitude,
             'longitude' => $branch->longitude,
             'device_uuid' => (string) Str::uuid(),
         ])
-        ->assertRedirect(route('attendance.scan'));
+        ->assertRedirect(route('attendance.scan'))
+        ->assertSessionHas('attendance_recorded', 'check_in');
+
+    $this->actingAs($user)
+        ->get(route('attendance.scan'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('attendance/Scan')
+            ->where('recorded', 'check_in'));
 
     expect(Attendance::query()->first()?->user_id)->toBe($user->id);
+});
+
+test('the scan page records check out when the kiosk is in check out mode', function () {
+    $branch = Branch::factory()->create();
+    $user = staffedEmployee(['branch' => $branch]);
+    $device = (string) Str::uuid();
+    openAttendanceDay($branch);
+
+    $checkIn = app(QrSessionService::class)->create($branch, QrSessionType::CheckIn);
+    $this->actingAs($user)->postJson(route('api.attendance.scan'), [
+        'token' => $checkIn->token,
+        'latitude' => $branch->latitude,
+        'longitude' => $branch->longitude,
+        'device_uuid' => $device,
+    ])->assertOk();
+
+    $checkOut = app(QrSessionService::class)->create($branch, QrSessionType::CheckOut);
+    $this->actingAs($user)->postJson(route('api.attendance.scan'), [
+        'token' => $checkOut->token,
+        'latitude' => $branch->latitude,
+        'longitude' => $branch->longitude,
+        'device_uuid' => $device,
+    ])->assertOk();
+
+    expect(Attendance::query()->first()?->check_out)->not->toBeNull();
+});
+
+test('check in is stored in africa cairo time', function () {
+    expect(config('app.timezone'))->toBe('Africa/Cairo');
+
+    $this->travelTo(CarbonImmutable::parse('2026-09-02 09:05:00', 'Africa/Cairo'));
+
+    $branch = Branch::factory()->create();
+    $user = staffedEmployee(['branch' => $branch]);
+    openAttendanceDay($branch);
+    $session = app(QrSessionService::class)->create($branch, QrSessionType::CheckIn);
+
+    $this->actingAs($user)
+        ->postJson(route('api.attendance.check-in'), [
+            'token' => $session->token,
+            'latitude' => $branch->latitude,
+            'longitude' => $branch->longitude,
+            'device_uuid' => (string) Str::uuid(),
+        ])
+        ->assertOk();
+
+    $attendance = Attendance::query()->first();
+
+    expect($attendance)->not->toBeNull()
+        ->and($attendance->check_in->timezone('Africa/Cairo')->format('Y-m-d H:i'))->toBe('2026-09-02 09:05')
+        ->and($attendance->date->toDateString())->toBe('2026-09-02');
 });
 
 test('qr scan endpoints are rate limited', function () {

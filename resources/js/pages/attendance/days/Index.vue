@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { Download } from '@lucide/vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,7 +17,7 @@ type DayRow = {
     id: number;
     date: string;
     branch?: { id: number; name: string };
-    staff?: { id: number; name: string }[];
+    present_count?: number;
 };
 
 defineProps<{
@@ -35,21 +36,6 @@ defineOptions({
 
 function destroy(id: number): void {
     router.delete(`/attendance/days/${id}`);
-}
-
-function staffLabel(staff: { id: number; name: string }[] | undefined): string {
-    if (!staff || staff.length === 0) {
-        return trans('roster.empty_staff');
-    }
-
-    if (staff.length <= 3) {
-        return staff.map((member) => member.name).join(', ');
-    }
-
-    return `${staff
-        .slice(0, 2)
-        .map((member) => member.name)
-        .join(', ')} +${staff.length - 2}`;
 }
 </script>
 
@@ -87,15 +73,18 @@ function staffLabel(staff: { id: number; name: string }[] | undefined): string {
                 </CardHeader>
                 <CardContent>
                     <p class="text-sm font-medium">
-                        {{ trans('common.staff') }} · {{ day.staff?.length ?? 0 }}
-                    </p>
-                    <p class="mt-1 text-xs text-muted-foreground">
-                        {{ staffLabel(day.staff) }}
+                        {{ trans('roster.present_count', { count: day.present_count ?? 0 }) }}
                     </p>
                 </CardContent>
                 <CardFooter class="mt-auto flex flex-wrap gap-2 border-t">
                     <Button variant="outline" size="sm" class="rounded-full" as-child>
                         <Link :href="`/attendance/days/${day.id}`">{{ trans('common.view') }}</Link>
+                    </Button>
+                    <Button variant="outline" size="sm" class="rounded-full" as-child>
+                        <a :href="`/attendance/days/${day.id}/export`">
+                            <Download class="size-4" />
+                            {{ trans('attendance.download') }}
+                        </a>
                     </Button>
                     <Button v-if="canCreate" variant="outline" size="sm" class="rounded-full" as-child>
                         <Link :href="`/attendance/days/${day.id}/edit`">{{ trans('common.edit') }}</Link>

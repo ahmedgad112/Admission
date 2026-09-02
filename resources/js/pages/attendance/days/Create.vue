@@ -5,17 +5,9 @@ import PageHeader from '@/components/PageHeader.vue';
 import { trans } from '@/composables/useTrans';
 
 type BranchOption = { id: number; name: string };
-type StaffOption = {
-    id: number;
-    name: string;
-    branch_id: number | null;
-    role: string;
-    department?: { id: number; name: string } | null;
-};
 
 defineProps<{
     branches: BranchOption[];
-    staff: StaffOption[];
     defaultBranchId: number | null;
 }>();
 
@@ -41,7 +33,6 @@ defineOptions({
 
         <AttendanceDayForm
             :branches="branches"
-            :staff="staff"
             :default-branch-id="defaultBranchId"
         />
     </div>

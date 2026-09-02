@@ -3,22 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Concerns\RespondsWithInertiaOrJson;
-use App\Enums\UserStatus;
 use App\Http\Requests\Attendance\StoreAttendanceDayRequest;
 use App\Http\Requests\Attendance\UpdateAttendanceDayRequest;
+use App\Models\Attendance;
 use App\Models\AttendanceDay;
 use App\Models\Branch;
-use App\Models\User;
+use App\Services\AttendanceSpreadsheet;
 use App\Support\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttendanceDayController extends Controller
 {
     use RespondsWithInertiaOrJson;
+
+    public function __construct(public AttendanceSpreadsheet $spreadsheet) {}
 
     public function index(Request $request): Response
     {
@@ -28,14 +31,18 @@ class AttendanceDayController extends Controller
         abort_unless($user !== null, 403);
 
         $days = AttendanceDay::query()
-            ->with(['branch:id,name', 'creator:id,name', 'staff:id,name'])
+            ->with(['branch:id,name', 'creator:id,name'])
             ->when(! $user->isSuperAdmin(), fn ($query) => $query->where('branch_id', $user->branch_id))
             ->latest('date')
             ->paginate(12)
             ->through(fn (AttendanceDay $day) => [
                 ...$day->toWindowArray(),
                 'branch' => $day->branch,
-                'staff' => $day->staff,
+                'present_count' => Attendance::query()
+                    ->where('branch_id', $day->branch_id)
+                    ->whereDate('date', $day->date)
+                    ->whereNotNull('check_in')
+                    ->count(),
             ])
             ->withQueryString();
 
@@ -55,23 +62,39 @@ class AttendanceDayController extends Controller
         $attendanceDay->load([
             'branch:id,name',
             'creator:id,name',
-            'staff:id,name,department_id',
-            'staff.department:id,name',
         ]);
+
+        $attendances = Attendance::query()
+            ->with(['user:id,name,department_id', 'user.department:id,name'])
+            ->where('branch_id', $attendanceDay->branch_id)
+            ->whereDate('date', $attendanceDay->date)
+            ->orderBy('check_in')
+            ->get();
 
         return Inertia::render('attendance/days/Show', [
             'day' => [
                 ...$attendanceDay->toWindowArray(),
                 'branch' => $attendanceDay->branch,
                 'creator' => $attendanceDay->creator,
-                'staff' => $attendanceDay->staff->map(fn (User $member) => [
-                    'id' => $member->id,
-                    'name' => $member->name,
-                    'department' => $member->department,
+                'attendances' => $attendances->map(fn (Attendance $record): array => [
+                    'id' => $record->id,
+                    'name' => $record->user?->name,
+                    'department' => $record->user?->department,
+                    'check_in' => $record->check_in?->format('H:i'),
+                    'check_out' => $record->check_out?->format('H:i'),
+                    'status' => $record->status?->value,
+                    'work_hours' => $record->work_hours,
                 ])->values()->all(),
             ],
             'canUpdate' => $user->can('update', $attendanceDay),
         ]);
+    }
+
+    public function export(AttendanceDay $attendanceDay): StreamedResponse
+    {
+        $this->authorize('view', $attendanceDay);
+
+        return $this->spreadsheet->downloadForDay($attendanceDay);
     }
 
     public function create(Request $request): Response
@@ -88,18 +111,16 @@ class AttendanceDayController extends Controller
 
         $day = AttendanceDay::query()->create([
             ...AttendanceDay::defaultSessionHours(),
-            ...$request->safe()->except('staff_ids'),
+            ...$request->safe()->all(),
             'created_by' => $user->id,
         ]);
-        $day->staff()->sync($request->validated('staff_ids'));
 
         ActivityLogger::record('roster_synced', $day, [
             'name' => $day->date->toDateString(),
-            'staff_ids' => $request->validated('staff_ids'),
         ]);
 
         return $this->flashRedirect($request, __('flash.roster.created'), route('attendance.days.index'), [
-            'day' => $day->load('staff:id,name'),
+            'day' => $day,
         ]);
     }
 
@@ -107,14 +128,11 @@ class AttendanceDayController extends Controller
     {
         $this->authorize('update', $attendanceDay);
 
-        $attendanceDay->load('staff:id');
-
         return Inertia::render('attendance/days/Edit', [
             'day' => [
                 'id' => $attendanceDay->id,
                 'branch_id' => $attendanceDay->branch_id,
                 'date' => $attendanceDay->date->toDateString(),
-                'staff_ids' => $attendanceDay->staff->pluck('id')->all(),
             ],
             ...$this->formOptions($request),
         ]);
@@ -122,16 +140,14 @@ class AttendanceDayController extends Controller
 
     public function update(UpdateAttendanceDayRequest $request, AttendanceDay $attendanceDay): JsonResponse|RedirectResponse
     {
-        $attendanceDay->update($request->safe()->except('staff_ids'));
-        $attendanceDay->staff()->sync($request->validated('staff_ids'));
+        $attendanceDay->update($request->safe()->all());
 
         ActivityLogger::record('roster_synced', $attendanceDay, [
             'name' => $attendanceDay->date->toDateString(),
-            'staff_ids' => $request->validated('staff_ids'),
         ]);
 
         return $this->flashRedirect($request, __('flash.roster.updated'), route('attendance.days.index'), [
-            'day' => $attendanceDay->load('staff:id,name'),
+            'day' => $attendanceDay,
         ]);
     }
 
@@ -156,13 +172,6 @@ class AttendanceDayController extends Controller
             'branches' => $user->isSuperAdmin()
                 ? Branch::query()->orderBy('name')->get(['id', 'name'])
                 : Branch::query()->whereKey($user->branch_id)->get(['id', 'name']),
-            'staff' => User::query()
-                ->with('department:id,name')
-                ->withoutSuperAdmins()
-                ->where('status', UserStatus::Active)
-                ->when(! $user->isSuperAdmin(), fn ($query) => $query->where('branch_id', $user->branch_id))
-                ->orderBy('name')
-                ->get(['id', 'name', 'branch_id', 'department_id', 'role_id']),
             'defaultBranchId' => $user->branch_id,
         ];
     }

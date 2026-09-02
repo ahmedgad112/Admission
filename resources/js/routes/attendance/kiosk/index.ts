@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
 export const pending = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ pending.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
 pending.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ pending.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
 pending.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ pending.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
 pending.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ pending.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
     const pendingForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ pending.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
         pendingForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ pending.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\QrSessionController::pending
- * @see app/Http/Controllers/QrSessionController.php:124
+ * @see app/Http/Controllers/QrSessionController.php:105
  * @route '/attendance/kiosk/pending'
  */
         pendingForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

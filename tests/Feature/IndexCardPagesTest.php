@@ -106,7 +106,7 @@ test('list pages return the records shown as cards', function () {
             ->has('days.data', 1)
             ->where('days.data.0.id', $day->id)
             ->where('days.data.0.branch.name', 'Card Clinic')
-            ->where('days.data.0.staff.0.id', $employee->id));
+            ->where('days.data.0.present_count', 1));
 
     $this->actingAs($admin)
         ->get(route('attendance.index'))

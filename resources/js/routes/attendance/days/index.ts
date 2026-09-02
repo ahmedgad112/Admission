@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\AttendanceDayController::index
- * @see app/Http/Controllers/AttendanceDayController.php:23
+ * @see app/Http/Controllers/AttendanceDayController.php:26
  * @route '/attendance/days'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::index
- * @see app/Http/Controllers/AttendanceDayController.php:23
+ * @see app/Http/Controllers/AttendanceDayController.php:26
  * @route '/attendance/days'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::index
- * @see app/Http/Controllers/AttendanceDayController.php:23
+ * @see app/Http/Controllers/AttendanceDayController.php:26
  * @route '/attendance/days'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\AttendanceDayController::index
- * @see app/Http/Controllers/AttendanceDayController.php:23
+ * @see app/Http/Controllers/AttendanceDayController.php:26
  * @route '/attendance/days'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\AttendanceDayController::index
- * @see app/Http/Controllers/AttendanceDayController.php:23
+ * @see app/Http/Controllers/AttendanceDayController.php:26
  * @route '/attendance/days'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\AttendanceDayController::index
- * @see app/Http/Controllers/AttendanceDayController.php:23
+ * @see app/Http/Controllers/AttendanceDayController.php:26
  * @route '/attendance/days'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\AttendanceDayController::index
- * @see app/Http/Controllers/AttendanceDayController.php:23
+ * @see app/Http/Controllers/AttendanceDayController.php:26
  * @route '/attendance/days'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\AttendanceDayController::create
- * @see app/Http/Controllers/AttendanceDayController.php:77
+ * @see app/Http/Controllers/AttendanceDayController.php:100
  * @route '/attendance/days/create'
  */
 export const create = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ create.definition = {
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::create
- * @see app/Http/Controllers/AttendanceDayController.php:77
+ * @see app/Http/Controllers/AttendanceDayController.php:100
  * @route '/attendance/days/create'
  */
 create.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ create.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::create
- * @see app/Http/Controllers/AttendanceDayController.php:77
+ * @see app/Http/Controllers/AttendanceDayController.php:100
  * @route '/attendance/days/create'
  */
 create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +112,7 @@ create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\AttendanceDayController::create
- * @see app/Http/Controllers/AttendanceDayController.php:77
+ * @see app/Http/Controllers/AttendanceDayController.php:100
  * @route '/attendance/days/create'
  */
 create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +122,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\AttendanceDayController::create
- * @see app/Http/Controllers/AttendanceDayController.php:77
+ * @see app/Http/Controllers/AttendanceDayController.php:100
  * @route '/attendance/days/create'
  */
     const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +132,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\AttendanceDayController::create
- * @see app/Http/Controllers/AttendanceDayController.php:77
+ * @see app/Http/Controllers/AttendanceDayController.php:100
  * @route '/attendance/days/create'
  */
         createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +141,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\AttendanceDayController::create
- * @see app/Http/Controllers/AttendanceDayController.php:77
+ * @see app/Http/Controllers/AttendanceDayController.php:100
  * @route '/attendance/days/create'
  */
         createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -157,7 +157,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     create.form = createForm
 /**
 * @see \App\Http\Controllers\AttendanceDayController::store
- * @see app/Http/Controllers/AttendanceDayController.php:84
+ * @see app/Http/Controllers/AttendanceDayController.php:107
  * @route '/attendance/days'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -172,7 +172,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::store
- * @see app/Http/Controllers/AttendanceDayController.php:84
+ * @see app/Http/Controllers/AttendanceDayController.php:107
  * @route '/attendance/days'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::store
- * @see app/Http/Controllers/AttendanceDayController.php:84
+ * @see app/Http/Controllers/AttendanceDayController.php:107
  * @route '/attendance/days'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -191,7 +191,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\AttendanceDayController::store
- * @see app/Http/Controllers/AttendanceDayController.php:84
+ * @see app/Http/Controllers/AttendanceDayController.php:107
  * @route '/attendance/days'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -201,7 +201,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\AttendanceDayController::store
- * @see app/Http/Controllers/AttendanceDayController.php:84
+ * @see app/Http/Controllers/AttendanceDayController.php:107
  * @route '/attendance/days'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -212,7 +212,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\AttendanceDayController::show
- * @see app/Http/Controllers/AttendanceDayController.php:48
+ * @see app/Http/Controllers/AttendanceDayController.php:55
  * @route '/attendance/days/{attendanceDay}'
  */
 export const show = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -227,7 +227,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::show
- * @see app/Http/Controllers/AttendanceDayController.php:48
+ * @see app/Http/Controllers/AttendanceDayController.php:55
  * @route '/attendance/days/{attendanceDay}'
  */
 show.url = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -260,7 +260,7 @@ show.url = (args: { attendanceDay: number | { id: number } } | [attendanceDay: n
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::show
- * @see app/Http/Controllers/AttendanceDayController.php:48
+ * @see app/Http/Controllers/AttendanceDayController.php:55
  * @route '/attendance/days/{attendanceDay}'
  */
 show.get = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -269,7 +269,7 @@ show.get = (args: { attendanceDay: number | { id: number } } | [attendanceDay: n
 })
 /**
 * @see \App\Http\Controllers\AttendanceDayController::show
- * @see app/Http/Controllers/AttendanceDayController.php:48
+ * @see app/Http/Controllers/AttendanceDayController.php:55
  * @route '/attendance/days/{attendanceDay}'
  */
 show.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -279,7 +279,7 @@ show.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: 
 
     /**
 * @see \App\Http\Controllers\AttendanceDayController::show
- * @see app/Http/Controllers/AttendanceDayController.php:48
+ * @see app/Http/Controllers/AttendanceDayController.php:55
  * @route '/attendance/days/{attendanceDay}'
  */
     const showForm = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -289,7 +289,7 @@ show.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: 
 
             /**
 * @see \App\Http\Controllers\AttendanceDayController::show
- * @see app/Http/Controllers/AttendanceDayController.php:48
+ * @see app/Http/Controllers/AttendanceDayController.php:55
  * @route '/attendance/days/{attendanceDay}'
  */
         showForm.get = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -298,7 +298,7 @@ show.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: 
         })
             /**
 * @see \App\Http\Controllers\AttendanceDayController::show
- * @see app/Http/Controllers/AttendanceDayController.php:48
+ * @see app/Http/Controllers/AttendanceDayController.php:55
  * @route '/attendance/days/{attendanceDay}'
  */
         showForm.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -313,8 +313,110 @@ show.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: 
     
     show.form = showForm
 /**
+* @see \App\Http\Controllers\AttendanceDayController::exportMethod
+ * @see app/Http/Controllers/AttendanceDayController.php:93
+ * @route '/attendance/days/{attendanceDay}/export'
+ */
+export const exportMethod = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: exportMethod.url(args, options),
+    method: 'get',
+})
+
+exportMethod.definition = {
+    methods: ["get","head"],
+    url: '/attendance/days/{attendanceDay}/export',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\AttendanceDayController::exportMethod
+ * @see app/Http/Controllers/AttendanceDayController.php:93
+ * @route '/attendance/days/{attendanceDay}/export'
+ */
+exportMethod.url = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { attendanceDay: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { attendanceDay: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    attendanceDay: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        attendanceDay: typeof args.attendanceDay === 'object'
+                ? args.attendanceDay.id
+                : args.attendanceDay,
+                }
+
+    return exportMethod.definition.url
+            .replace('{attendanceDay}', parsedArgs.attendanceDay.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\AttendanceDayController::exportMethod
+ * @see app/Http/Controllers/AttendanceDayController.php:93
+ * @route '/attendance/days/{attendanceDay}/export'
+ */
+exportMethod.get = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: exportMethod.url(args, options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\AttendanceDayController::exportMethod
+ * @see app/Http/Controllers/AttendanceDayController.php:93
+ * @route '/attendance/days/{attendanceDay}/export'
+ */
+exportMethod.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: exportMethod.url(args, options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\AttendanceDayController::exportMethod
+ * @see app/Http/Controllers/AttendanceDayController.php:93
+ * @route '/attendance/days/{attendanceDay}/export'
+ */
+    const exportMethodForm = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: exportMethod.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\AttendanceDayController::exportMethod
+ * @see app/Http/Controllers/AttendanceDayController.php:93
+ * @route '/attendance/days/{attendanceDay}/export'
+ */
+        exportMethodForm.get = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: exportMethod.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\AttendanceDayController::exportMethod
+ * @see app/Http/Controllers/AttendanceDayController.php:93
+ * @route '/attendance/days/{attendanceDay}/export'
+ */
+        exportMethodForm.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: exportMethod.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    exportMethod.form = exportMethodForm
+/**
 * @see \App\Http\Controllers\AttendanceDayController::edit
- * @see app/Http/Controllers/AttendanceDayController.php:106
+ * @see app/Http/Controllers/AttendanceDayController.php:127
  * @route '/attendance/days/{attendanceDay}/edit'
  */
 export const edit = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -329,7 +431,7 @@ edit.definition = {
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::edit
- * @see app/Http/Controllers/AttendanceDayController.php:106
+ * @see app/Http/Controllers/AttendanceDayController.php:127
  * @route '/attendance/days/{attendanceDay}/edit'
  */
 edit.url = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -362,7 +464,7 @@ edit.url = (args: { attendanceDay: number | { id: number } } | [attendanceDay: n
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::edit
- * @see app/Http/Controllers/AttendanceDayController.php:106
+ * @see app/Http/Controllers/AttendanceDayController.php:127
  * @route '/attendance/days/{attendanceDay}/edit'
  */
 edit.get = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -371,7 +473,7 @@ edit.get = (args: { attendanceDay: number | { id: number } } | [attendanceDay: n
 })
 /**
 * @see \App\Http\Controllers\AttendanceDayController::edit
- * @see app/Http/Controllers/AttendanceDayController.php:106
+ * @see app/Http/Controllers/AttendanceDayController.php:127
  * @route '/attendance/days/{attendanceDay}/edit'
  */
 edit.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -381,7 +483,7 @@ edit.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: 
 
     /**
 * @see \App\Http\Controllers\AttendanceDayController::edit
- * @see app/Http/Controllers/AttendanceDayController.php:106
+ * @see app/Http/Controllers/AttendanceDayController.php:127
  * @route '/attendance/days/{attendanceDay}/edit'
  */
     const editForm = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -391,7 +493,7 @@ edit.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: 
 
             /**
 * @see \App\Http\Controllers\AttendanceDayController::edit
- * @see app/Http/Controllers/AttendanceDayController.php:106
+ * @see app/Http/Controllers/AttendanceDayController.php:127
  * @route '/attendance/days/{attendanceDay}/edit'
  */
         editForm.get = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -400,7 +502,7 @@ edit.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: 
         })
             /**
 * @see \App\Http\Controllers\AttendanceDayController::edit
- * @see app/Http/Controllers/AttendanceDayController.php:106
+ * @see app/Http/Controllers/AttendanceDayController.php:127
  * @route '/attendance/days/{attendanceDay}/edit'
  */
         editForm.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -416,7 +518,7 @@ edit.head = (args: { attendanceDay: number | { id: number } } | [attendanceDay: 
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\AttendanceDayController::update
- * @see app/Http/Controllers/AttendanceDayController.php:123
+ * @see app/Http/Controllers/AttendanceDayController.php:141
  * @route '/attendance/days/{attendanceDay}'
  */
 export const update = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -431,7 +533,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::update
- * @see app/Http/Controllers/AttendanceDayController.php:123
+ * @see app/Http/Controllers/AttendanceDayController.php:141
  * @route '/attendance/days/{attendanceDay}'
  */
 update.url = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -464,7 +566,7 @@ update.url = (args: { attendanceDay: number | { id: number } } | [attendanceDay:
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::update
- * @see app/Http/Controllers/AttendanceDayController.php:123
+ * @see app/Http/Controllers/AttendanceDayController.php:141
  * @route '/attendance/days/{attendanceDay}'
  */
 update.put = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -474,7 +576,7 @@ update.put = (args: { attendanceDay: number | { id: number } } | [attendanceDay:
 
     /**
 * @see \App\Http\Controllers\AttendanceDayController::update
- * @see app/Http/Controllers/AttendanceDayController.php:123
+ * @see app/Http/Controllers/AttendanceDayController.php:141
  * @route '/attendance/days/{attendanceDay}'
  */
     const updateForm = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -489,7 +591,7 @@ update.put = (args: { attendanceDay: number | { id: number } } | [attendanceDay:
 
             /**
 * @see \App\Http\Controllers\AttendanceDayController::update
- * @see app/Http/Controllers/AttendanceDayController.php:123
+ * @see app/Http/Controllers/AttendanceDayController.php:141
  * @route '/attendance/days/{attendanceDay}'
  */
         updateForm.put = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -505,7 +607,7 @@ update.put = (args: { attendanceDay: number | { id: number } } | [attendanceDay:
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\AttendanceDayController::destroy
- * @see app/Http/Controllers/AttendanceDayController.php:138
+ * @see app/Http/Controllers/AttendanceDayController.php:154
  * @route '/attendance/days/{attendanceDay}'
  */
 export const destroy = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -520,7 +622,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::destroy
- * @see app/Http/Controllers/AttendanceDayController.php:138
+ * @see app/Http/Controllers/AttendanceDayController.php:154
  * @route '/attendance/days/{attendanceDay}'
  */
 destroy.url = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -553,7 +655,7 @@ destroy.url = (args: { attendanceDay: number | { id: number } } | [attendanceDay
 
 /**
 * @see \App\Http\Controllers\AttendanceDayController::destroy
- * @see app/Http/Controllers/AttendanceDayController.php:138
+ * @see app/Http/Controllers/AttendanceDayController.php:154
  * @route '/attendance/days/{attendanceDay}'
  */
 destroy.delete = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -563,7 +665,7 @@ destroy.delete = (args: { attendanceDay: number | { id: number } } | [attendance
 
     /**
 * @see \App\Http\Controllers\AttendanceDayController::destroy
- * @see app/Http/Controllers/AttendanceDayController.php:138
+ * @see app/Http/Controllers/AttendanceDayController.php:154
  * @route '/attendance/days/{attendanceDay}'
  */
     const destroyForm = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -578,7 +680,7 @@ destroy.delete = (args: { attendanceDay: number | { id: number } } | [attendance
 
             /**
 * @see \App\Http\Controllers\AttendanceDayController::destroy
- * @see app/Http/Controllers/AttendanceDayController.php:138
+ * @see app/Http/Controllers/AttendanceDayController.php:154
  * @route '/attendance/days/{attendanceDay}'
  */
         destroyForm.delete = (args: { attendanceDay: number | { id: number } } | [attendanceDay: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -597,6 +699,7 @@ const days = {
 create: Object.assign(create, create),
 store: Object.assign(store, store),
 show: Object.assign(show, show),
+export: Object.assign(exportMethod, exportMethod),
 edit: Object.assign(edit, edit),
 update: Object.assign(update, update),
 destroy: Object.assign(destroy, destroy),

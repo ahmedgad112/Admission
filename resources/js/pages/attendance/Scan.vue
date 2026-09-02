@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { CheckCircle2 } from '@lucide/vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { trans } from '@/composables/useTrans';
@@ -25,9 +33,9 @@ type DaySession = {
     check_out_is_open: boolean;
 };
 
-defineProps<{
+const props = defineProps<{
     day: DaySession | null;
-    isScheduled: boolean;
+    recorded: 'check_in' | 'check_out' | null;
 }>();
 
 defineOptions({
@@ -39,9 +47,9 @@ defineOptions({
     },
 });
 
-const mode = ref<'check-in' | 'check-out'>('check-in');
 const status = ref(trans('scan.requesting'));
 const cameraFailed = ref(false);
+const successOpen = ref(props.recorded !== null);
 const video = ref<HTMLVideoElement | null>(null);
 const canvas = document.createElement('canvas');
 let stream: MediaStream | null = null;
@@ -166,6 +174,13 @@ function applyScan(value: string): void {
     submit();
 }
 
+watch(
+    () => props.recorded,
+    (value) => {
+        successOpen.value = value !== null;
+    },
+);
+
 onMounted(async () => {
     form.device_uuid = getDeviceUuid();
 
@@ -196,9 +211,13 @@ function submit(): void {
         return;
     }
 
-    const url = mode.value === 'check-in' ? '/attendance/check-in' : '/attendance/check-out';
+    const url = '/attendance/scan';
     form.post(url, {
         preserveScroll: true,
+        onSuccess: () => {
+            form.token = '';
+            status.value = trans('scan.point_camera');
+        },
         onError: () => {
             form.token = '';
             retryAfter = Date.now() + 1500;
@@ -261,31 +280,15 @@ async function retryCamera(): Promise<void> {
                 <p v-if="!day" class="text-sm text-destructive">
                     {{ trans('scan.no_session') }}
                 </p>
-                <p v-if="day && !isScheduled" class="text-sm text-destructive">
-                    {{ trans('scan.not_rostered') }}
-                </p>
                 <p
-                    v-if="day && mode === 'check-in' && !day.check_in_is_open"
+                    v-if="day && !day.check_in_is_open && !day.check_out_is_open"
                     class="text-sm text-destructive"
                 >
-                    {{ trans('scan.check_in_closed') }}
-                </p>
-                <p
-                    v-if="day && mode === 'check-out' && !day.check_out_is_open"
-                    class="text-sm text-destructive"
-                >
-                    {{ trans('scan.check_out_closed') }}
+                    {{ trans('scan.sessions_closed') }}
                 </p>
                 <p v-if="(form.errors as Record<string, string>).attendance" class="text-sm text-destructive">
                     {{ (form.errors as Record<string, string>).attendance }}
                 </p>
-                <div class="space-y-2">
-                    <Label for="mode">{{ trans('common.action') }}</Label>
-                    <select id="mode" v-model="mode" class="field-control">
-                        <option value="check-in">{{ trans('scan.check_in') }}</option>
-                        <option value="check-out">{{ trans('scan.check_out') }}</option>
-                    </select>
-                </div>
                 <div class="space-y-2">
                     <Label for="token">{{ trans('scan.kiosk_code') }}</Label>
                     <Input
@@ -305,9 +308,36 @@ async function retryCamera(): Promise<void> {
                     :disabled="form.processing || !form.token"
                     @click="submit"
                 >
-                    {{ mode === 'check-in' ? trans('scan.check_in') : trans('scan.check_out') }}
+                    {{ trans('scan.submit') }}
                 </Button>
             </div>
         </div>
+
+        <Dialog :open="successOpen" @update:open="successOpen = $event">
+            <DialogContent class="sm:max-w-sm" :show-close-button="false">
+                <div class="flex flex-col items-center gap-4 py-2 text-center">
+                    <div
+                        class="flex size-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+                    >
+                        <CheckCircle2 class="size-8" />
+                    </div>
+                    <DialogHeader class="items-center space-y-2 text-center">
+                        <DialogTitle class="text-xl">
+                            {{ trans('scan.success_title') }}
+                        </DialogTitle>
+                        <DialogDescription class="text-base">
+                            {{
+                                recorded === 'check_out'
+                                    ? trans('scan.success_check_out')
+                                    : trans('scan.success_check_in')
+                            }}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Button class="w-full rounded-full" @click="successOpen = false">
+                        {{ trans('scan.success_ok') }}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     </div>
 </template>

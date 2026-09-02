@@ -29,15 +29,14 @@ class QrSessionController extends Controller
             ? Branch::query()->orderBy('name')->get(['id', 'name'])
             : Branch::query()->whereKey($user->branch_id)->get(['id', 'name']);
 
+        $todaySessions = $branches->map(
+            fn (Branch $branch): array => AttendanceDay::ensureForBranch($branch->id, $user->id)->toWindowArray(),
+        )->values();
+
         return Inertia::render('attendance/Kiosk', [
             'branches' => $branches,
             'defaultBranchId' => $user->branch_id,
-            'todaySessions' => AttendanceDay::query()
-                ->whereIn('branch_id', $branches->pluck('id'))
-                ->whereDate('date', now()->toDateString())
-                ->get()
-                ->map->toWindowArray()
-                ->values(),
+            'todaySessions' => $todaySessions,
             'qrTtlSeconds' => (int) config('attendance.qr_ttl_seconds', 20),
             'entryCodeLength' => (int) config('attendance.entry_code_length', 6),
         ]);
@@ -46,12 +45,6 @@ class QrSessionController extends Controller
     public function current(GenerateQrSessionRequest $request): JsonResponse
     {
         [$type, $branch, $day] = $this->resolvedDay($request);
-
-        if (! $day instanceof AttendanceDay) {
-            return response()->json([
-                'message' => 'Create an attendance session for today before opening the kiosk.',
-            ], 422);
-        }
 
         if (! $day->isOpenFor($type)) {
             return response()->json([
@@ -71,12 +64,6 @@ class QrSessionController extends Controller
     public function open(GenerateQrSessionRequest $request): JsonResponse
     {
         [$type, $branch, $day] = $this->resolvedDay($request);
-
-        if (! $day instanceof AttendanceDay) {
-            return response()->json([
-                'message' => 'Create an attendance session for today before opening the kiosk.',
-            ], 422);
-        }
 
         $this->authorize('update', $day);
         $day->setSessionOpen($type, true);
@@ -99,12 +86,6 @@ class QrSessionController extends Controller
     {
         [$type, $branch, $day] = $this->resolvedDay($request);
 
-        if (! $day instanceof AttendanceDay) {
-            return response()->json([
-                'message' => 'Create an attendance session for today before opening the kiosk.',
-            ], 422);
-        }
-
         $this->authorize('update', $day);
         $day->setSessionOpen($type, false);
         $this->qrSessions->expireActive($branch, $type);
@@ -125,19 +106,13 @@ class QrSessionController extends Controller
     {
         [$type, , $day] = $this->resolvedDay($request);
 
-        if (! $day instanceof AttendanceDay) {
-            return response()->json([
-                'pending' => [],
-            ]);
-        }
-
         return response()->json([
             'pending' => $day->pendingStaff($type),
         ]);
     }
 
     /**
-     * @return array{0: QrSessionType, 1: Branch, 2: AttendanceDay|null}
+     * @return array{0: QrSessionType, 1: Branch, 2: AttendanceDay}
      */
     private function resolvedDay(GenerateQrSessionRequest $request): array
     {
@@ -150,6 +125,6 @@ class QrSessionController extends Controller
             $request->validated('branch_id') !== null ? (int) $request->validated('branch_id') : null,
         );
 
-        return [$type, $branch, AttendanceDay::forBranchOnDate($branch->id, now())];
+        return [$type, $branch, AttendanceDay::ensureForBranch($branch->id, $user->id)];
     }
 }

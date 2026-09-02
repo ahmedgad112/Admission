@@ -27,7 +27,6 @@ class UpdateAttendanceDayRequest extends FormRequest
         $user = $this->user();
 
         return [
-            ...$this->staffRules(),
             'branch_id' => [
                 'required',
                 'integer',

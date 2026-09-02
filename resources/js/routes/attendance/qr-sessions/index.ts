@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
 export const current = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ current.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
 current.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ current.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
 current.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ current.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
 current.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ current.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
     const currentForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ current.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
         currentForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ current.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\QrSessionController::current
- * @see app/Http/Controllers/QrSessionController.php:46
+ * @see app/Http/Controllers/QrSessionController.php:45
  * @route '/attendance/qr-sessions/current'
  */
         currentForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ current.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     current.form = currentForm
 /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/attendance/qr-sessions/open'
  */
 export const open = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ open.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/attendance/qr-sessions/open'
  */
 open.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ open.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/attendance/qr-sessions/open'
  */
 open.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ open.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/attendance/qr-sessions/open'
  */
     const openForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ open.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\QrSessionController::open
- * @see app/Http/Controllers/QrSessionController.php:71
+ * @see app/Http/Controllers/QrSessionController.php:64
  * @route '/attendance/qr-sessions/open'
  */
         openForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -134,7 +134,7 @@ open.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     open.form = openForm
 /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/attendance/qr-sessions/close'
  */
 export const close = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -149,7 +149,7 @@ close.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/attendance/qr-sessions/close'
  */
 close.url = (options?: RouteQueryOptions) => {
@@ -158,7 +158,7 @@ close.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/attendance/qr-sessions/close'
  */
 close.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -168,7 +168,7 @@ close.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/attendance/qr-sessions/close'
  */
     const closeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -178,7 +178,7 @@ close.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\QrSessionController::close
- * @see app/Http/Controllers/QrSessionController.php:98
+ * @see app/Http/Controllers/QrSessionController.php:85
  * @route '/attendance/qr-sessions/close'
  */
         closeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

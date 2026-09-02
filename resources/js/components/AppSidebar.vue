@@ -29,6 +29,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarRail,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { trans } from '@/composables/useTrans';
 import type { NavItem } from '@/types';
@@ -39,8 +40,13 @@ type NavGroup = {
 };
 
 const page = usePage();
-const documentDir = computed<'ltr' | 'rtl'>(() => (page.props.dir === 'rtl' ? 'rtl' : 'ltr'));
-const sidebarSide = computed(() => (documentDir.value === 'rtl' ? 'right' : 'left'));
+const { setOpenMobile } = useSidebar();
+const documentDir = computed<'ltr' | 'rtl'>(() =>
+    page.props.dir === 'rtl' ? 'rtl' : 'ltr',
+);
+const sidebarSide = computed(() =>
+    documentDir.value === 'rtl' ? 'right' : 'left',
+);
 const home = computed(() => page.props.home || '/dashboard');
 
 const navGroups = computed<NavGroup[]>(() => {
@@ -55,55 +61,107 @@ const navGroups = computed<NavGroup[]>(() => {
     const settings: NavItem[] = [];
 
     if (can?.viewDashboard) {
-        workspace.push({ title: trans('nav.dashboard'), href: '/dashboard', icon: LayoutGrid });
+        workspace.push({
+            title: trans('nav.dashboard'),
+            href: '/dashboard',
+            icon: LayoutGrid,
+        });
     }
 
     if (can?.scanAttendance) {
-        attendance.push({ title: trans('nav.scan'), href: '/attendance/scan', icon: ScanLine });
+        attendance.push({
+            title: trans('nav.scan'),
+            href: '/attendance/scan',
+            icon: ScanLine,
+        });
     }
 
     if (can?.viewRoster) {
-        attendance.push({ title: trans('nav.roster'), href: '/attendance/days', icon: CalendarDays });
+        attendance.push({
+            title: trans('nav.roster'),
+            href: '/attendance/days',
+            icon: CalendarDays,
+        });
     }
 
     if (can?.viewAttendance) {
-        attendance.push({ title: trans('nav.records'), href: '/attendance', icon: Timer });
+        attendance.push({
+            title: trans('nav.records'),
+            href: '/attendance',
+            icon: Timer,
+        });
     }
 
     if (can?.manageKiosk) {
-        attendance.push({ title: trans('nav.kiosk'), href: '/attendance/kiosk', icon: QrCode });
+        attendance.push({
+            title: trans('nav.kiosk'),
+            href: '/attendance/kiosk',
+            icon: QrCode,
+        });
     }
 
     if (can?.viewStaff) {
-        organization.push({ title: trans('nav.staff'), href: '/staff', icon: Users });
+        organization.push({
+            title: trans('nav.staff'),
+            href: '/staff',
+            icon: Users,
+        });
     }
 
     if (can?.manageStaff) {
-        organization.push({ title: trans('nav.departments'), href: '/departments', icon: Building2 });
+        organization.push({
+            title: trans('nav.departments'),
+            href: '/departments',
+            icon: Building2,
+        });
     }
 
     if (can?.manageShifts) {
-        organization.push({ title: trans('nav.shifts'), href: '/shifts', icon: Clock });
+        organization.push({
+            title: trans('nav.shifts'),
+            href: '/shifts',
+            icon: Clock,
+        });
     }
 
     if (can?.manageBranches) {
-        organization.push({ title: trans('nav.branches'), href: '/branches', icon: MapPin });
+        organization.push({
+            title: trans('nav.branches'),
+            href: '/branches',
+            icon: MapPin,
+        });
     }
 
     if (can?.viewTasks) {
-        organization.push({ title: trans('nav.tasks'), href: '/tasks', icon: ClipboardList });
+        organization.push({
+            title: trans('nav.tasks'),
+            href: '/tasks',
+            icon: ClipboardList,
+        });
     }
 
     if (can?.viewLeaveRequests) {
-        organization.push({ title: trans('nav.leave'), href: '/leave-requests', icon: CalendarOff });
+        organization.push({
+            title: trans('nav.leave'),
+            href: '/leave-requests',
+            icon: CalendarOff,
+        });
     }
 
     if (can?.managePermissions) {
-        settings.push({ title: trans('nav.permissions'), href: '/permissions', icon: ShieldCheck });
+        settings.push({
+            title: trans('nav.permissions'),
+            href: '/permissions',
+            icon: ShieldCheck,
+        });
     }
 
     if (can?.viewActivityLog) {
-        settings.push({ title: trans('nav.activity_log'), href: '/activity-logs', icon: History });
+        settings.push({
+            title: trans('nav.activity_log'),
+            href: '/activity-logs',
+            icon: History,
+        });
     }
 
     return [
@@ -126,7 +184,7 @@ const navGroups = computed<NavGroup[]>(() => {
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="home">
+                        <Link :href="home" @click="setOpenMobile(false)">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>
