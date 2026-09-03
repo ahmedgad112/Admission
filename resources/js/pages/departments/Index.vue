@@ -50,7 +50,9 @@ function destroy(id: number): void {
         >
             <template #actions>
                 <Button v-if="canCreate" class="rounded-full" as-child>
-                    <Link href="/departments/create">{{ trans('departments.new') }}</Link>
+                    <Link href="/departments/create">{{
+                        trans('departments.new')
+                    }}</Link>
                 </Button>
             </template>
         </PageHeader>
@@ -76,20 +78,36 @@ function destroy(id: number): void {
                 <CardContent>
                     <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
                         <div>
-                            <dt class="text-xs text-muted-foreground">{{ trans('departments.manager') }}</dt>
+                            <dt class="text-xs text-muted-foreground">
+                                {{ trans('departments.manager') }}
+                            </dt>
                             <dd class="font-medium">
-                                {{ department.manager?.name ?? trans('common.none') }}
+                                {{
+                                    department.manager?.name ??
+                                    trans('common.none')
+                                }}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-muted-foreground">{{ trans('common.staff') }}</dt>
-                            <dd class="font-medium">{{ department.staff_count }}</dd>
+                            <dt class="text-xs text-muted-foreground">
+                                {{ trans('common.staff') }}
+                            </dt>
+                            <dd class="font-medium">
+                                {{ department.staff_count }}
+                            </dd>
                         </div>
                     </dl>
                 </CardContent>
                 <CardFooter class="mt-auto flex flex-wrap gap-2 border-t">
-                    <Button variant="outline" size="sm" class="rounded-full" as-child>
-                        <Link :href="`/departments/${department.id}/edit`">{{ trans('common.edit') }}</Link>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        class="rounded-full"
+                        as-child
+                    >
+                        <Link :href="`/departments/${department.id}/edit`">{{
+                            trans('common.edit')
+                        }}</Link>
                     </Button>
                     <Button
                         v-if="canCreate"

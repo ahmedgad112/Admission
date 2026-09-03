@@ -16,8 +16,8 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { trans } from '@/composables/useTrans';
 import { Label } from '@/components/ui/label';
+import { trans } from '@/composables/useTrans';
 
 const passwordInput = useTemplateRef('passwordInput');
 </script>
@@ -33,14 +33,19 @@ const passwordInput = useTemplateRef('passwordInput');
             class="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10"
         >
             <div class="relative space-y-0.5 text-red-600 dark:text-red-100">
-                <p class="font-medium">{{ trans('settings.delete.warning') }}</p>
+                <p class="font-medium">
+                    {{ trans('settings.delete.warning') }}
+                </p>
                 <p class="text-sm">
                     {{ trans('settings.delete.caution') }}
                 </p>
             </div>
             <Dialog>
                 <DialogTrigger as-child>
-                    <Button variant="destructive" data-test="delete-user-button">
+                    <Button
+                        variant="destructive"
+                        data-test="delete-user-button"
+                    >
                         {{ trans('settings.delete.button') }}
                     </Button>
                 </DialogTrigger>
@@ -56,14 +61,18 @@ const passwordInput = useTemplateRef('passwordInput');
                         v-slot="{ errors, processing, reset, clearErrors }"
                     >
                         <DialogHeader class="space-y-3">
-                            <DialogTitle>{{ trans('settings.delete.confirm_title') }}</DialogTitle>
+                            <DialogTitle>{{
+                                trans('settings.delete.confirm_title')
+                            }}</DialogTitle>
                             <DialogDescription>
                                 {{ trans('settings.delete.body') }}
                             </DialogDescription>
                         </DialogHeader>
 
                         <div class="grid gap-2">
-                            <Label for="password" class="sr-only">{{ trans('common.password') }}</Label>
+                            <Label for="password" class="sr-only">{{
+                                trans('common.password')
+                            }}</Label>
                             <PasswordInput
                                 id="password"
                                 name="password"

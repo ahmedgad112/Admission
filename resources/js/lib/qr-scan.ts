@@ -9,10 +9,14 @@ type BarcodeDetectorCtor = {
     getSupportedFormats?: () => Promise<string[]>;
 };
 
-export type QrFrameDetector = (canvas: HTMLCanvasElement) => Promise<string | null>;
+export type QrFrameDetector = (
+    canvas: HTMLCanvasElement,
+) => Promise<string | null>;
 
 function barcodeDetectorCtor(): BarcodeDetectorCtor | null {
-    const Detector = (window as Window & { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector;
+    const Detector = (
+        window as Window & { BarcodeDetector?: BarcodeDetectorCtor }
+    ).BarcodeDetector;
 
     return typeof Detector === 'function' ? Detector : null;
 }
@@ -72,8 +76,14 @@ export async function createQrDetector(): Promise<QrFrameDetector> {
     };
 }
 
-export function drawVideoFrame(video: HTMLVideoElement, canvas: HTMLCanvasElement): boolean {
-    if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || video.videoWidth === 0) {
+export function drawVideoFrame(
+    video: HTMLVideoElement,
+    canvas: HTMLCanvasElement,
+): boolean {
+    if (
+        video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+        video.videoWidth === 0
+    ) {
         return false;
     }
 

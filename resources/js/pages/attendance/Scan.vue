@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
 import { CheckCircle2 } from '@lucide/vue';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -66,6 +66,10 @@ const form = useForm({
     longitude: 0,
     device_uuid: '',
 });
+
+const attendanceError = computed(
+    () => (form.errors as Record<string, string>).attendance,
+);
 
 async function locate(): Promise<void> {
     await new Promise<void>((resolve, reject) => {
@@ -252,8 +256,12 @@ async function retryCamera(): Promise<void> {
             :description="trans('scan.description')"
         />
 
-        <div class="mx-auto grid w-full max-w-3xl gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div class="relative overflow-hidden rounded-[2rem] bg-black shadow-xl">
+        <div
+            class="mx-auto grid w-full max-w-3xl gap-6 lg:grid-cols-[1.1fr_0.9fr]"
+        >
+            <div
+                class="relative overflow-hidden rounded-[2rem] bg-black shadow-xl"
+            >
                 <video
                     ref="video"
                     class="aspect-[4/5] w-full object-cover md:aspect-video"
@@ -262,7 +270,9 @@ async function retryCamera(): Promise<void> {
                     playsinline
                     webkit-playsinline
                 />
-                <div class="pointer-events-none absolute inset-4 rounded-3xl border-2 border-white/70 sm:inset-8" />
+                <div
+                    class="pointer-events-none absolute inset-4 rounded-3xl border-2 border-white/70 sm:inset-8"
+                />
                 <button
                     v-if="cameraFailed"
                     type="button"
@@ -271,7 +281,9 @@ async function retryCamera(): Promise<void> {
                 >
                     {{ trans('scan.start_camera') }}
                 </button>
-                <p class="absolute inset-x-0 bottom-0 bg-black/55 px-4 py-3 text-sm text-white">
+                <p
+                    class="absolute inset-x-0 bottom-0 bg-black/55 px-4 py-3 text-sm text-white"
+                >
                     {{ status }}
                 </p>
             </div>
@@ -281,13 +293,15 @@ async function retryCamera(): Promise<void> {
                     {{ trans('scan.no_session') }}
                 </p>
                 <p
-                    v-if="day && !day.check_in_is_open && !day.check_out_is_open"
+                    v-if="
+                        day && !day.check_in_is_open && !day.check_out_is_open
+                    "
                     class="text-sm text-destructive"
                 >
                     {{ trans('scan.sessions_closed') }}
                 </p>
-                <p v-if="(form.errors as Record<string, string>).attendance" class="text-sm text-destructive">
-                    {{ (form.errors as Record<string, string>).attendance }}
+                <p v-if="attendanceError" class="text-sm text-destructive">
+                    {{ attendanceError }}
                 </p>
                 <div class="space-y-2">
                     <Label for="token">{{ trans('scan.kiosk_code') }}</Label>
@@ -333,7 +347,10 @@ async function retryCamera(): Promise<void> {
                             }}
                         </DialogDescription>
                     </DialogHeader>
-                    <Button class="w-full rounded-full" @click="successOpen = false">
+                    <Button
+                        class="w-full rounded-full"
+                        @click="successOpen = false"
+                    >
                         {{ trans('scan.success_ok') }}
                     </Button>
                 </div>

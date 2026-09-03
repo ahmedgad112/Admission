@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { trans } from '@/composables/useTrans';
 
@@ -46,8 +52,14 @@ function filter(key: 'search' | 'event', value: string): void {
     router.get(
         '/activity-logs',
         {
-            search: key === 'search' ? value || undefined : props.filters.search || undefined,
-            event: key === 'event' ? value || undefined : props.filters.event || undefined,
+            search:
+                key === 'search'
+                    ? value || undefined
+                    : props.filters.search || undefined,
+            event:
+                key === 'event'
+                    ? value || undefined
+                    : props.filters.event || undefined,
         },
         { preserveState: true, replace: true },
     );
@@ -100,7 +112,9 @@ function formatChange(value: unknown): string {
             <select
                 class="field-control sm:max-w-xs"
                 :value="filters.event"
-                @change="filter('event', ($event.target as HTMLSelectElement).value)"
+                @change="
+                    filter('event', ($event.target as HTMLSelectElement).value)
+                "
             >
                 <option value="">{{ trans('activity.all_events') }}</option>
                 <option v-for="event in events" :key="event" :value="event">
@@ -118,7 +132,9 @@ function formatChange(value: unknown): string {
         <div v-else class="grid gap-3">
             <Card v-for="log in logs.data" :key="log.id" class="shadow-sm">
                 <CardHeader class="pb-2">
-                    <CardTitle class="text-base">{{ log.description }}</CardTitle>
+                    <CardTitle class="text-base">{{
+                        log.description
+                    }}</CardTitle>
                     <CardDescription>
                         {{ trans(`activity.events.${log.event}`) }}
                         ·
@@ -127,21 +143,34 @@ function formatChange(value: unknown): string {
                 </CardHeader>
                 <CardContent class="space-y-3 text-sm text-muted-foreground">
                     <div class="flex flex-wrap gap-x-6 gap-y-1">
-                        <span>{{ log.causer?.name ?? trans('activity.system') }}</span>
+                        <span>{{
+                            log.causer?.name ?? trans('activity.system')
+                        }}</span>
                         <span>{{ formatTime(log.created_at) }}</span>
                         <span v-if="log.ip_address">{{ log.ip_address }}</span>
                     </div>
                     <div
-                        v-if="log.changes && Object.keys(log.changes).length > 0"
+                        v-if="
+                            log.changes && Object.keys(log.changes).length > 0
+                        "
                         class="rounded-xl border border-border/70 bg-muted/20 p-3"
                     >
-                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground">
+                        <p
+                            class="mb-2 text-xs font-semibold tracking-wide text-foreground uppercase"
+                        >
                             {{ trans('activity.changes') }}
                         </p>
                         <dl class="grid gap-1 sm:grid-cols-2">
-                            <div v-for="(value, key) in log.changes" :key="String(key)">
-                                <dt class="text-xs text-muted-foreground">{{ key }}</dt>
-                                <dd class="font-medium text-foreground">{{ formatChange(value) }}</dd>
+                            <div
+                                v-for="(value, key) in log.changes"
+                                :key="String(key)"
+                            >
+                                <dt class="text-xs text-muted-foreground">
+                                    {{ key }}
+                                </dt>
+                                <dd class="font-medium text-foreground">
+                                    {{ formatChange(value) }}
+                                </dd>
                             </div>
                         </dl>
                     </div>

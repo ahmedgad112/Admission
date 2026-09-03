@@ -8,7 +8,9 @@ const props = defineProps<{
     tone: string;
 }>();
 
-const label = computed(() => trans(`status.${props.value}`, {}, humanize(props.value)));
+const label = computed(() =>
+    trans(`status.${props.value}`, {}, humanize(props.value)),
+);
 </script>
 
 <template>

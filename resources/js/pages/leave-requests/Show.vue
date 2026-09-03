@@ -64,7 +64,11 @@ function review(status: 'approved' | 'rejected'): void {
 }
 
 function cancel(): void {
-    router.post(`/leave-requests/${props.leaveRequest.id}/cancel`, {}, { preserveScroll: true });
+    router.post(
+        `/leave-requests/${props.leaveRequest.id}/cancel`,
+        {},
+        { preserveScroll: true },
+    );
 }
 </script>
 
@@ -72,20 +76,41 @@ function cancel(): void {
     <Head :title="trans('leave.head')" />
 
     <div class="page-shell">
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div
+            class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"
+        >
             <div>
-                <p class="text-xs font-semibold tracking-[0.18em] text-primary uppercase">{{ trans('leave.eyebrow') }}</p>
-                <h1 class="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">
+                <p
+                    class="text-xs font-semibold tracking-[0.18em] text-primary uppercase"
+                >
+                    {{ trans('leave.eyebrow') }}
+                </p>
+                <h1
+                    class="mt-1 text-2xl font-semibold tracking-tight md:text-3xl"
+                >
                     {{ leaveRequest.user?.name ?? trans('leave.head') }}
                 </h1>
                 <p class="text-sm text-muted-foreground">
                     {{ dateRange() }}
-                    · {{ leaveRequest.department?.name ?? leaveRequest.branch?.name ?? trans('common.no_team') }}
+                    ·
+                    {{
+                        leaveRequest.department?.name ??
+                        leaveRequest.branch?.name ??
+                        trans('common.no_team')
+                    }}
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <StatusBadge :value="leaveRequest.status" :tone="leaveRequestStatusTone(leaveRequest.status)" />
-                <Button v-if="canCancel" variant="outline" class="rounded-full" @click="cancel">
+                <StatusBadge
+                    :value="leaveRequest.status"
+                    :tone="leaveRequestStatusTone(leaveRequest.status)"
+                />
+                <Button
+                    v-if="canCancel"
+                    variant="outline"
+                    class="rounded-full"
+                    @click="cancel"
+                >
                     {{ trans('leave.cancel') }}
                 </Button>
             </div>
@@ -95,17 +120,24 @@ function cancel(): void {
             <Card>
                 <CardHeader>
                     <CardTitle>{{ trans('leave.details') }}</CardTitle>
-                    <CardDescription>{{ trans(`leave.type.${leaveRequest.type}`) }}</CardDescription>
+                    <CardDescription>{{
+                        trans(`leave.type.${leaveRequest.type}`)
+                    }}</CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-4">
-                    <p class="whitespace-pre-wrap text-sm">{{ leaveRequest.reason }}</p>
+                    <p class="text-sm whitespace-pre-wrap">
+                        {{ leaveRequest.reason }}
+                    </p>
                     <div v-if="canReview" class="space-y-3">
                         <textarea
                             v-model="reviewForm.review_note"
                             class="field-control min-h-24 py-3"
                             :placeholder="trans('leave.note_placeholder')"
                         />
-                        <p v-if="reviewForm.errors.review_note" class="text-sm text-destructive">
+                        <p
+                            v-if="reviewForm.errors.review_note"
+                            class="text-sm text-destructive"
+                        >
                             {{ reviewForm.errors.review_note }}
                         </p>
                         <div class="flex flex-wrap gap-2">
@@ -135,21 +167,46 @@ function cancel(): void {
                 </CardHeader>
                 <CardContent class="space-y-3 text-sm">
                     <div>
-                        <p class="text-muted-foreground">{{ trans('common.staff') }}</p>
-                        <p class="font-medium">{{ leaveRequest.user?.name ?? '—' }}</p>
-                        <p class="text-xs text-muted-foreground">{{ leaveRequest.user?.email }}</p>
+                        <p class="text-muted-foreground">
+                            {{ trans('common.staff') }}
+                        </p>
+                        <p class="font-medium">
+                            {{ leaveRequest.user?.name ?? '—' }}
+                        </p>
+                        <p class="text-xs text-muted-foreground">
+                            {{ leaveRequest.user?.email }}
+                        </p>
                     </div>
                     <div>
-                        <p class="text-muted-foreground">{{ trans('leave.reviewed_by') }}</p>
-                        <p class="font-medium">{{ leaveRequest.reviewer?.name ?? trans('leave.not_reviewed') }}</p>
+                        <p class="text-muted-foreground">
+                            {{ trans('leave.reviewed_by') }}
+                        </p>
+                        <p class="font-medium">
+                            {{
+                                leaveRequest.reviewer?.name ??
+                                trans('leave.not_reviewed')
+                            }}
+                        </p>
                     </div>
                     <div v-if="leaveRequest.reviewed_at">
-                        <p class="text-muted-foreground">{{ trans('leave.reviewed_at') }}</p>
-                        <p class="font-medium">{{ new Date(leaveRequest.reviewed_at).toLocaleString() }}</p>
+                        <p class="text-muted-foreground">
+                            {{ trans('leave.reviewed_at') }}
+                        </p>
+                        <p class="font-medium">
+                            {{
+                                new Date(
+                                    leaveRequest.reviewed_at,
+                                ).toLocaleString()
+                            }}
+                        </p>
                     </div>
                     <div v-if="leaveRequest.review_note">
-                        <p class="text-muted-foreground">{{ trans('leave.note') }}</p>
-                        <p class="whitespace-pre-wrap">{{ leaveRequest.review_note }}</p>
+                        <p class="text-muted-foreground">
+                            {{ trans('leave.note') }}
+                        </p>
+                        <p class="whitespace-pre-wrap">
+                            {{ leaveRequest.review_note }}
+                        </p>
                     </div>
                 </CardContent>
             </Card>

@@ -48,7 +48,9 @@ defineOptions({
 });
 
 const type = ref<'check_in' | 'check_out'>('check_in');
-const branchId = ref<number | null>(props.defaultBranchId ?? props.branches[0]?.id ?? null);
+const branchId = ref<number | null>(
+    props.defaultBranchId ?? props.branches[0]?.id ?? null,
+);
 const days = ref<DaySession[]>([...props.todaySessions]);
 const session = ref<QrPayload | null>(null);
 const qrSvg = ref('');
@@ -59,8 +61,8 @@ const pending = ref<PendingPerson[]>([]);
 let timer: number | undefined;
 let pendingTimer: number | undefined;
 
-const todaySession = computed(() =>
-    days.value.find((day) => day.branch_id === branchId.value) ?? null,
+const todaySession = computed(
+    () => days.value.find((day) => day.branch_id === branchId.value) ?? null,
 );
 
 const isOpen = computed(() => {
@@ -89,10 +91,7 @@ function applyDay(day?: DaySession): void {
         return;
     }
 
-    days.value = [
-        ...days.value.filter((item) => item.id !== day.id),
-        day,
-    ];
+    days.value = [...days.value.filter((item) => item.id !== day.id), day];
 }
 
 function clearQr(): void {
@@ -108,7 +107,10 @@ async function renderQr(payload: QrPayload): Promise<void> {
     error.value = '';
 }
 
-async function requestSession(path: string, method: 'GET' | 'POST'): Promise<Response> {
+async function requestSession(
+    path: string,
+    method: 'GET' | 'POST',
+): Promise<Response> {
     const params = new URLSearchParams({
         type: type.value,
     });
@@ -127,20 +129,18 @@ async function requestSession(path: string, method: 'GET' | 'POST'): Promise<Res
         headers['X-XSRF-TOKEN'] = csrfToken();
     }
 
-    return fetch(
-        method === 'GET' ? `${path}?${params.toString()}` : path,
-        {
-            method,
-            headers,
-            credentials: 'same-origin',
-            body: method === 'POST'
+    return fetch(method === 'GET' ? `${path}?${params.toString()}` : path, {
+        method,
+        headers,
+        credentials: 'same-origin',
+        body:
+            method === 'POST'
                 ? JSON.stringify({
-                    type: type.value,
-                    branch_id: branchId.value,
-                })
+                      type: type.value,
+                      branch_id: branchId.value,
+                  })
                 : undefined,
-        },
-    );
+    });
 }
 
 async function loadSession(): Promise<void> {
@@ -151,7 +151,10 @@ async function loadSession(): Promise<void> {
         return;
     }
 
-    const response = await requestSession('/attendance/qr-sessions/current', 'GET');
+    const response = await requestSession(
+        '/attendance/qr-sessions/current',
+        'GET',
+    );
     const body = (await response.json()) as QrPayload;
 
     applyDay(body.day);
@@ -181,13 +184,16 @@ async function loadPending(): Promise<void> {
         params.set('branch_id', String(branchId.value));
     }
 
-    const response = await fetch(`/attendance/kiosk/pending?${params.toString()}`, {
-        headers: {
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
+    const response = await fetch(
+        `/attendance/kiosk/pending?${params.toString()}`,
+        {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
         },
-        credentials: 'same-origin',
-    });
+    );
 
     if (!response.ok) {
         return;
@@ -202,7 +208,9 @@ async function toggleSession(open: boolean): Promise<void> {
 
     try {
         const response = await requestSession(
-            open ? '/attendance/qr-sessions/open' : '/attendance/qr-sessions/close',
+            open
+                ? '/attendance/qr-sessions/open'
+                : '/attendance/qr-sessions/close',
             'POST',
         );
         const body = (await response.json()) as QrPayload;
@@ -290,17 +298,31 @@ watch([type, branchId], () => {
                 class="flex flex-col items-center justify-center rounded-[2rem] border bg-card px-6 py-10 text-center shadow-sm"
             >
                 <p class="mb-2 text-xs tracking-[0.3em] text-primary uppercase">
-                    {{ type === 'check_in' ? trans('scan.check_in') : trans('scan.check_out') }}
+                    {{
+                        type === 'check_in'
+                            ? trans('scan.check_in')
+                            : trans('scan.check_out')
+                    }}
                 </p>
                 <p
                     class="mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium"
-                    :class="isOpen ? 'bg-emerald-100 text-emerald-800' : 'bg-muted text-muted-foreground'"
+                    :class="
+                        isOpen
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-muted text-muted-foreground'
+                    "
                 >
                     <span
                         class="size-2 rounded-full"
-                        :class="isOpen ? 'bg-emerald-600' : 'bg-muted-foreground/50'"
+                        :class="
+                            isOpen ? 'bg-emerald-600' : 'bg-muted-foreground/50'
+                        "
                     />
-                    {{ isOpen ? trans('kiosk.session_open') : trans('kiosk.session_closed') }}
+                    {{
+                        isOpen
+                            ? trans('kiosk.session_open')
+                            : trans('kiosk.session_closed')
+                    }}
                 </p>
                 <div
                     v-if="qrSvg"
@@ -314,36 +336,58 @@ watch([type, branchId], () => {
                     {{ trans('kiosk.open_to_show') }}
                 </div>
                 <div v-if="session?.entry_code" class="mt-6 space-y-2">
-                    <p class="text-xs tracking-[0.2em] text-muted-foreground uppercase">
+                    <p
+                        class="text-xs tracking-[0.2em] text-muted-foreground uppercase"
+                    >
                         {{ trans('kiosk.code_hint') }}
                     </p>
-                    <p class="font-mono text-4xl font-semibold tracking-[0.35em] text-foreground">
+                    <p
+                        class="font-mono text-4xl font-semibold tracking-[0.35em] text-foreground"
+                    >
                         {{ session.entry_code }}
                     </p>
                 </div>
-                <div v-if="isOpen && session" class="mt-4 space-y-1 text-sm text-muted-foreground">
+                <div
+                    v-if="isOpen && session"
+                    class="mt-4 space-y-1 text-sm text-muted-foreground"
+                >
                     <div class="flex items-center gap-3">
                         <span class="size-2 rounded-full bg-primary" />
                         {{ trans('kiosk.refreshes', { seconds: remaining }) }}
                     </div>
                     <p class="text-xs">
-                        {{ trans('kiosk.ttl_hint', { seconds: props.qrTtlSeconds, digits: props.entryCodeLength }) }}
+                        {{
+                            trans('kiosk.ttl_hint', {
+                                seconds: props.qrTtlSeconds,
+                                digits: props.entryCodeLength,
+                            })
+                        }}
                     </p>
                 </div>
-                <p v-if="error" class="mt-3 text-sm text-destructive">{{ error }}</p>
+                <p v-if="error" class="mt-3 text-sm text-destructive">
+                    {{ error }}
+                </p>
             </div>
 
             <div class="space-y-5 rounded-[2rem] border bg-card p-6 shadow-sm">
                 <div class="space-y-2">
                     <Label for="type">{{ trans('kiosk.mode') }}</Label>
                     <select id="type" v-model="type" class="field-control">
-                        <option value="check_in">{{ trans('scan.check_in') }}</option>
-                        <option value="check_out">{{ trans('scan.check_out') }}</option>
+                        <option value="check_in">
+                            {{ trans('scan.check_in') }}
+                        </option>
+                        <option value="check_out">
+                            {{ trans('scan.check_out') }}
+                        </option>
                     </select>
                 </div>
                 <div class="space-y-2">
                     <Label for="branch">{{ trans('common.branch') }}</Label>
-                    <select id="branch" v-model.number="branchId" class="field-control">
+                    <select
+                        id="branch"
+                        v-model.number="branchId"
+                        class="field-control"
+                    >
                         <option
                             v-for="branch in branches"
                             :key="branch.id"
@@ -386,7 +430,9 @@ watch([type, branchId], () => {
             v-if="todaySession"
             class="rounded-[2rem] border bg-card p-6 shadow-sm"
         >
-            <div class="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div
+                class="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between"
+            >
                 <div>
                     <p class="text-xs tracking-[0.3em] text-primary uppercase">
                         {{
@@ -404,7 +450,9 @@ watch([type, branchId], () => {
                     </p>
                 </div>
                 <p class="text-sm font-medium text-muted-foreground">
-                    {{ trans('kiosk.pending_count', { count: pending.length }) }}
+                    {{
+                        trans('kiosk.pending_count', { count: pending.length })
+                    }}
                 </p>
             </div>
 
@@ -429,11 +477,13 @@ watch([type, branchId], () => {
                     class="flex items-center gap-3 rounded-2xl border bg-muted/20 px-4 py-3"
                 >
                     <span
-                        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold tabular-nums text-primary"
+                        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary tabular-nums"
                     >
                         {{ index + 1 }}
                     </span>
-                    <p class="min-w-0 text-sm font-medium leading-5">{{ person.name }}</p>
+                    <p class="min-w-0 text-sm leading-5 font-medium">
+                        {{ person.name }}
+                    </p>
                 </div>
             </div>
         </div>

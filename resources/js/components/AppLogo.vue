@@ -13,8 +13,13 @@ const name = usePage().props.name;
         <AppLogoIcon class="size-5 text-white" />
     </div>
     <div class="ms-1.5 grid flex-1 text-start text-sm">
-        <span class="truncate leading-tight font-bold tracking-tight text-foreground">{{ name }}</span>
-        <span class="truncate text-[11px] font-medium text-sidebar-foreground/60">
+        <span
+            class="truncate leading-tight font-bold tracking-tight text-foreground"
+            >{{ name }}</span
+        >
+        <span
+            class="truncate text-[11px] font-medium text-sidebar-foreground/60"
+        >
             {{ trans('brand.tagline') }}
         </span>
     </div>

@@ -23,7 +23,11 @@ const props = defineProps<{
 
 const form = useForm({
     name: props.department?.name ?? '',
-    branch_id: props.department?.branch_id ?? props.defaultBranchId ?? props.branches[0]?.id ?? '',
+    branch_id:
+        props.department?.branch_id ??
+        props.defaultBranchId ??
+        props.branches[0]?.id ??
+        '',
     manager_id: props.department?.manager_id ?? '',
 });
 
@@ -49,30 +53,71 @@ function submit(): void {
             <div class="space-y-2">
                 <Label for="name">{{ trans('departments.name') }}</Label>
                 <Input id="name" v-model="form.name" />
-                <p v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</p>
+                <p v-if="form.errors.name" class="text-sm text-destructive">
+                    {{ form.errors.name }}
+                </p>
             </div>
             <div class="space-y-2">
                 <Label for="branch_id">{{ trans('common.branch') }}</Label>
-                <select id="branch_id" v-model="form.branch_id" class="field-control" :disabled="Boolean(department)">
-                    <option v-for="branch in branches" :key="branch.id" :value="branch.id">
+                <select
+                    id="branch_id"
+                    v-model="form.branch_id"
+                    class="field-control"
+                    :disabled="Boolean(department)"
+                >
+                    <option
+                        v-for="branch in branches"
+                        :key="branch.id"
+                        :value="branch.id"
+                    >
                         {{ branch.name }}
                     </option>
                 </select>
-                <p v-if="form.errors.branch_id" class="text-sm text-destructive">{{ form.errors.branch_id }}</p>
+                <p
+                    v-if="form.errors.branch_id"
+                    class="text-sm text-destructive"
+                >
+                    {{ form.errors.branch_id }}
+                </p>
             </div>
             <div class="space-y-2">
-                <Label for="manager_id">{{ trans('departments.manager') }}</Label>
-                <select id="manager_id" v-model="form.manager_id" class="field-control">
+                <Label for="manager_id">{{
+                    trans('departments.manager')
+                }}</Label>
+                <select
+                    id="manager_id"
+                    v-model="form.manager_id"
+                    class="field-control"
+                >
                     <option value="">{{ trans('common.none') }}</option>
-                    <option v-for="manager in managers" :key="manager.id" :value="manager.id">
+                    <option
+                        v-for="manager in managers"
+                        :key="manager.id"
+                        :value="manager.id"
+                    >
                         {{ manager.name }}
                     </option>
                 </select>
-                <p class="text-sm text-muted-foreground">{{ trans('departments.manager_help') }}</p>
-                <p v-if="form.errors.manager_id" class="text-sm text-destructive">{{ form.errors.manager_id }}</p>
+                <p class="text-sm text-muted-foreground">
+                    {{ trans('departments.manager_help') }}
+                </p>
+                <p
+                    v-if="form.errors.manager_id"
+                    class="text-sm text-destructive"
+                >
+                    {{ form.errors.manager_id }}
+                </p>
             </div>
-            <Button class="rounded-full" :disabled="form.processing" @click="submit">
-                {{ department ? trans('departments.update') : trans('departments.save') }}
+            <Button
+                class="rounded-full"
+                :disabled="form.processing"
+                @click="submit"
+            >
+                {{
+                    department
+                        ? trans('departments.update')
+                        : trans('departments.save')
+                }}
             </Button>
         </CardContent>
     </Card>

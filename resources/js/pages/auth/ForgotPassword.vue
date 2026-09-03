@@ -61,7 +61,9 @@ defineProps<{
 
         <div class="space-x-1 text-center text-sm text-muted-foreground">
             <span>{{ trans('auth.forgot.return') }}</span>
-            <TextLink :href="login()">{{ trans('auth.forgot.login') }}</TextLink>
+            <TextLink :href="login()">{{
+                trans('auth.forgot.login')
+            }}</TextLink>
         </div>
     </div>
 </template>

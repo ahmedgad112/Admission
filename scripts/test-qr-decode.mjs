@@ -1,5 +1,5 @@
-import sharp from 'sharp';
 import jsQR from 'jsqr';
+import sharp from 'sharp';
 import { encodeQrSvg } from '../resources/js/lib/qrcode.ts';
 
 async function test(code) {

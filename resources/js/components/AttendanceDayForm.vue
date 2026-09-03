@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,11 @@ function localIsoDate(): string {
 }
 
 const form = useForm({
-    branch_id: props.day?.branch_id ?? props.defaultBranchId ?? props.branches[0]?.id ?? '',
+    branch_id:
+        props.day?.branch_id ??
+        props.defaultBranchId ??
+        props.branches[0]?.id ??
+        '',
     date: props.day?.date ?? localIsoDate(),
 });
 
@@ -53,7 +57,11 @@ function submit(): void {
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="space-y-2">
                     <Label for="branch_id">{{ trans('common.branch') }}</Label>
-                    <select id="branch_id" v-model="form.branch_id" class="field-control">
+                    <select
+                        id="branch_id"
+                        v-model="form.branch_id"
+                        class="field-control"
+                    >
                         <option
                             v-for="branch in branches"
                             :key="branch.id"
@@ -62,7 +70,10 @@ function submit(): void {
                             {{ branch.name }}
                         </option>
                     </select>
-                    <p v-if="form.errors.branch_id" class="text-sm text-destructive">
+                    <p
+                        v-if="form.errors.branch_id"
+                        class="text-sm text-destructive"
+                    >
                         {{ form.errors.branch_id }}
                     </p>
                 </div>
@@ -75,7 +86,11 @@ function submit(): void {
                 </div>
             </div>
 
-            <Button class="rounded-full" :disabled="form.processing || !canSubmit" @click="submit">
+            <Button
+                class="rounded-full"
+                :disabled="form.processing || !canSubmit"
+                @click="submit"
+            >
                 {{ day ? trans('roster.update') : trans('roster.save') }}
             </Button>
         </CardContent>

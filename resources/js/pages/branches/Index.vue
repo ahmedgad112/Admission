@@ -46,7 +46,9 @@ function destroy(id: number): void {
         >
             <template #actions>
                 <Button v-if="canCreate" class="rounded-full" as-child>
-                    <Link href="/branches/create">{{ trans('branches.new') }}</Link>
+                    <Link href="/branches/create">{{
+                        trans('branches.new')
+                    }}</Link>
                 </Button>
             </template>
         </PageHeader>
@@ -65,11 +67,20 @@ function destroy(id: number): void {
             >
                 <CardHeader>
                     <CardTitle class="text-lg">{{ branch.name }}</CardTitle>
-                    <CardDescription>{{ trans('common.branch') }}</CardDescription>
+                    <CardDescription>{{
+                        trans('common.branch')
+                    }}</CardDescription>
                 </CardHeader>
                 <CardFooter class="mt-auto flex flex-wrap gap-2 border-t">
-                    <Button variant="outline" size="sm" class="rounded-full" as-child>
-                        <Link :href="`/branches/${branch.id}/edit`">{{ trans('common.edit') }}</Link>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        class="rounded-full"
+                        as-child
+                    >
+                        <Link :href="`/branches/${branch.id}/edit`">{{
+                            trans('common.edit')
+                        }}</Link>
                     </Button>
                     <Button
                         v-if="canCreate"

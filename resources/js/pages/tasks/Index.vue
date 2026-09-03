@@ -3,7 +3,13 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { trans } from '@/composables/useTrans';
 import { taskPriorityTone, taskStatusTone } from '@/lib/status';
 
@@ -71,18 +77,29 @@ function assigneeLabel(task: TaskRow): string {
             <select
                 :value="filters.status"
                 class="field-control max-w-48"
-                @change="filter('status', ($event.target as HTMLSelectElement).value)"
+                @change="
+                    filter('status', ($event.target as HTMLSelectElement).value)
+                "
             >
                 <option value="">{{ trans('status.all') }}</option>
                 <option value="todo">{{ trans('status.todo') }}</option>
-                <option value="in_progress">{{ trans('status.in_progress') }}</option>
+                <option value="in_progress">
+                    {{ trans('status.in_progress') }}
+                </option>
                 <option value="review">{{ trans('status.review') }}</option>
-                <option value="completed">{{ trans('status.completed') }}</option>
+                <option value="completed">
+                    {{ trans('status.completed') }}
+                </option>
             </select>
             <select
                 :value="filters.priority"
                 class="field-control max-w-48"
-                @change="filter('priority', ($event.target as HTMLSelectElement).value)"
+                @change="
+                    filter(
+                        'priority',
+                        ($event.target as HTMLSelectElement).value,
+                    )
+                "
             >
                 <option value="">{{ trans('priority.all') }}</option>
                 <option value="low">{{ trans('priority.low') }}</option>
@@ -106,7 +123,10 @@ function assigneeLabel(task: TaskRow): string {
             >
                 <CardHeader>
                     <CardTitle class="text-lg">
-                        <Link :href="`/tasks/${task.id}`" class="hover:text-primary">
+                        <Link
+                            :href="`/tasks/${task.id}`"
+                            class="hover:text-primary"
+                        >
                             {{ task.title }}
                         </Link>
                     </CardTitle>
@@ -116,8 +136,14 @@ function assigneeLabel(task: TaskRow): string {
                 </CardHeader>
                 <CardContent class="flex items-center justify-between">
                     <div class="flex flex-wrap gap-2">
-                        <StatusBadge :value="task.priority" :tone="taskPriorityTone(task.priority)" />
-                        <StatusBadge :value="task.status" :tone="taskStatusTone(task.status)" />
+                        <StatusBadge
+                            :value="task.priority"
+                            :tone="taskPriorityTone(task.priority)"
+                        />
+                        <StatusBadge
+                            :value="task.status"
+                            :tone="taskStatusTone(task.status)"
+                        />
                     </div>
                     <span class="text-xs text-muted-foreground">
                         {{ task.due_date ?? trans('tasks.no_due') }}

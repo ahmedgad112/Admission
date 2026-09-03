@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { Download, Trash2 } from '@lucide/vue';
+import { computed, ref, watch } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { trans } from '@/composables/useTrans';
@@ -58,9 +64,13 @@ const exportFrom = ref(props.from);
 const exportTo = ref(props.to);
 const historyFrom = ref(props.from);
 const historyTo = ref(props.to);
-const exportUrl = computed(() => `/attendance/export?from=${exportFrom.value}&to=${exportTo.value}`);
+const exportUrl = computed(
+    () => `/attendance/export?from=${exportFrom.value}&to=${exportTo.value}`,
+);
 const filledCount = computed(
-    () => form.entries.filter((entry) => entry.check_in || entry.check_out).length,
+    () =>
+        form.entries.filter((entry) => entry.check_in || entry.check_out)
+            .length,
 );
 
 watch(
@@ -111,7 +121,13 @@ function saveTimes(): void {
 }
 
 function clearDay(): void {
-    if (!confirm(trans('attendance.clear_confirm_day', { date: dayLabel(props.date) }))) {
+    if (
+        !confirm(
+            trans('attendance.clear_confirm_day', {
+                date: dayLabel(props.date),
+            }),
+        )
+    ) {
         return;
     }
 
@@ -143,7 +159,14 @@ function clearRange(): void {
 }
 
 function clearPerson(userId: number, name: string): void {
-    if (!confirm(trans('attendance.clear_confirm_person', { name, date: dayLabel(props.date) }))) {
+    if (
+        !confirm(
+            trans('attendance.clear_confirm_person', {
+                name,
+                date: dayLabel(props.date),
+            }),
+        )
+    ) {
         return;
     }
 
@@ -172,7 +195,10 @@ function clock(value: string | null): string {
         return value;
     }
 
-    return parsed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return parsed.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+    });
 }
 </script>
 
@@ -191,9 +217,13 @@ function clock(value: string | null): string {
         />
 
         <Card class="shadow-sm">
-            <CardContent class="flex flex-col gap-4 pt-5 sm:gap-5 sm:pt-6 lg:flex-row lg:items-end lg:justify-between">
+            <CardContent
+                class="flex flex-col gap-4 pt-5 sm:gap-5 sm:pt-6 lg:flex-row lg:items-end lg:justify-between"
+            >
                 <div v-if="canRecord" class="w-full space-y-2 lg:w-auto">
-                    <p class="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                    <p
+                        class="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase"
+                    >
                         {{ trans('attendance.timesheet') }}
                     </p>
                     <div class="space-y-1">
@@ -208,37 +238,76 @@ function clock(value: string | null): string {
                     </div>
                 </div>
                 <div v-else class="w-full space-y-2 lg:w-auto">
-                    <p class="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                    <p
+                        class="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase"
+                    >
                         {{ trans('attendance.history_range') }}
                     </p>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end">
+                    <div
+                        class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end"
+                    >
                         <div class="space-y-1">
-                            <Label for="history-from">{{ trans('common.from') }}</Label>
-                            <Input id="history-from" v-model="historyFrom" type="date" class="w-full min-w-0 sm:w-44" />
+                            <Label for="history-from">{{
+                                trans('common.from')
+                            }}</Label>
+                            <Input
+                                id="history-from"
+                                v-model="historyFrom"
+                                type="date"
+                                class="w-full min-w-0 sm:w-44"
+                            />
                         </div>
                         <div class="space-y-1">
-                            <Label for="history-to">{{ trans('common.to') }}</Label>
-                            <Input id="history-to" v-model="historyTo" type="date" class="w-full min-w-0 sm:w-44" />
+                            <Label for="history-to">{{
+                                trans('common.to')
+                            }}</Label>
+                            <Input
+                                id="history-to"
+                                v-model="historyTo"
+                                type="date"
+                                class="w-full min-w-0 sm:w-44"
+                            />
                         </div>
-                        <Button class="w-full rounded-full sm:col-span-2 sm:w-auto" @click="applyHistoryRange">
+                        <Button
+                            class="w-full rounded-full sm:col-span-2 sm:w-auto"
+                            @click="applyHistoryRange"
+                        >
                             {{ trans('attendance.show_table') }}
                         </Button>
                     </div>
                 </div>
                 <div class="w-full space-y-2 lg:w-auto">
-                    <p class="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                    <p
+                        class="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase"
+                    >
                         {{ trans('attendance.export') }}
                     </p>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end">
+                    <div
+                        class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end"
+                    >
                         <div class="space-y-1">
                             <Label for="from">{{ trans('common.from') }}</Label>
-                            <Input id="from" v-model="exportFrom" type="date" class="w-full min-w-0 sm:w-44" />
+                            <Input
+                                id="from"
+                                v-model="exportFrom"
+                                type="date"
+                                class="w-full min-w-0 sm:w-44"
+                            />
                         </div>
                         <div class="space-y-1">
                             <Label for="to">{{ trans('common.to') }}</Label>
-                            <Input id="to" v-model="exportTo" type="date" class="w-full min-w-0 sm:w-44" />
+                            <Input
+                                id="to"
+                                v-model="exportTo"
+                                type="date"
+                                class="w-full min-w-0 sm:w-44"
+                            />
                         </div>
-                        <Button variant="outline" class="w-full rounded-full sm:col-span-2 sm:w-auto" as-child>
+                        <Button
+                            variant="outline"
+                            class="w-full rounded-full sm:col-span-2 sm:w-auto"
+                            as-child
+                        >
                             <a :href="exportUrl">
                                 <Download class="size-4" />
                                 {{ trans('attendance.download') }}
@@ -262,11 +331,18 @@ function clock(value: string | null): string {
             <CardHeader class="border-b">
                 <CardTitle>{{ trans('attendance.daily_times') }}</CardTitle>
                 <p class="text-sm text-muted-foreground">
-                    {{ trans('attendance.people_day', { count: people.length, date: dayLabel(date) }) }}
+                    {{
+                        trans('attendance.people_day', {
+                            count: people.length,
+                            date: dayLabel(date),
+                        })
+                    }}
                 </p>
             </CardHeader>
             <CardContent class="pt-4 sm:pt-6">
-                <p v-if="firstError" class="pb-4 text-sm text-destructive">{{ firstError }}</p>
+                <p v-if="firstError" class="pb-4 text-sm text-destructive">
+                    {{ firstError }}
+                </p>
                 <div
                     v-if="people.length === 0"
                     class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground sm:p-8"
@@ -279,22 +355,37 @@ function clock(value: string | null): string {
                         :key="entry.user_id"
                         class="rounded-2xl border bg-muted/20 p-4"
                     >
-                        <div class="mb-3 flex items-start justify-between gap-2">
-                            <p class="min-w-0 text-sm font-medium leading-5">{{ people[index]?.name }}</p>
+                        <div
+                            class="mb-3 flex items-start justify-between gap-2"
+                        >
+                            <p class="min-w-0 text-sm leading-5 font-medium">
+                                {{ people[index]?.name }}
+                            </p>
                             <div class="flex shrink-0 items-center gap-1">
                                 <StatusBadge
                                     v-if="people[index]?.status"
                                     :value="people[index].status"
                                     :tone="attendanceTone(people[index].status)"
                                 />
-                                <span v-else class="text-xs text-muted-foreground">—</span>
+                                <span
+                                    v-else
+                                    class="text-xs text-muted-foreground"
+                                    >—</span
+                                >
                                 <Button
                                     v-if="hasRecord(people[index])"
                                     variant="ghost"
                                     size="sm"
                                     class="size-8 rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                    :aria-label="trans('attendance.clear_person')"
-                                    @click="clearPerson(entry.user_id, people[index]?.name ?? '')"
+                                    :aria-label="
+                                        trans('attendance.clear_person')
+                                    "
+                                    @click="
+                                        clearPerson(
+                                            entry.user_id,
+                                            people[index]?.name ?? '',
+                                        )
+                                    "
                                 >
                                     <Trash2 class="size-4" />
                                 </Button>
@@ -302,7 +393,11 @@ function clock(value: string | null): string {
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div class="space-y-1">
-                                <Label :for="`in-${entry.user_id}`" class="text-xs">{{ trans('common.in') }}</Label>
+                                <Label
+                                    :for="`in-${entry.user_id}`"
+                                    class="text-xs"
+                                    >{{ trans('common.in') }}</Label
+                                >
                                 <Input
                                     :id="`in-${entry.user_id}`"
                                     v-model="entry.check_in"
@@ -311,7 +406,11 @@ function clock(value: string | null): string {
                                 />
                             </div>
                             <div class="space-y-1">
-                                <Label :for="`out-${entry.user_id}`" class="text-xs">{{ trans('common.out') }}</Label>
+                                <Label
+                                    :for="`out-${entry.user_id}`"
+                                    class="text-xs"
+                                    >{{ trans('common.out') }}</Label
+                                >
                                 <Input
                                     :id="`out-${entry.user_id}`"
                                     v-model="entry.check_out"
@@ -321,7 +420,11 @@ function clock(value: string | null): string {
                             </div>
                         </div>
                         <p class="mt-2 text-xs text-muted-foreground">
-                            {{ trans('attendance.hours_label', { hours: people[index]?.work_hours ?? '—' }) }}
+                            {{
+                                trans('attendance.hours_label', {
+                                    hours: people[index]?.work_hours ?? '—',
+                                })
+                            }}
                         </p>
                     </div>
                 </div>
@@ -330,10 +433,19 @@ function clock(value: string | null): string {
                 v-if="people.length > 0"
                 class="flex-col-reverse gap-3 border-t bg-muted/30 sm:flex-row sm:justify-between"
             >
-                <p class="text-center text-sm text-muted-foreground sm:text-start">
-                    {{ trans('attendance.filled', { filled: filledCount, total: people.length }) }}
+                <p
+                    class="text-center text-sm text-muted-foreground sm:text-start"
+                >
+                    {{
+                        trans('attendance.filled', {
+                            filled: filledCount,
+                            total: people.length,
+                        })
+                    }}
                 </p>
-                <div class="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row">
+                <div
+                    class="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row"
+                >
                     <Button
                         variant="destructive"
                         class="w-full rounded-full sm:w-auto"
@@ -342,10 +454,18 @@ function clock(value: string | null): string {
                         <Trash2 class="size-4" />
                         {{ trans('attendance.clear_all') }}
                     </Button>
-                    <Button class="w-full rounded-full sm:w-auto" :disabled="form.processing" @click="saveTimes">
+                    <Button
+                        class="w-full rounded-full sm:w-auto"
+                        :disabled="form.processing"
+                        @click="saveTimes"
+                    >
                         {{ trans('attendance.save_times') }}
                     </Button>
-                    <Button variant="outline" class="w-full rounded-full sm:w-auto" as-child>
+                    <Button
+                        variant="outline"
+                        class="w-full rounded-full sm:w-auto"
+                        as-child
+                    >
                         <a :href="`/attendance/export?date=${date}`">
                             <Download class="size-4" />
                             {{ trans('attendance.download') }}
@@ -381,40 +501,81 @@ function clock(value: string | null): string {
                             :key="row.id"
                             class="rounded-2xl border bg-muted/20 p-4"
                         >
-                            <div class="mb-3 flex items-start justify-between gap-2">
-                                <p class="text-sm font-medium tabular-nums">{{ dayLabel(row.date) }}</p>
-                                <StatusBadge :value="row.status" :tone="attendanceTone(row.status)" />
+                            <div
+                                class="mb-3 flex items-start justify-between gap-2"
+                            >
+                                <p class="text-sm font-medium tabular-nums">
+                                    {{ dayLabel(row.date) }}
+                                </p>
+                                <StatusBadge
+                                    :value="row.status"
+                                    :tone="attendanceTone(row.status)"
+                                />
                             </div>
-                            <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
+                            <dl
+                                class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm"
+                            >
                                 <div>
-                                    <dt class="text-xs text-muted-foreground">{{ trans('common.branch') }}</dt>
-                                    <dd class="font-medium">{{ row.branch?.name ?? '—' }}</dd>
+                                    <dt class="text-xs text-muted-foreground">
+                                        {{ trans('common.branch') }}
+                                    </dt>
+                                    <dd class="font-medium">
+                                        {{ row.branch?.name ?? '—' }}
+                                    </dd>
                                 </div>
                                 <div>
-                                    <dt class="text-xs text-muted-foreground">{{ trans('common.hours') }}</dt>
-                                    <dd class="font-medium tabular-nums">{{ row.work_hours ?? '—' }}</dd>
+                                    <dt class="text-xs text-muted-foreground">
+                                        {{ trans('common.hours') }}
+                                    </dt>
+                                    <dd class="font-medium tabular-nums">
+                                        {{ row.work_hours ?? '—' }}
+                                    </dd>
                                 </div>
                                 <div>
-                                    <dt class="text-xs text-muted-foreground">{{ trans('common.in') }}</dt>
-                                    <dd class="font-medium tabular-nums">{{ clock(row.check_in) }}</dd>
+                                    <dt class="text-xs text-muted-foreground">
+                                        {{ trans('common.in') }}
+                                    </dt>
+                                    <dd class="font-medium tabular-nums">
+                                        {{ clock(row.check_in) }}
+                                    </dd>
                                 </div>
                                 <div>
-                                    <dt class="text-xs text-muted-foreground">{{ trans('common.out') }}</dt>
-                                    <dd class="font-medium tabular-nums">{{ clock(row.check_out) }}</dd>
+                                    <dt class="text-xs text-muted-foreground">
+                                        {{ trans('common.out') }}
+                                    </dt>
+                                    <dd class="font-medium tabular-nums">
+                                        {{ clock(row.check_out) }}
+                                    </dd>
                                 </div>
                             </dl>
                         </div>
                     </div>
-                    <div class="hidden overflow-x-auto rounded-2xl border md:block">
+                    <div
+                        class="hidden overflow-x-auto rounded-2xl border md:block"
+                    >
                         <table class="w-full min-w-[36rem] text-start text-sm">
-                            <thead class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
+                            <thead
+                                class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase"
+                            >
                                 <tr>
-                                    <th class="px-4 py-3 font-semibold">{{ trans('common.date') }}</th>
-                                    <th class="px-4 py-3 font-semibold">{{ trans('common.branch') }}</th>
-                                    <th class="px-4 py-3 font-semibold">{{ trans('common.in') }}</th>
-                                    <th class="px-4 py-3 font-semibold">{{ trans('common.out') }}</th>
-                                    <th class="px-4 py-3 font-semibold">{{ trans('common.hours') }}</th>
-                                    <th class="px-4 py-3 font-semibold">{{ trans('common.status') }}</th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.date') }}
+                                    </th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.branch') }}
+                                    </th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.in') }}
+                                    </th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.out') }}
+                                    </th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.hours') }}
+                                    </th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.status') }}
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -423,13 +584,28 @@ function clock(value: string | null): string {
                                     :key="row.id"
                                     class="border-t"
                                 >
-                                    <td class="px-4 py-3 font-medium tabular-nums">{{ dayLabel(row.date) }}</td>
-                                    <td class="px-4 py-3 text-muted-foreground">{{ row.branch?.name ?? '—' }}</td>
-                                    <td class="px-4 py-3 tabular-nums">{{ clock(row.check_in) }}</td>
-                                    <td class="px-4 py-3 tabular-nums">{{ clock(row.check_out) }}</td>
-                                    <td class="px-4 py-3 tabular-nums">{{ row.work_hours ?? '—' }}</td>
+                                    <td
+                                        class="px-4 py-3 font-medium tabular-nums"
+                                    >
+                                        {{ dayLabel(row.date) }}
+                                    </td>
+                                    <td class="px-4 py-3 text-muted-foreground">
+                                        {{ row.branch?.name ?? '—' }}
+                                    </td>
+                                    <td class="px-4 py-3 tabular-nums">
+                                        {{ clock(row.check_in) }}
+                                    </td>
+                                    <td class="px-4 py-3 tabular-nums">
+                                        {{ clock(row.check_out) }}
+                                    </td>
+                                    <td class="px-4 py-3 tabular-nums">
+                                        {{ row.work_hours ?? '—' }}
+                                    </td>
                                     <td class="px-4 py-3">
-                                        <StatusBadge :value="row.status" :tone="attendanceTone(row.status)" />
+                                        <StatusBadge
+                                            :value="row.status"
+                                            :tone="attendanceTone(row.status)"
+                                        />
                                     </td>
                                 </tr>
                             </tbody>

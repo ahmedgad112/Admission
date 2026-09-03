@@ -101,10 +101,14 @@ function windowLabel(start: string, end: string): string {
                     </a>
                 </Button>
                 <Button variant="outline" class="rounded-full" as-child>
-                    <Link href="/attendance/days">{{ trans('common.back') }}</Link>
+                    <Link href="/attendance/days">{{
+                        trans('common.back')
+                    }}</Link>
                 </Button>
                 <Button v-if="canUpdate" class="rounded-full" as-child>
-                    <Link :href="`/attendance/days/${day.id}/edit`">{{ trans('common.edit') }}</Link>
+                    <Link :href="`/attendance/days/${day.id}/edit`">{{
+                        trans('common.edit')
+                    }}</Link>
                 </Button>
                 <Button
                     v-if="canUpdate"
@@ -120,9 +124,12 @@ function windowLabel(start: string, end: string): string {
         <div class="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
             <Card class="shadow-sm">
                 <CardHeader class="border-b">
-                    <CardTitle>{{ trans('roster.todays_attendance') }}</CardTitle>
+                    <CardTitle>{{
+                        trans('roster.todays_attendance')
+                    }}</CardTitle>
                     <CardDescription>
-                        {{ trans('common.staff') }} · {{ day.attendances.length }}
+                        {{ trans('common.staff') }} ·
+                        {{ day.attendances.length }}
                     </CardDescription>
                 </CardHeader>
                 <CardContent class="pt-4 sm:pt-6">
@@ -139,53 +146,105 @@ function windowLabel(start: string, end: string): string {
                                 :key="record.id"
                                 class="rounded-2xl border bg-muted/20 p-4"
                             >
-                                <div class="mb-3 flex items-start justify-between gap-2">
+                                <div
+                                    class="mb-3 flex items-start justify-between gap-2"
+                                >
                                     <div class="min-w-0">
-                                        <p class="text-sm font-medium">{{ record.name ?? '—' }}</p>
-                                        <p class="text-xs text-muted-foreground">
-                                            {{ record.department?.name ?? trans('common.no_department') }}
+                                        <p class="text-sm font-medium">
+                                            {{ record.name ?? '—' }}
+                                        </p>
+                                        <p
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            {{
+                                                record.department?.name ??
+                                                trans('common.no_department')
+                                            }}
                                         </p>
                                     </div>
-                                    <div class="flex shrink-0 items-center gap-1">
+                                    <div
+                                        class="flex shrink-0 items-center gap-1"
+                                    >
                                         <StatusBadge
                                             v-if="record.status"
                                             :value="record.status"
-                                            :tone="attendanceTone(record.status)"
+                                            :tone="
+                                                attendanceTone(record.status)
+                                            "
                                         />
-                                        <span v-else class="text-xs text-muted-foreground">—</span>
+                                        <span
+                                            v-else
+                                            class="text-xs text-muted-foreground"
+                                            >—</span
+                                        >
                                         <Button
                                             v-if="canUpdate && record.user_id"
                                             variant="ghost"
                                             size="sm"
                                             class="size-8 rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                            :aria-label="trans('attendance.clear_person')"
+                                            :aria-label="
+                                                trans('attendance.clear_person')
+                                            "
                                             @click="destroyAttendance(record)"
                                         >
                                             <Trash2 class="size-4" />
                                         </Button>
                                     </div>
                                 </div>
-                                <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
+                                <dl
+                                    class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm"
+                                >
                                     <div>
-                                        <dt class="text-xs text-muted-foreground">{{ trans('common.in') }}</dt>
-                                        <dd class="font-medium tabular-nums">{{ record.check_in ?? '—' }}</dd>
+                                        <dt
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            {{ trans('common.in') }}
+                                        </dt>
+                                        <dd class="font-medium tabular-nums">
+                                            {{ record.check_in ?? '—' }}
+                                        </dd>
                                     </div>
                                     <div>
-                                        <dt class="text-xs text-muted-foreground">{{ trans('common.out') }}</dt>
-                                        <dd class="font-medium tabular-nums">{{ record.check_out ?? '—' }}</dd>
+                                        <dt
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            {{ trans('common.out') }}
+                                        </dt>
+                                        <dd class="font-medium tabular-nums">
+                                            {{ record.check_out ?? '—' }}
+                                        </dd>
                                     </div>
                                 </dl>
                             </div>
                         </div>
-                        <div class="hidden overflow-x-auto rounded-2xl border md:block">
-                            <table class="w-full min-w-[28rem] text-start text-sm">
-                                <thead class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
+                        <div
+                            class="hidden overflow-x-auto rounded-2xl border md:block"
+                        >
+                            <table
+                                class="w-full min-w-[28rem] text-start text-sm"
+                            >
+                                <thead
+                                    class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase"
+                                >
                                     <tr>
-                                        <th class="px-4 py-3 font-semibold">{{ trans('common.name') }}</th>
-                                        <th class="px-4 py-3 font-semibold">{{ trans('common.in') }}</th>
-                                        <th class="px-4 py-3 font-semibold">{{ trans('common.out') }}</th>
-                                        <th class="px-4 py-3 font-semibold">{{ trans('common.status') }}</th>
-                                        <th v-if="canUpdate" class="px-4 py-3 font-semibold">{{ trans('common.action') }}</th>
+                                        <th class="px-4 py-3 font-semibold">
+                                            {{ trans('common.name') }}
+                                        </th>
+                                        <th class="px-4 py-3 font-semibold">
+                                            {{ trans('common.in') }}
+                                        </th>
+                                        <th class="px-4 py-3 font-semibold">
+                                            {{ trans('common.out') }}
+                                        </th>
+                                        <th class="px-4 py-3 font-semibold">
+                                            {{ trans('common.status') }}
+                                        </th>
+                                        <th
+                                            v-if="canUpdate"
+                                            class="px-4 py-3 font-semibold"
+                                        >
+                                            {{ trans('common.action') }}
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -194,14 +253,24 @@ function windowLabel(start: string, end: string): string {
                                         :key="record.id"
                                         class="border-t"
                                     >
-                                        <td class="px-4 py-3 font-medium">{{ record.name ?? '—' }}</td>
-                                        <td class="px-4 py-3 tabular-nums">{{ record.check_in ?? '—' }}</td>
-                                        <td class="px-4 py-3 tabular-nums">{{ record.check_out ?? '—' }}</td>
+                                        <td class="px-4 py-3 font-medium">
+                                            {{ record.name ?? '—' }}
+                                        </td>
+                                        <td class="px-4 py-3 tabular-nums">
+                                            {{ record.check_in ?? '—' }}
+                                        </td>
+                                        <td class="px-4 py-3 tabular-nums">
+                                            {{ record.check_out ?? '—' }}
+                                        </td>
                                         <td class="px-4 py-3">
                                             <StatusBadge
                                                 v-if="record.status"
                                                 :value="record.status"
-                                                :tone="attendanceTone(record.status)"
+                                                :tone="
+                                                    attendanceTone(
+                                                        record.status,
+                                                    )
+                                                "
                                             />
                                             <span v-else>—</span>
                                         </td>
@@ -211,7 +280,9 @@ function windowLabel(start: string, end: string): string {
                                                 variant="ghost"
                                                 size="sm"
                                                 class="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                                @click="destroyAttendance(record)"
+                                                @click="
+                                                    destroyAttendance(record)
+                                                "
                                             >
                                                 <Trash2 class="size-4" />
                                                 {{ trans('common.delete') }}
@@ -234,11 +305,18 @@ function windowLabel(start: string, end: string): string {
                 </CardHeader>
                 <CardContent class="space-y-4 pt-4 sm:pt-6">
                     <div class="rounded-2xl border bg-muted/20 p-4">
-                        <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        <p
+                            class="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                        >
                             {{ trans('roster.check_in') }}
                         </p>
                         <p class="mt-1 text-sm font-medium tabular-nums">
-                            {{ windowLabel(day.check_in_starts_at, day.check_in_ends_at) }}
+                            {{
+                                windowLabel(
+                                    day.check_in_starts_at,
+                                    day.check_in_ends_at,
+                                )
+                            }}
                         </p>
                         <p class="mt-1 text-xs text-muted-foreground">
                             {{
@@ -249,11 +327,18 @@ function windowLabel(start: string, end: string): string {
                         </p>
                     </div>
                     <div class="rounded-2xl border bg-muted/20 p-4">
-                        <p class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        <p
+                            class="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                        >
                             {{ trans('roster.check_out') }}
                         </p>
                         <p class="mt-1 text-sm font-medium tabular-nums">
-                            {{ windowLabel(day.check_out_starts_at, day.check_out_ends_at) }}
+                            {{
+                                windowLabel(
+                                    day.check_out_starts_at,
+                                    day.check_out_ends_at,
+                                )
+                            }}
                         </p>
                         <p class="mt-1 text-xs text-muted-foreground">
                             {{

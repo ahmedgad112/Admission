@@ -1,15 +1,26 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { trans } from '@/composables/useTrans';
 
-type PermissionOption = { value: string; label: string; description: string; group: string };
+type PermissionOption = {
+    value: string;
+    label: string;
+    description: string;
+    group: string;
+};
 type RoleOption = {
     id: number;
     value: string;
@@ -59,7 +70,9 @@ const groups = computed(() => {
     return order
         .map((group) => ({
             group,
-            permissions: props.permissionOptions.filter((permission) => permission.group === group),
+            permissions: props.permissionOptions.filter(
+                (permission) => permission.group === group,
+            ),
         }))
         .filter((item) => item.permissions.length > 0);
 });
@@ -68,12 +81,18 @@ const form = useForm({
     roles: Object.fromEntries(
         props.roles
             .filter((role) => !role.locked)
-            .map((role) => [role.value, [...(props.rolePermissions[role.value] ?? [])]]),
+            .map((role) => [
+                role.value,
+                [...(props.rolePermissions[role.value] ?? [])],
+            ]),
     ) as Record<string, string[]>,
     homes: Object.fromEntries(
         props.roles
             .filter((role) => !role.locked)
-            .map((role) => [role.value, props.roleHomes[role.value] ?? 'dashboard']),
+            .map((role) => [
+                role.value,
+                props.roleHomes[role.value] ?? 'dashboard',
+            ]),
     ) as Record<string, string>,
     names: Object.fromEntries(
         props.roles
@@ -102,7 +121,11 @@ function isChecked(role: RoleOption, permission: string): boolean {
     return form.roles[role.value]?.includes(permission) ?? false;
 }
 
-function toggle(role: RoleOption, permission: string, checked: boolean | 'indeterminate'): void {
+function toggle(
+    role: RoleOption,
+    permission: string,
+    checked: boolean | 'indeterminate',
+): void {
     if (role.locked || checked === 'indeterminate') {
         return;
     }
@@ -111,12 +134,16 @@ function toggle(role: RoleOption, permission: string, checked: boolean | 'indete
 
     if (checked && !current.includes(permission)) {
         form.roles[role.value] = [...current, permission];
+
         return;
     }
 
     if (!checked) {
-        form.roles[role.value] = current.filter((value) => value !== permission);
+        form.roles[role.value] = current.filter(
+            (value) => value !== permission,
+        );
         const allowed = allowedHomes(role);
+
         if (!allowed.some((page) => page.value === form.homes[role.value])) {
             form.homes[role.value] = allowed[0]?.value ?? 'dashboard';
         }
@@ -133,7 +160,9 @@ function homeValue(role: RoleOption): string {
 
 function allowedHomes(role: RoleOption): HomePageOption[] {
     if (role.locked) {
-        return props.homePageOptions.filter((page) => page.value === 'dashboard');
+        return props.homePageOptions.filter(
+            (page) => page.value === 'dashboard',
+        );
     }
 
     const permissions = form.roles[role.value] ?? [];
@@ -159,7 +188,9 @@ function createRole(): void {
         onSuccess: () => {
             showCreate.value = false;
             createForm.reset();
-            createForm.permissions = [...(props.rolePermissions.employee ?? [])];
+            createForm.permissions = [
+                ...(props.rolePermissions.employee ?? []),
+            ];
             createForm.home_page = 'dashboard';
         },
     });
@@ -188,8 +219,16 @@ function destroyRole(role: RoleOption): void {
             :description="trans('permissions.description')"
         >
             <template #actions>
-                <Button class="rounded-full" variant="outline" @click="showCreate = !showCreate">
-                    {{ showCreate ? trans('common.cancel') : trans('permissions.add_role') }}
+                <Button
+                    class="rounded-full"
+                    variant="outline"
+                    @click="showCreate = !showCreate"
+                >
+                    {{
+                        showCreate
+                            ? trans('common.cancel')
+                            : trans('permissions.add_role')
+                    }}
                 </Button>
             </template>
         </PageHeader>
@@ -197,17 +236,28 @@ function destroyRole(role: RoleOption): void {
         <Card v-if="showCreate" class="mb-4 shadow-sm">
             <CardHeader>
                 <CardTitle>{{ trans('permissions.add_role') }}</CardTitle>
-                <CardDescription>{{ trans('permissions.add_role_help') }}</CardDescription>
+                <CardDescription>{{
+                    trans('permissions.add_role_help')
+                }}</CardDescription>
             </CardHeader>
             <CardContent class="space-y-4">
                 <div class="max-w-md space-y-2">
-                    <Label for="new-role-name">{{ trans('permissions.role_name') }}</Label>
+                    <Label for="new-role-name">{{
+                        trans('permissions.role_name')
+                    }}</Label>
                     <Input id="new-role-name" v-model="createForm.name" />
-                    <p v-if="createForm.errors.name" class="text-sm text-destructive">
+                    <p
+                        v-if="createForm.errors.name"
+                        class="text-sm text-destructive"
+                    >
                         {{ createForm.errors.name }}
                     </p>
                 </div>
-                <Button class="rounded-full" :disabled="createForm.processing" @click="createRole">
+                <Button
+                    class="rounded-full"
+                    :disabled="createForm.processing"
+                    @click="createRole"
+                >
                     {{ trans('permissions.create_role') }}
                 </Button>
             </CardContent>
@@ -215,11 +265,17 @@ function destroyRole(role: RoleOption): void {
 
         <div class="grid gap-4">
             <Card v-for="role in roles" :key="role.id" class="shadow-sm">
-                <CardHeader class="flex flex-row items-start justify-between gap-3 space-y-0">
+                <CardHeader
+                    class="flex flex-row items-start justify-between gap-3 space-y-0"
+                >
                     <div class="space-y-1.5">
                         <CardTitle>{{ roleTitle(role) }}</CardTitle>
                         <CardDescription>
-                            {{ role.locked ? trans('permissions.locked') : trans('permissions.role_help') }}
+                            {{
+                                role.locked
+                                    ? trans('permissions.locked')
+                                    : trans('permissions.role_help')
+                            }}
                         </CardDescription>
                     </div>
                     <Button
@@ -234,25 +290,34 @@ function destroyRole(role: RoleOption): void {
                 </CardHeader>
                 <CardContent class="space-y-6">
                     <div v-if="!isLocked(role)" class="max-w-md space-y-2">
-                        <Label :for="`name-${role.value}`">{{ trans('permissions.role_name') }}</Label>
+                        <Label :for="`name-${role.value}`">{{
+                            trans('permissions.role_name')
+                        }}</Label>
                         <Input
                             :id="`name-${role.value}`"
                             v-model="form.names[role.value]"
                         />
-                        <p v-if="form.errors[`names.${role.value}`]" class="text-sm text-destructive">
+                        <p
+                            v-if="form.errors[`names.${role.value}`]"
+                            class="text-sm text-destructive"
+                        >
                             {{ form.errors[`names.${role.value}`] }}
                         </p>
                     </div>
 
                     <div class="max-w-md space-y-2">
-                        <Label :for="`home-${role.value}`">{{ trans('permissions.home_page') }}</Label>
+                        <Label :for="`home-${role.value}`">{{
+                            trans('permissions.home_page')
+                        }}</Label>
                         <select
                             :id="`home-${role.value}`"
                             class="field-control"
                             :value="homeValue(role)"
                             :disabled="isLocked(role)"
                             @change="
-                                form.homes[role.value] = ($event.target as HTMLSelectElement).value
+                                form.homes[role.value] = (
+                                    $event.target as HTMLSelectElement
+                                ).value
                             "
                         >
                             <option
@@ -263,13 +328,22 @@ function destroyRole(role: RoleOption): void {
                                 {{ page.label }}
                             </option>
                         </select>
-                        <p class="text-xs text-muted-foreground">{{ trans('permissions.home_page_help') }}</p>
-                        <p v-if="form.errors[`homes.${role.value}`]" class="text-sm text-destructive">
+                        <p class="text-xs text-muted-foreground">
+                            {{ trans('permissions.home_page_help') }}
+                        </p>
+                        <p
+                            v-if="form.errors[`homes.${role.value}`]"
+                            class="text-sm text-destructive"
+                        >
                             {{ form.errors[`homes.${role.value}`] }}
                         </p>
                     </div>
 
-                    <div v-for="group in groups" :key="`${role.value}-${group.group}`" class="space-y-3">
+                    <div
+                        v-for="group in groups"
+                        :key="`${role.value}-${group.group}`"
+                        class="space-y-3"
+                    >
                         <h3 class="text-sm font-semibold text-muted-foreground">
                             {{ trans(`permissions.group.${group.group}`) }}
                         </h3>
@@ -286,15 +360,29 @@ function destroyRole(role: RoleOption): void {
                                     :disabled="isLocked(role)"
                                     @update:checked="
                                         (checked: boolean | 'indeterminate') =>
-                                            toggle(role, permission.value, checked)
+                                            toggle(
+                                                role,
+                                                permission.value,
+                                                checked,
+                                            )
                                     "
                                 />
                                 <span class="space-y-1">
                                     <span class="block text-sm font-medium">
-                                        {{ trans(`permissions.${permission.value}`) }}
+                                        {{
+                                            trans(
+                                                `permissions.${permission.value}`,
+                                            )
+                                        }}
                                     </span>
-                                    <span class="block text-xs text-muted-foreground">
-                                        {{ trans(`permissions.${permission.value}_help`) }}
+                                    <span
+                                        class="block text-xs text-muted-foreground"
+                                    >
+                                        {{
+                                            trans(
+                                                `permissions.${permission.value}_help`,
+                                            )
+                                        }}
                                     </span>
                                 </span>
                             </label>
@@ -303,9 +391,15 @@ function destroyRole(role: RoleOption): void {
                 </CardContent>
             </Card>
 
-            <p v-if="form.errors.roles" class="text-sm text-destructive">{{ form.errors.roles }}</p>
+            <p v-if="form.errors.roles" class="text-sm text-destructive">
+                {{ form.errors.roles }}
+            </p>
 
-            <Button class="w-fit rounded-full" :disabled="form.processing" @click="submit">
+            <Button
+                class="w-fit rounded-full"
+                :disabled="form.processing"
+                @click="submit"
+            >
                 {{ trans('permissions.save') }}
             </Button>
         </div>

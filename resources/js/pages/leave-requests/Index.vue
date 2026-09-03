@@ -69,7 +69,9 @@ function dateRange(request: LeaveRequestRow): string {
         >
             <template #actions>
                 <Button v-if="canCreate" class="rounded-full" as-child>
-                    <Link href="/leave-requests/create">{{ trans('leave.request') }}</Link>
+                    <Link href="/leave-requests/create">{{
+                        trans('leave.request')
+                    }}</Link>
                 </Button>
             </template>
         </PageHeader>
@@ -78,23 +80,33 @@ function dateRange(request: LeaveRequestRow): string {
             <select
                 :value="filters.status"
                 class="field-control max-w-48"
-                @change="filter('status', ($event.target as HTMLSelectElement).value)"
+                @change="
+                    filter('status', ($event.target as HTMLSelectElement).value)
+                "
             >
                 <option value="">{{ trans('status.all') }}</option>
                 <option value="pending">{{ trans('status.pending') }}</option>
                 <option value="approved">{{ trans('status.approved') }}</option>
                 <option value="rejected">{{ trans('status.rejected') }}</option>
-                <option value="cancelled">{{ trans('status.cancelled') }}</option>
+                <option value="cancelled">
+                    {{ trans('status.cancelled') }}
+                </option>
             </select>
             <select
                 :value="filters.type"
                 class="field-control max-w-48"
-                @change="filter('type', ($event.target as HTMLSelectElement).value)"
+                @change="
+                    filter('type', ($event.target as HTMLSelectElement).value)
+                "
             >
                 <option value="">{{ trans('leave.type.all') }}</option>
-                <option value="permission">{{ trans('leave.type.permission') }}</option>
+                <option value="permission">
+                    {{ trans('leave.type.permission') }}
+                </option>
                 <option value="sick">{{ trans('leave.type.sick') }}</option>
-                <option value="personal">{{ trans('leave.type.personal') }}</option>
+                <option value="personal">
+                    {{ trans('leave.type.personal') }}
+                </option>
             </select>
         </div>
 
@@ -111,27 +123,50 @@ function dateRange(request: LeaveRequestRow): string {
                 class="h-full shadow-sm transition-transform hover:-translate-y-0.5"
             >
                 <CardHeader>
-                    <CardTitle class="text-lg">{{ request.user?.name ?? '—' }}</CardTitle>
+                    <CardTitle class="text-lg">{{
+                        request.user?.name ?? '—'
+                    }}</CardTitle>
                     <CardDescription>
-                        {{ request.department?.name ?? trans('common.no_department') }}
+                        {{
+                            request.department?.name ??
+                            trans('common.no_department')
+                        }}
                     </CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-4">
-                    <StatusBadge :value="request.status" :tone="leaveRequestStatusTone(request.status)" />
+                    <StatusBadge
+                        :value="request.status"
+                        :tone="leaveRequestStatusTone(request.status)"
+                    />
                     <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
                         <div>
-                            <dt class="text-xs text-muted-foreground">{{ trans('common.date') }}</dt>
-                            <dd class="font-medium">{{ dateRange(request) }}</dd>
+                            <dt class="text-xs text-muted-foreground">
+                                {{ trans('common.date') }}
+                            </dt>
+                            <dd class="font-medium">
+                                {{ dateRange(request) }}
+                            </dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-muted-foreground">{{ trans('common.type') }}</dt>
-                            <dd class="font-medium">{{ trans(`leave.type.${request.type}`) }}</dd>
+                            <dt class="text-xs text-muted-foreground">
+                                {{ trans('common.type') }}
+                            </dt>
+                            <dd class="font-medium">
+                                {{ trans(`leave.type.${request.type}`) }}
+                            </dd>
                         </div>
                     </dl>
                 </CardContent>
                 <CardFooter class="mt-auto border-t">
-                    <Button variant="outline" size="sm" class="rounded-full" as-child>
-                        <Link :href="`/leave-requests/${request.id}`">{{ trans('common.open') }}</Link>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        class="rounded-full"
+                        as-child
+                    >
+                        <Link :href="`/leave-requests/${request.id}`">{{
+                            trans('common.open')
+                        }}</Link>
                     </Button>
                 </CardFooter>
             </Card>

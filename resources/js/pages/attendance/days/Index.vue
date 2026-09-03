@@ -50,7 +50,9 @@ function destroy(id: number): void {
         >
             <template #actions>
                 <Button v-if="canCreate" class="rounded-full" as-child>
-                    <Link href="/attendance/days/create">{{ trans('roster.new') }}</Link>
+                    <Link href="/attendance/days/create">{{
+                        trans('roster.new')
+                    }}</Link>
                 </Button>
             </template>
         </PageHeader>
@@ -73,21 +75,45 @@ function destroy(id: number): void {
                 </CardHeader>
                 <CardContent>
                     <p class="text-sm font-medium">
-                        {{ trans('roster.present_count', { count: day.present_count ?? 0 }) }}
+                        {{
+                            trans('roster.present_count', {
+                                count: day.present_count ?? 0,
+                            })
+                        }}
                     </p>
                 </CardContent>
                 <CardFooter class="mt-auto flex flex-wrap gap-2 border-t">
-                    <Button variant="outline" size="sm" class="rounded-full" as-child>
-                        <Link :href="`/attendance/days/${day.id}`">{{ trans('common.view') }}</Link>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        class="rounded-full"
+                        as-child
+                    >
+                        <Link :href="`/attendance/days/${day.id}`">{{
+                            trans('common.view')
+                        }}</Link>
                     </Button>
-                    <Button variant="outline" size="sm" class="rounded-full" as-child>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        class="rounded-full"
+                        as-child
+                    >
                         <a :href="`/attendance/days/${day.id}/export`">
                             <Download class="size-4" />
                             {{ trans('attendance.download') }}
                         </a>
                     </Button>
-                    <Button v-if="canCreate" variant="outline" size="sm" class="rounded-full" as-child>
-                        <Link :href="`/attendance/days/${day.id}/edit`">{{ trans('common.edit') }}</Link>
+                    <Button
+                        v-if="canCreate"
+                        variant="outline"
+                        size="sm"
+                        class="rounded-full"
+                        as-child
+                    >
+                        <Link :href="`/attendance/days/${day.id}/edit`">{{
+                            trans('common.edit')
+                        }}</Link>
                     </Button>
                     <Button
                         v-if="canCreate"

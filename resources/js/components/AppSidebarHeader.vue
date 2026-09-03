@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { Calendar } from '@lucide/vue';
+import { computed } from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
@@ -20,6 +20,7 @@ const locale = computed(() => page.props.locale || 'ar');
 
 const formattedDate = computed(() => {
     const now = new Date();
+
     return now.toLocaleDateString(locale.value === 'ar' ? 'ar-EG' : 'en-US', {
         weekday: 'short',
         month: 'short',
@@ -39,17 +40,25 @@ const formattedDate = computed(() => {
             </template>
         </div>
 
-        <div class="flex items-center gap-3 text-xs font-medium text-muted-foreground">
-            <div class="hidden items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-3 py-1 sm:flex">
+        <div
+            class="flex items-center gap-3 text-xs font-medium text-muted-foreground"
+        >
+            <div
+                class="hidden items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-3 py-1 sm:flex"
+            >
                 <Calendar class="size-3.5 text-primary" />
                 <span>{{ formattedDate }}</span>
             </div>
-            <div class="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-emerald-600 dark:text-emerald-400">
+            <div
+                class="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-emerald-600 dark:text-emerald-400"
+            >
                 <span class="active-pulse-dot">
                     <span></span>
                     <span></span>
                 </span>
-                <span class="text-[11px] font-semibold tracking-wide">أونلاين</span>
+                <span class="text-[11px] font-semibold tracking-wide"
+                    >أونلاين</span
+                >
             </div>
         </div>
     </header>

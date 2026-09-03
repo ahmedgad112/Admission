@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
@@ -54,9 +54,18 @@ function filter(key: 'search' | 'role' | 'status', value: string): void {
     router.get(
         '/staff',
         {
-            search: key === 'search' ? value || undefined : props.filters.search || undefined,
-            role: key === 'role' ? value || undefined : props.filters.role || undefined,
-            status: key === 'status' ? value || undefined : props.filters.status || undefined,
+            search:
+                key === 'search'
+                    ? value || undefined
+                    : props.filters.search || undefined,
+            role:
+                key === 'role'
+                    ? value || undefined
+                    : props.filters.role || undefined,
+            status:
+                key === 'status'
+                    ? value || undefined
+                    : props.filters.status || undefined,
         },
         { preserveState: true, replace: true },
     );
@@ -75,7 +84,10 @@ function impersonate(id: number): void {
 }
 
 function canImpersonate(member: StaffRow): boolean {
-    return Boolean(page.props.can?.impersonate) && member.id !== page.props.auth.user.id;
+    return (
+        Boolean(page.props.can?.impersonate) &&
+        member.id !== page.props.auth.user.id
+    );
 }
 
 function hasActions(member: StaffRow): boolean {
@@ -93,8 +105,15 @@ function hasActions(member: StaffRow): boolean {
             :description="trans('staff.description')"
         >
             <template #actions>
-                <Button v-if="page.props.can?.managePermissions" variant="outline" class="rounded-full" as-child>
-                    <Link href="/permissions">{{ trans('nav.permissions') }}</Link>
+                <Button
+                    v-if="page.props.can?.managePermissions"
+                    variant="outline"
+                    class="rounded-full"
+                    as-child
+                >
+                    <Link href="/permissions">{{
+                        trans('nav.permissions')
+                    }}</Link>
                 </Button>
                 <Button v-if="canCreate" class="rounded-full" as-child>
                     <Link href="/staff/create">{{ trans('staff.new') }}</Link>
@@ -112,22 +131,32 @@ function hasActions(member: StaffRow): boolean {
             <select
                 :value="filters.role"
                 class="field-control max-w-48"
-                @change="filter('role', ($event.target as HTMLSelectElement).value)"
+                @change="
+                    filter('role', ($event.target as HTMLSelectElement).value)
+                "
             >
                 <option value="">{{ trans('staff.all_roles') }}</option>
-                <option v-for="role in roleOptions" :key="role.value" :value="role.value">
+                <option
+                    v-for="role in roleOptions"
+                    :key="role.value"
+                    :value="role.value"
+                >
                     {{ role.label }}
                 </option>
             </select>
             <select
                 :value="filters.status"
                 class="field-control max-w-48"
-                @change="filter('status', ($event.target as HTMLSelectElement).value)"
+                @change="
+                    filter('status', ($event.target as HTMLSelectElement).value)
+                "
             >
                 <option value="">{{ trans('staff.all_statuses') }}</option>
                 <option value="active">{{ trans('status.active') }}</option>
                 <option value="inactive">{{ trans('status.inactive') }}</option>
-                <option value="suspended">{{ trans('status.suspended') }}</option>
+                <option value="suspended">
+                    {{ trans('status.suspended') }}
+                </option>
             </select>
         </div>
 
@@ -158,24 +187,43 @@ function hasActions(member: StaffRow): boolean {
                             >
                                 {{ member.role_label }}
                             </span>
-                            <StatusBadge :value="member.status" :tone="userStatusTone(member.status)" />
+                            <StatusBadge
+                                :value="member.status"
+                                :tone="userStatusTone(member.status)"
+                            />
                         </div>
                         <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
                             <div>
-                                <dt class="text-xs text-muted-foreground">{{ trans('common.branch') }}</dt>
-                                <dd class="font-medium">{{ member.branch?.name ?? '—' }}</dd>
+                                <dt class="text-xs text-muted-foreground">
+                                    {{ trans('common.branch') }}
+                                </dt>
+                                <dd class="font-medium">
+                                    {{ member.branch?.name ?? '—' }}
+                                </dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-muted-foreground">{{ trans('common.department') }}</dt>
-                                <dd class="font-medium">{{ member.department?.name ?? '—' }}</dd>
+                                <dt class="text-xs text-muted-foreground">
+                                    {{ trans('common.department') }}
+                                </dt>
+                                <dd class="font-medium">
+                                    {{ member.department?.name ?? '—' }}
+                                </dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-muted-foreground">{{ trans('common.shift') }}</dt>
-                                <dd class="font-medium">{{ member.shift?.name ?? '—' }}</dd>
+                                <dt class="text-xs text-muted-foreground">
+                                    {{ trans('common.shift') }}
+                                </dt>
+                                <dd class="font-medium">
+                                    {{ member.shift?.name ?? '—' }}
+                                </dd>
                             </div>
                             <div>
-                                <dt class="text-xs text-muted-foreground">{{ trans('staff.leave_days') }}</dt>
-                                <dd class="font-medium">{{ member.leave_days }}</dd>
+                                <dt class="text-xs text-muted-foreground">
+                                    {{ trans('staff.leave_days') }}
+                                </dt>
+                                <dd class="font-medium">
+                                    {{ member.leave_days }}
+                                </dd>
                             </div>
                         </dl>
                     </CardContent>
@@ -192,8 +240,16 @@ function hasActions(member: StaffRow): boolean {
                         >
                             {{ trans('staff.login_as') }}
                         </Button>
-                        <Button v-if="canCreate" variant="outline" size="sm" class="rounded-full" as-child>
-                            <Link :href="`/staff/${member.id}/edit`">{{ trans('common.edit') }}</Link>
+                        <Button
+                            v-if="canCreate"
+                            variant="outline"
+                            size="sm"
+                            class="rounded-full"
+                            as-child
+                        >
+                            <Link :href="`/staff/${member.id}/edit`">{{
+                                trans('common.edit')
+                            }}</Link>
                         </Button>
                         <Button
                             v-if="member.can_delete"
@@ -210,15 +266,31 @@ function hasActions(member: StaffRow): boolean {
 
             <div class="hidden overflow-x-auto rounded-2xl border md:block">
                 <table class="w-full min-w-[52rem] text-start text-sm">
-                    <thead class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
+                    <thead
+                        class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase"
+                    >
                         <tr>
-                            <th class="px-4 py-3 font-semibold">{{ trans('common.name') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ trans('common.email') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ trans('common.role') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ trans('common.status') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ trans('common.branch') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ trans('common.department') }}</th>
-                            <th class="px-4 py-3 font-semibold">{{ trans('common.action') }}</th>
+                            <th class="px-4 py-3 font-semibold">
+                                {{ trans('common.name') }}
+                            </th>
+                            <th class="px-4 py-3 font-semibold">
+                                {{ trans('common.email') }}
+                            </th>
+                            <th class="px-4 py-3 font-semibold">
+                                {{ trans('common.role') }}
+                            </th>
+                            <th class="px-4 py-3 font-semibold">
+                                {{ trans('common.status') }}
+                            </th>
+                            <th class="px-4 py-3 font-semibold">
+                                {{ trans('common.branch') }}
+                            </th>
+                            <th class="px-4 py-3 font-semibold">
+                                {{ trans('common.department') }}
+                            </th>
+                            <th class="px-4 py-3 font-semibold">
+                                {{ trans('common.action') }}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -227,8 +299,12 @@ function hasActions(member: StaffRow): boolean {
                             :key="member.id"
                             class="border-t"
                         >
-                            <td class="px-4 py-3 font-medium">{{ member.name }}</td>
-                            <td class="px-4 py-3 text-muted-foreground">{{ member.email }}</td>
+                            <td class="px-4 py-3 font-medium">
+                                {{ member.name }}
+                            </td>
+                            <td class="px-4 py-3 text-muted-foreground">
+                                {{ member.email }}
+                            </td>
                             <td class="px-4 py-3">
                                 <span
                                     :class="[
@@ -240,10 +316,17 @@ function hasActions(member: StaffRow): boolean {
                                 </span>
                             </td>
                             <td class="px-4 py-3">
-                                <StatusBadge :value="member.status" :tone="userStatusTone(member.status)" />
+                                <StatusBadge
+                                    :value="member.status"
+                                    :tone="userStatusTone(member.status)"
+                                />
                             </td>
-                            <td class="px-4 py-3">{{ member.branch?.name ?? '—' }}</td>
-                            <td class="px-4 py-3">{{ member.department?.name ?? '—' }}</td>
+                            <td class="px-4 py-3">
+                                {{ member.branch?.name ?? '—' }}
+                            </td>
+                            <td class="px-4 py-3">
+                                {{ member.department?.name ?? '—' }}
+                            </td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
                                     <Button
@@ -255,8 +338,17 @@ function hasActions(member: StaffRow): boolean {
                                     >
                                         {{ trans('staff.login_as') }}
                                     </Button>
-                                    <Button v-if="canCreate" variant="outline" size="sm" class="rounded-full" as-child>
-                                        <Link :href="`/staff/${member.id}/edit`">{{ trans('common.edit') }}</Link>
+                                    <Button
+                                        v-if="canCreate"
+                                        variant="outline"
+                                        size="sm"
+                                        class="rounded-full"
+                                        as-child
+                                    >
+                                        <Link
+                                            :href="`/staff/${member.id}/edit`"
+                                            >{{ trans('common.edit') }}</Link
+                                        >
                                     </Button>
                                     <Button
                                         v-if="member.can_delete"

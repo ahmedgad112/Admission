@@ -42,7 +42,12 @@ export function useDocumentLocale(): void {
     const page = usePage();
 
     watch(
-        () => [page.props.locale, page.props.dir, page.props.translations] as const,
+        () =>
+            [
+                page.props.locale,
+                page.props.dir,
+                page.props.translations,
+            ] as const,
         ([locale, dir, dictionary]) => {
             syncTranslations(locale, dictionary);
 

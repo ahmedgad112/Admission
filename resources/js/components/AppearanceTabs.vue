@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Monitor, Moon, Sun } from '@lucide/vue';
-import { trans } from '@/composables/useTrans';
 import { useAppearance } from '@/composables/useAppearance';
+import { trans } from '@/composables/useTrans';
 
 const { appearance, updateAppearance } = useAppearance();
 

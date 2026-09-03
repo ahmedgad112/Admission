@@ -70,25 +70,43 @@ function destroy(id: number): void {
             >
                 <CardHeader>
                     <CardTitle class="text-lg">{{ shift.name }}</CardTitle>
-                    <CardDescription>{{ shift.start_time }} – {{ shift.end_time }}</CardDescription>
+                    <CardDescription
+                        >{{ shift.start_time }} –
+                        {{ shift.end_time }}</CardDescription
+                    >
                 </CardHeader>
                 <CardContent>
                     <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
                         <div>
-                            <dt class="text-xs text-muted-foreground">{{ trans('shifts.grace') }}</dt>
+                            <dt class="text-xs text-muted-foreground">
+                                {{ trans('shifts.grace') }}
+                            </dt>
                             <dd class="font-medium">
-                                {{ trans('shifts.grace_minutes', { count: shift.grace_period_minutes }) }}
+                                {{
+                                    trans('shifts.grace_minutes', {
+                                        count: shift.grace_period_minutes,
+                                    })
+                                }}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-xs text-muted-foreground">{{ trans('common.staff') }}</dt>
+                            <dt class="text-xs text-muted-foreground">
+                                {{ trans('common.staff') }}
+                            </dt>
                             <dd class="font-medium">{{ shift.staff_count }}</dd>
                         </div>
                     </dl>
                 </CardContent>
                 <CardFooter class="mt-auto flex flex-wrap gap-2 border-t">
-                    <Button variant="outline" size="sm" class="rounded-full" as-child>
-                        <Link :href="`/shifts/${shift.id}/edit`">{{ trans('common.edit') }}</Link>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        class="rounded-full"
+                        as-child
+                    >
+                        <Link :href="`/shifts/${shift.id}/edit`">{{
+                            trans('common.edit')
+                        }}</Link>
                     </Button>
                     <Button
                         v-if="canCreate"

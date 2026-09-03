@@ -54,7 +54,9 @@ defineOptions({
             v-slot="{ errors, processing }"
         >
             <div class="grid gap-2">
-                <Label for="current_password">{{ trans('settings.security.current') }}</Label>
+                <Label for="current_password">{{
+                    trans('settings.security.current')
+                }}</Label>
                 <PasswordInput
                     id="current_password"
                     name="current_password"
@@ -66,7 +68,9 @@ defineOptions({
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">{{ trans('settings.security.new') }}</Label>
+                <Label for="password">{{
+                    trans('settings.security.new')
+                }}</Label>
                 <PasswordInput
                     id="password"
                     name="password"
@@ -79,7 +83,9 @@ defineOptions({
             </div>
 
             <div class="grid gap-2">
-                <Label for="password_confirmation">{{ trans('settings.security.confirm') }}</Label>
+                <Label for="password_confirmation">{{
+                    trans('settings.security.confirm')
+                }}</Label>
                 <PasswordInput
                     id="password_confirmation"
                     name="password_confirmation"

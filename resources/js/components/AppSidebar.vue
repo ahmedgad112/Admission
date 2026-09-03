@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     Building2,
@@ -16,6 +15,7 @@ import {
     Timer,
     Users,
 } from '@lucide/vue';
+import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -50,8 +50,8 @@ const sidebarSide = computed(() =>
 const home = computed(() => page.props.home || '/dashboard');
 
 const navGroups = computed<NavGroup[]>(() => {
-    page.props.locale;
-    page.props.translations;
+    void page.props.locale;
+    void page.props.translations;
 
     const can = page.props.can;
 

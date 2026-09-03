@@ -38,7 +38,10 @@ defineOptions({
     <Head :title="trans('common.edit')" />
 
     <div class="page-shell">
-        <PageHeader :eyebrow="trans('tasks.eyebrow')" :title="trans('common.edit')" />
+        <PageHeader
+            :eyebrow="trans('tasks.eyebrow')"
+            :title="trans('common.edit')"
+        />
         <TaskForm
             :task="task"
             :employees="employees"

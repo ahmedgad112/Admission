@@ -7,8 +7,8 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { trans } from '@/composables/useTrans';
 import UserInfo from '@/components/UserInfo.vue';
+import { trans } from '@/composables/useTrans';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';

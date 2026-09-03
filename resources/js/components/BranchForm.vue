@@ -36,9 +36,15 @@ function submit(): void {
             <div class="space-y-2">
                 <Label for="name">{{ trans('branches.name') }}</Label>
                 <Input id="name" v-model="form.name" />
-                <p v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</p>
+                <p v-if="form.errors.name" class="text-sm text-destructive">
+                    {{ form.errors.name }}
+                </p>
             </div>
-            <Button class="rounded-full" :disabled="form.processing" @click="submit">
+            <Button
+                class="rounded-full"
+                :disabled="form.processing"
+                @click="submit"
+            >
                 {{ branch ? trans('branches.update') : trans('branches.save') }}
             </Button>
         </CardContent>
