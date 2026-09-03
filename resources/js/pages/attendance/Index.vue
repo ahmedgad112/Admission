@@ -142,6 +142,21 @@ function clearRange(): void {
     });
 }
 
+function clearPerson(userId: number, name: string): void {
+    if (!confirm(trans('attendance.clear_confirm_person', { name, date: dayLabel(props.date) }))) {
+        return;
+    }
+
+    router.delete('/attendance/records', {
+        data: { date: props.date, user_id: userId },
+        preserveScroll: true,
+    });
+}
+
+function hasRecord(person?: PersonRow): boolean {
+    return Boolean(person?.check_in || person?.check_out || person?.status);
+}
+
 function dayLabel(value: string): string {
     return value.slice(0, 10);
 }
@@ -266,12 +281,24 @@ function clock(value: string | null): string {
                     >
                         <div class="mb-3 flex items-start justify-between gap-2">
                             <p class="min-w-0 text-sm font-medium leading-5">{{ people[index]?.name }}</p>
-                            <StatusBadge
-                                v-if="people[index]?.status"
-                                :value="people[index].status"
-                                :tone="attendanceTone(people[index].status)"
-                            />
-                            <span v-else class="text-xs text-muted-foreground">—</span>
+                            <div class="flex shrink-0 items-center gap-1">
+                                <StatusBadge
+                                    v-if="people[index]?.status"
+                                    :value="people[index].status"
+                                    :tone="attendanceTone(people[index].status)"
+                                />
+                                <span v-else class="text-xs text-muted-foreground">—</span>
+                                <Button
+                                    v-if="hasRecord(people[index])"
+                                    variant="ghost"
+                                    size="sm"
+                                    class="size-8 rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    :aria-label="trans('attendance.clear_person')"
+                                    @click="clearPerson(entry.user_id, people[index]?.name ?? '')"
+                                >
+                                    <Trash2 class="size-4" />
+                                </Button>
+                            </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div class="space-y-1">
@@ -347,35 +374,67 @@ function clock(value: string | null): string {
                 >
                     {{ trans('attendance.empty_range') }}
                 </div>
-                <div v-else class="overflow-x-auto rounded-2xl border">
-                    <table class="w-full min-w-[36rem] text-start text-sm">
-                        <thead class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
-                            <tr>
-                                <th class="px-4 py-3 font-semibold">{{ trans('common.date') }}</th>
-                                <th class="px-4 py-3 font-semibold">{{ trans('common.branch') }}</th>
-                                <th class="px-4 py-3 font-semibold">{{ trans('common.in') }}</th>
-                                <th class="px-4 py-3 font-semibold">{{ trans('common.out') }}</th>
-                                <th class="px-4 py-3 font-semibold">{{ trans('common.hours') }}</th>
-                                <th class="px-4 py-3 font-semibold">{{ trans('common.status') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="row in attendances.data"
-                                :key="row.id"
-                                class="border-t"
-                            >
-                                <td class="px-4 py-3 font-medium tabular-nums">{{ dayLabel(row.date) }}</td>
-                                <td class="px-4 py-3 text-muted-foreground">{{ row.branch?.name ?? '—' }}</td>
-                                <td class="px-4 py-3 tabular-nums">{{ clock(row.check_in) }}</td>
-                                <td class="px-4 py-3 tabular-nums">{{ clock(row.check_out) }}</td>
-                                <td class="px-4 py-3 tabular-nums">{{ row.work_hours ?? '—' }}</td>
-                                <td class="px-4 py-3">
-                                    <StatusBadge :value="row.status" :tone="attendanceTone(row.status)" />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div v-else>
+                    <div class="grid gap-3 md:hidden">
+                        <div
+                            v-for="row in attendances.data"
+                            :key="row.id"
+                            class="rounded-2xl border bg-muted/20 p-4"
+                        >
+                            <div class="mb-3 flex items-start justify-between gap-2">
+                                <p class="text-sm font-medium tabular-nums">{{ dayLabel(row.date) }}</p>
+                                <StatusBadge :value="row.status" :tone="attendanceTone(row.status)" />
+                            </div>
+                            <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
+                                <div>
+                                    <dt class="text-xs text-muted-foreground">{{ trans('common.branch') }}</dt>
+                                    <dd class="font-medium">{{ row.branch?.name ?? '—' }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-xs text-muted-foreground">{{ trans('common.hours') }}</dt>
+                                    <dd class="font-medium tabular-nums">{{ row.work_hours ?? '—' }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-xs text-muted-foreground">{{ trans('common.in') }}</dt>
+                                    <dd class="font-medium tabular-nums">{{ clock(row.check_in) }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-xs text-muted-foreground">{{ trans('common.out') }}</dt>
+                                    <dd class="font-medium tabular-nums">{{ clock(row.check_out) }}</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="hidden overflow-x-auto rounded-2xl border md:block">
+                        <table class="w-full min-w-[36rem] text-start text-sm">
+                            <thead class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
+                                <tr>
+                                    <th class="px-4 py-3 font-semibold">{{ trans('common.date') }}</th>
+                                    <th class="px-4 py-3 font-semibold">{{ trans('common.branch') }}</th>
+                                    <th class="px-4 py-3 font-semibold">{{ trans('common.in') }}</th>
+                                    <th class="px-4 py-3 font-semibold">{{ trans('common.out') }}</th>
+                                    <th class="px-4 py-3 font-semibold">{{ trans('common.hours') }}</th>
+                                    <th class="px-4 py-3 font-semibold">{{ trans('common.status') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="row in attendances.data"
+                                    :key="row.id"
+                                    class="border-t"
+                                >
+                                    <td class="px-4 py-3 font-medium tabular-nums">{{ dayLabel(row.date) }}</td>
+                                    <td class="px-4 py-3 text-muted-foreground">{{ row.branch?.name ?? '—' }}</td>
+                                    <td class="px-4 py-3 tabular-nums">{{ clock(row.check_in) }}</td>
+                                    <td class="px-4 py-3 tabular-nums">{{ clock(row.check_out) }}</td>
+                                    <td class="px-4 py-3 tabular-nums">{{ row.work_hours ?? '—' }}</td>
+                                    <td class="px-4 py-3">
+                                        <StatusBadge :value="row.status" :tone="attendanceTone(row.status)" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </CardContent>
         </Card>

@@ -78,6 +78,7 @@ class AttendanceDayController extends Controller
                 'creator' => $attendanceDay->creator,
                 'attendances' => $attendances->map(fn (Attendance $record): array => [
                     'id' => $record->id,
+                    'user_id' => $record->user_id,
                     'name' => $record->user?->name,
                     'department' => $record->user?->department,
                     'check_in' => $record->check_in?->format('H:i'),

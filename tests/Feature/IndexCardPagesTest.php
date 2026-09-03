@@ -63,7 +63,8 @@ test('list pages return the records shown as cards', function () {
             ->where('staff.data.1.shift.name', 'Morning')
             ->has('staff.data.1.leave_days')
             ->has('staff.data.1.role')
-            ->has('staff.data.1.status'));
+            ->has('staff.data.1.status')
+            ->where('staff.data.1.can_delete', true));
 
     $this->actingAs($admin)
         ->get(route('branches.index'))

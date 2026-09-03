@@ -2,9 +2,12 @@
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Models\Attendance;
+use App\Models\AttendanceDay;
 use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Shift;
+use App\Models\Task;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -193,4 +196,63 @@ test('admins cannot delete themselves', function () {
     $this->actingAs($admin)
         ->delete(route('staff.destroy', $admin))
         ->assertForbidden();
+});
+
+test('staff index marks which members can be deleted', function () {
+    $admin = User::factory()->superAdmin()->create(['name' => 'Admin User']);
+    $employee = User::factory()->employee()->create(['name' => 'Ziad Nurse']);
+
+    $this->actingAs($admin)
+        ->get(route('staff.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('staff/Index')
+            ->has('staff.data', 2)
+            ->where('staff.data.0.name', 'Admin User')
+            ->where('staff.data.0.can_delete', false)
+            ->where('staff.data.1.name', 'Ziad Nurse')
+            ->where('staff.data.1.can_delete', true));
+});
+
+test('admins can delete any employee including ones with related records', function () {
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->superAdmin()->create(['branch_id' => $branch->id]);
+    $staff = User::factory()->employee()->create([
+        'name' => 'Mona Fathy',
+        'branch_id' => $branch->id,
+    ]);
+    $day = AttendanceDay::factory()->create([
+        'branch_id' => $branch->id,
+        'created_by' => $staff->id,
+    ]);
+    $task = Task::factory()->assignedTo($staff)->create([
+        'title' => 'Keep this task',
+        'created_by' => $staff->id,
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $staff->id,
+        'branch_id' => $branch->id,
+    ]);
+
+    $this->actingAs($admin)
+        ->delete(route('staff.destroy', $staff))
+        ->assertRedirect(route('staff.index'));
+
+    expect(User::query()->whereKey($staff->id)->exists())->toBeFalse()
+        ->and($day->refresh()->created_by)->toBe($admin->id)
+        ->and($task->refresh()->created_by)->toBe($admin->id)
+        ->and($task->assignees()->whereKey($staff->id)->exists())->toBeFalse()
+        ->and(Attendance::query()->where('user_id', $staff->id)->exists())->toBeFalse();
+});
+
+test('branch admins cannot delete super admins', function () {
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->branchAdmin()->create(['branch_id' => $branch->id]);
+    $super = User::factory()->superAdmin()->create(['branch_id' => $branch->id]);
+
+    $this->actingAs($admin)
+        ->delete(route('staff.destroy', $super))
+        ->assertForbidden();
+
+    expect(User::query()->whereKey($super->id)->exists())->toBeTrue();
 });

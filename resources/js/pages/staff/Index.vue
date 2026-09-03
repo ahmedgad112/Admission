@@ -28,6 +28,7 @@ type StaffRow = {
     department?: { id: number; name: string } | null;
     shift?: { id: number; name: string } | null;
     leave_days: number;
+    can_delete: boolean;
 };
 
 const props = defineProps<{
@@ -61,8 +62,12 @@ function filter(key: 'search' | 'role' | 'status', value: string): void {
     );
 }
 
-function destroy(id: number): void {
-    router.delete(`/staff/${id}`);
+function destroy(member: StaffRow): void {
+    if (!confirm(trans('staff.delete_confirm', { name: member.name }))) {
+        return;
+    }
+
+    router.delete(`/staff/${member.id}`);
 }
 
 function impersonate(id: number): void {
@@ -71,6 +76,10 @@ function impersonate(id: number): void {
 
 function canImpersonate(member: StaffRow): boolean {
     return Boolean(page.props.can?.impersonate) && member.id !== page.props.auth.user.id;
+}
+
+function hasActions(member: StaffRow): boolean {
+    return canImpersonate(member) || props.canCreate || member.can_delete;
 }
 </script>
 
@@ -128,74 +137,142 @@ function canImpersonate(member: StaffRow): boolean {
         >
             {{ trans('staff.empty') }}
         </div>
-        <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <Card
-                v-for="member in staff.data"
-                :key="member.id"
-                class="h-full shadow-sm transition-transform hover:-translate-y-0.5"
-            >
-                <CardHeader>
-                    <CardTitle class="text-lg">{{ member.name }}</CardTitle>
-                    <CardDescription>{{ member.email }}</CardDescription>
-                </CardHeader>
-                <CardContent class="space-y-4">
-                    <div class="flex flex-wrap gap-2">
-                        <span
-                            :class="[
-                                'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
-                                userRoleTone(member.role),
-                            ]"
-                        >
-                            {{ member.role_label }}
-                        </span>
-                        <StatusBadge :value="member.status" :tone="userStatusTone(member.status)" />
-                    </div>
-                    <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
-                        <div>
-                            <dt class="text-xs text-muted-foreground">{{ trans('common.branch') }}</dt>
-                            <dd class="font-medium">{{ member.branch?.name ?? '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs text-muted-foreground">{{ trans('common.department') }}</dt>
-                            <dd class="font-medium">{{ member.department?.name ?? '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs text-muted-foreground">{{ trans('common.shift') }}</dt>
-                            <dd class="font-medium">{{ member.shift?.name ?? '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs text-muted-foreground">{{ trans('staff.leave_days') }}</dt>
-                            <dd class="font-medium">{{ member.leave_days }}</dd>
-                        </div>
-                    </dl>
-                </CardContent>
-                <CardFooter
-                    v-if="canCreate || canImpersonate(member)"
-                    class="mt-auto flex flex-wrap gap-2 border-t"
+        <template v-else>
+            <div class="grid gap-4 md:hidden">
+                <Card
+                    v-for="member in staff.data"
+                    :key="member.id"
+                    class="h-full shadow-sm"
                 >
-                    <Button
-                        v-if="canImpersonate(member)"
-                        variant="secondary"
-                        size="sm"
-                        class="rounded-full"
-                        @click="impersonate(member.id)"
+                    <CardHeader>
+                        <CardTitle class="text-lg">{{ member.name }}</CardTitle>
+                        <CardDescription>{{ member.email }}</CardDescription>
+                    </CardHeader>
+                    <CardContent class="space-y-4">
+                        <div class="flex flex-wrap gap-2">
+                            <span
+                                :class="[
+                                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
+                                    userRoleTone(member.role),
+                                ]"
+                            >
+                                {{ member.role_label }}
+                            </span>
+                            <StatusBadge :value="member.status" :tone="userStatusTone(member.status)" />
+                        </div>
+                        <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
+                            <div>
+                                <dt class="text-xs text-muted-foreground">{{ trans('common.branch') }}</dt>
+                                <dd class="font-medium">{{ member.branch?.name ?? '—' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-muted-foreground">{{ trans('common.department') }}</dt>
+                                <dd class="font-medium">{{ member.department?.name ?? '—' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-muted-foreground">{{ trans('common.shift') }}</dt>
+                                <dd class="font-medium">{{ member.shift?.name ?? '—' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-muted-foreground">{{ trans('staff.leave_days') }}</dt>
+                                <dd class="font-medium">{{ member.leave_days }}</dd>
+                            </div>
+                        </dl>
+                    </CardContent>
+                    <CardFooter
+                        v-if="hasActions(member)"
+                        class="mt-auto flex flex-wrap gap-2 border-t"
                     >
-                        {{ trans('staff.login_as') }}
-                    </Button>
-                    <Button v-if="canCreate" variant="outline" size="sm" class="rounded-full" as-child>
-                        <Link :href="`/staff/${member.id}/edit`">{{ trans('common.edit') }}</Link>
-                    </Button>
-                    <Button
-                        v-if="canCreate"
-                        variant="destructive"
-                        size="sm"
-                        class="rounded-full"
-                        @click="destroy(member.id)"
-                    >
-                        {{ trans('common.delete') }}
-                    </Button>
-                </CardFooter>
-            </Card>
-        </div>
+                        <Button
+                            v-if="canImpersonate(member)"
+                            variant="secondary"
+                            size="sm"
+                            class="rounded-full"
+                            @click="impersonate(member.id)"
+                        >
+                            {{ trans('staff.login_as') }}
+                        </Button>
+                        <Button v-if="canCreate" variant="outline" size="sm" class="rounded-full" as-child>
+                            <Link :href="`/staff/${member.id}/edit`">{{ trans('common.edit') }}</Link>
+                        </Button>
+                        <Button
+                            v-if="member.can_delete"
+                            variant="destructive"
+                            size="sm"
+                            class="rounded-full"
+                            @click="destroy(member)"
+                        >
+                            {{ trans('common.delete') }}
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+
+            <div class="hidden overflow-x-auto rounded-2xl border md:block">
+                <table class="w-full min-w-[52rem] text-start text-sm">
+                    <thead class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
+                        <tr>
+                            <th class="px-4 py-3 font-semibold">{{ trans('common.name') }}</th>
+                            <th class="px-4 py-3 font-semibold">{{ trans('common.email') }}</th>
+                            <th class="px-4 py-3 font-semibold">{{ trans('common.role') }}</th>
+                            <th class="px-4 py-3 font-semibold">{{ trans('common.status') }}</th>
+                            <th class="px-4 py-3 font-semibold">{{ trans('common.branch') }}</th>
+                            <th class="px-4 py-3 font-semibold">{{ trans('common.department') }}</th>
+                            <th class="px-4 py-3 font-semibold">{{ trans('common.action') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="member in staff.data"
+                            :key="member.id"
+                            class="border-t"
+                        >
+                            <td class="px-4 py-3 font-medium">{{ member.name }}</td>
+                            <td class="px-4 py-3 text-muted-foreground">{{ member.email }}</td>
+                            <td class="px-4 py-3">
+                                <span
+                                    :class="[
+                                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
+                                        userRoleTone(member.role),
+                                    ]"
+                                >
+                                    {{ member.role_label }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <StatusBadge :value="member.status" :tone="userStatusTone(member.status)" />
+                            </td>
+                            <td class="px-4 py-3">{{ member.branch?.name ?? '—' }}</td>
+                            <td class="px-4 py-3">{{ member.department?.name ?? '—' }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap gap-2">
+                                    <Button
+                                        v-if="canImpersonate(member)"
+                                        variant="secondary"
+                                        size="sm"
+                                        class="rounded-full"
+                                        @click="impersonate(member.id)"
+                                    >
+                                        {{ trans('staff.login_as') }}
+                                    </Button>
+                                    <Button v-if="canCreate" variant="outline" size="sm" class="rounded-full" as-child>
+                                        <Link :href="`/staff/${member.id}/edit`">{{ trans('common.edit') }}</Link>
+                                    </Button>
+                                    <Button
+                                        v-if="member.can_delete"
+                                        variant="destructive"
+                                        size="sm"
+                                        class="rounded-full"
+                                        @click="destroy(member)"
+                                    >
+                                        {{ trans('common.delete') }}
+                                    </Button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </template>
     </div>
 </template>

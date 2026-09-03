@@ -346,6 +346,46 @@ test('admins can clear attendance records for a chosen day', function () {
         ->and(Attendance::query()->first()->date->toDateString())->toBe('2026-08-22');
 });
 
+test('admins can clear one employee attendance for a chosen day', function () {
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->branchAdmin()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $employee = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $other = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $employee->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-21',
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $other->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-21',
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $employee->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-22',
+    ]);
+
+    $this->actingAs($admin)
+        ->delete(route('attendance.records.clear'), [
+            'date' => '2026-08-21',
+            'user_id' => $employee->id,
+        ])
+        ->assertRedirect(route('attendance.index', ['date' => '2026-08-21']));
+
+    expect(Attendance::query()->count())->toBe(2)
+        ->and(Attendance::query()->where('user_id', $employee->id)->count())->toBe(1)
+        ->and(Attendance::query()->where('user_id', $employee->id)->first()->date->toDateString())->toBe('2026-08-22')
+        ->and(Attendance::query()->where('user_id', $other->id)->exists())->toBeTrue();
+});
+
 test('admins can clear attendance records for a date range', function () {
     $branch = Branch::factory()->create();
     $admin = User::factory()->branchAdmin()->create([

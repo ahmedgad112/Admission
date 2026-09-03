@@ -7,15 +7,18 @@ use App\Enums\Permission;
 use App\Enums\UserStatus;
 use App\Http\Requests\Staff\StoreStaffRequest;
 use App\Http\Requests\Staff\UpdateStaffRequest;
+use App\Models\AttendanceDay;
 use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Role;
 use App\Models\Shift;
+use App\Models\Task;
 use App\Models\User;
 use App\Support\RolePermissionCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -63,6 +66,7 @@ class StaffController extends Controller
                 'department' => $member->department,
                 'shift' => $member->shift,
                 'leave_days' => $member->leave_days,
+                'can_delete' => $user->can('delete', $member),
             ]);
 
         return Inertia::render('staff/Index', [
@@ -145,7 +149,20 @@ class StaffController extends Controller
     {
         $this->authorize('delete', $user);
 
-        $user->delete();
+        $actor = $request->user();
+        abort_unless($actor !== null, 403);
+
+        DB::transaction(function () use ($user, $actor): void {
+            AttendanceDay::query()
+                ->where('created_by', $user->id)
+                ->update(['created_by' => $actor->id]);
+
+            Task::query()
+                ->where('created_by', $user->id)
+                ->update(['created_by' => $actor->id]);
+
+            $user->delete();
+        });
 
         return $this->flashRedirect($request, __('flash.staff.deleted'), route('staff.index'));
     }

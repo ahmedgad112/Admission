@@ -54,6 +54,7 @@ test('admins can open a roster day view', function () {
             ->where('day.check_out_ends_at', '18:30')
             ->has('day.attendances', 1)
             ->where('day.attendances.0.name', 'Sara Nabil')
+            ->where('day.attendances.0.user_id', $employee->id)
             ->where('day.attendances.0.check_in', '09:05'));
 });
 

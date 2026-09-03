@@ -22,6 +22,7 @@ class ClearAttendanceRecordsRequest extends FormRequest
             'date' => ['nullable', 'date', 'required_without_all:from,to'],
             'from' => ['nullable', 'date', 'required_with:to'],
             'to' => ['nullable', 'date', 'required_with:from'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 }

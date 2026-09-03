@@ -94,6 +94,7 @@ class AttendanceController extends Controller
 
         Attendance::query()
             ->tap(fn ($query) => $user->constrainAttendanceVisibility($query))
+            ->when($request->filled('user_id'), fn ($query) => $query->where('user_id', $request->integer('user_id')))
             ->whereDate('date', '>=', $from)
             ->whereDate('date', '<=', $to)
             ->each(fn (Attendance $attendance) => $attendance->delete());

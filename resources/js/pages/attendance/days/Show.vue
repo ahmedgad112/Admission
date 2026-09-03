@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Download } from '@lucide/vue';
+import { Download, Trash2 } from '@lucide/vue';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { attendanceTone } from '@/lib/status';
 
 type AttendanceRow = {
     id: number;
+    user_id: number | null;
     name: string | null;
     department?: { id: number; name: string } | null;
     check_in: string | null;
@@ -54,6 +55,28 @@ defineOptions({
 
 function destroy(): void {
     router.delete(`/attendance/days/${props.day.id}`);
+}
+
+function destroyAttendance(record: AttendanceRow): void {
+    if (record.user_id === null) {
+        return;
+    }
+
+    if (
+        !confirm(
+            trans('attendance.clear_confirm_person', {
+                name: record.name ?? '',
+                date: props.day.date,
+            }),
+        )
+    ) {
+        return;
+    }
+
+    router.delete('/attendance/records', {
+        data: { date: props.day.date, user_id: record.user_id },
+        preserveScroll: true,
+    });
 }
 
 function windowLabel(start: string, end: string): string {
@@ -109,36 +132,95 @@ function windowLabel(start: string, end: string): string {
                     >
                         {{ trans('roster.empty_attendance') }}
                     </div>
-                    <div v-else class="overflow-x-auto rounded-2xl border">
-                        <table class="w-full min-w-[28rem] text-start text-sm">
-                            <thead class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
-                                <tr>
-                                    <th class="px-4 py-3 font-semibold">{{ trans('common.name') }}</th>
-                                    <th class="px-4 py-3 font-semibold">{{ trans('common.in') }}</th>
-                                    <th class="px-4 py-3 font-semibold">{{ trans('common.out') }}</th>
-                                    <th class="px-4 py-3 font-semibold">{{ trans('common.status') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="record in day.attendances"
-                                    :key="record.id"
-                                    class="border-t"
-                                >
-                                    <td class="px-4 py-3 font-medium">{{ record.name ?? '—' }}</td>
-                                    <td class="px-4 py-3 tabular-nums">{{ record.check_in ?? '—' }}</td>
-                                    <td class="px-4 py-3 tabular-nums">{{ record.check_out ?? '—' }}</td>
-                                    <td class="px-4 py-3">
+                    <div v-else>
+                        <div class="grid gap-3 md:hidden">
+                            <div
+                                v-for="record in day.attendances"
+                                :key="record.id"
+                                class="rounded-2xl border bg-muted/20 p-4"
+                            >
+                                <div class="mb-3 flex items-start justify-between gap-2">
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium">{{ record.name ?? '—' }}</p>
+                                        <p class="text-xs text-muted-foreground">
+                                            {{ record.department?.name ?? trans('common.no_department') }}
+                                        </p>
+                                    </div>
+                                    <div class="flex shrink-0 items-center gap-1">
                                         <StatusBadge
                                             v-if="record.status"
                                             :value="record.status"
                                             :tone="attendanceTone(record.status)"
                                         />
-                                        <span v-else>—</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                        <span v-else class="text-xs text-muted-foreground">—</span>
+                                        <Button
+                                            v-if="canUpdate && record.user_id"
+                                            variant="ghost"
+                                            size="sm"
+                                            class="size-8 rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                            :aria-label="trans('attendance.clear_person')"
+                                            @click="destroyAttendance(record)"
+                                        >
+                                            <Trash2 class="size-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                                <dl class="grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
+                                    <div>
+                                        <dt class="text-xs text-muted-foreground">{{ trans('common.in') }}</dt>
+                                        <dd class="font-medium tabular-nums">{{ record.check_in ?? '—' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs text-muted-foreground">{{ trans('common.out') }}</dt>
+                                        <dd class="font-medium tabular-nums">{{ record.check_out ?? '—' }}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+                        <div class="hidden overflow-x-auto rounded-2xl border md:block">
+                            <table class="w-full min-w-[28rem] text-start text-sm">
+                                <thead class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase">
+                                    <tr>
+                                        <th class="px-4 py-3 font-semibold">{{ trans('common.name') }}</th>
+                                        <th class="px-4 py-3 font-semibold">{{ trans('common.in') }}</th>
+                                        <th class="px-4 py-3 font-semibold">{{ trans('common.out') }}</th>
+                                        <th class="px-4 py-3 font-semibold">{{ trans('common.status') }}</th>
+                                        <th v-if="canUpdate" class="px-4 py-3 font-semibold">{{ trans('common.action') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="record in day.attendances"
+                                        :key="record.id"
+                                        class="border-t"
+                                    >
+                                        <td class="px-4 py-3 font-medium">{{ record.name ?? '—' }}</td>
+                                        <td class="px-4 py-3 tabular-nums">{{ record.check_in ?? '—' }}</td>
+                                        <td class="px-4 py-3 tabular-nums">{{ record.check_out ?? '—' }}</td>
+                                        <td class="px-4 py-3">
+                                            <StatusBadge
+                                                v-if="record.status"
+                                                :value="record.status"
+                                                :tone="attendanceTone(record.status)"
+                                            />
+                                            <span v-else>—</span>
+                                        </td>
+                                        <td v-if="canUpdate" class="px-4 py-3">
+                                            <Button
+                                                v-if="record.user_id"
+                                                variant="ghost"
+                                                size="sm"
+                                                class="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                @click="destroyAttendance(record)"
+                                            >
+                                                <Trash2 class="size-4" />
+                                                {{ trans('common.delete') }}
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
