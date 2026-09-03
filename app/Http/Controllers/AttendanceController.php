@@ -68,7 +68,7 @@ class AttendanceController extends Controller
     public function syncEntries(SyncAttendanceEntriesRequest $request): JsonResponse|RedirectResponse
     {
         try {
-            $this->attendanceService->recordEntries($request->user(), $request->validated());
+            $this->attendanceService->recordEntries($request->user(), $request->payload());
         } catch (AttendanceException $exception) {
             return $this->attendanceError($request, $exception);
         }
@@ -310,7 +310,7 @@ class AttendanceController extends Controller
             ->get()
             ->keyBy('user_id');
 
-        return $people->map(function (User $member) use ($records): array {
+        return array_values($people->map(function (User $member) use ($records): array {
             $record = $records->get($member->id);
 
             return [
@@ -321,7 +321,7 @@ class AttendanceController extends Controller
                 'work_hours' => $record?->work_hours,
                 'status' => $record?->status?->value,
             ];
-        })->all();
+        })->all());
     }
 
     private function attendanceError(Request $request, AttendanceException $exception): JsonResponse|RedirectResponse

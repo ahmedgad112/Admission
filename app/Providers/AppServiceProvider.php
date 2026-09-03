@@ -66,8 +66,10 @@ class AppServiceProvider extends ServiceProvider
     protected function configureRateLimiting(): void
     {
         RateLimiter::for('qr-scan', function (Request $request) {
+            $user = $request->user();
+
             return Limit::perMinute((int) config('attendance.qr_scan_per_minute', 10))
-                ->by('qr-scan|'.($request->user()?->id ?? $request->ip()));
+                ->by('qr-scan|'.($user instanceof User ? (string) $user->id : (string) $request->ip()));
         });
     }
 
@@ -96,7 +98,7 @@ class AppServiceProvider extends ServiceProvider
                 : '';
 
             ActivityLogger::record('login_failed', $user, [
-                'name' => $user?->name ?? $email,
+                'name' => $user instanceof User ? $user->name : $email,
                 'email' => $email,
             ], $user);
         });

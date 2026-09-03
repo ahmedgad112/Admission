@@ -92,7 +92,7 @@ class DepartmentController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
-        $branchId = $department?->branch_id ?? $user->branch_id;
+        $branchId = $department !== null ? $department->branch_id : $user->branch_id;
 
         return [
             'branches' => $user->isSuperAdmin()
@@ -108,7 +108,7 @@ class DepartmentController extends Controller
     }
 
     /**
-     * @return array{id: int, name: string, branch_id: int, branch?: array{id: int, name: string}|null, manager_id: int|null, manager?: array{id: int, name: string}|null, staff_count: int}
+     * @return array{id: int, name: string, branch_id: int, branch: Branch|null, manager_id: int|null, manager: User|null, staff_count: int}
      */
     private function departmentAttributes(Department $department): array
     {

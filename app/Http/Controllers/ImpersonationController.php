@@ -39,6 +39,8 @@ class ImpersonationController extends Controller
         abort_unless($impersonation->isActive($request), 403);
 
         $target = $request->user();
+        abort_unless($target instanceof User, 403);
+
         $actor = $impersonation->stop($request);
 
         abort_unless($actor !== null, 403);
@@ -46,7 +48,7 @@ class ImpersonationController extends Controller
         ActivityLogger::record(
             'impersonation_stopped',
             $target,
-            ['name' => $target?->name ?? $actor->name],
+            ['name' => $target->name],
             $actor,
         );
 

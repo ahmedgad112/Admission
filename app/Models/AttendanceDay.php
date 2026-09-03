@@ -254,7 +254,7 @@ class AttendanceDay extends Model
             ->get()
             ->keyBy('user_id');
 
-        return $staff
+        return array_values($staff
             ->filter(function (User $user) use ($type, $attendances): bool {
                 $record = $attendances->get($user->id);
 
@@ -270,8 +270,7 @@ class AttendanceDay extends Model
                 'id' => $user->id,
                 'name' => $user->name,
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 
     private function isWindowOpen(string $startsAt, string $endsAt, ?CarbonInterface $at = null): bool

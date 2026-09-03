@@ -44,8 +44,8 @@ class AttendanceSpreadsheet
             ->get()
             ->map(fn (Attendance $attendance): array => $this->row(
                 $date,
-                $attendance->user?->name,
-                $attendance->branch?->name ?? $branchName,
+                $attendance->user->name,
+                $attendance->branch->name,
                 $attendance,
             ))
             ->all();
@@ -54,7 +54,7 @@ class AttendanceSpreadsheet
             $filename,
             'Attendance',
             $this->headers(),
-            $rows,
+            array_values($rows),
         );
     }
 
@@ -91,32 +91,32 @@ class AttendanceSpreadsheet
                 ->get()
                 ->keyBy('user_id');
 
-            return $people->map(function (User $member) use ($from, $records): array {
+            return array_values($people->map(function (User $member) use ($from, $records): array {
                 return $this->row(
                     $from,
                     $member->name,
                     $member->branch?->name,
                     $records->get($member->id),
                 );
-            })->all();
+            })->all());
         }
 
-        return Attendance::query()
+        return array_values(Attendance::query()
             ->with(['user:id,name', 'branch:id,name'])
             ->whereIn('user_id', $people->modelKeys())
             ->whereDate('date', '>=', $from)
             ->whereDate('date', '<=', $to)
             ->orderBy('date')
             ->get()
-            ->sortBy(fn (Attendance $attendance): string => $attendance->date->toDateString().'|'.($attendance->user?->name ?? ''))
+            ->sortBy(fn (Attendance $attendance): string => $attendance->date->toDateString().'|'.$attendance->user->name)
             ->values()
             ->map(fn (Attendance $attendance): array => $this->row(
                 $attendance->date->toDateString(),
-                $attendance->user?->name,
-                $attendance->branch?->name,
+                $attendance->user->name,
+                $attendance->branch->name,
                 $attendance,
             ))
-            ->all();
+            ->all());
     }
 
     /**
@@ -124,7 +124,7 @@ class AttendanceSpreadsheet
      */
     private function personalRows(User $actor, string $from, string $to): array
     {
-        return Attendance::query()
+        return array_values(Attendance::query()
             ->with(['user:id,name', 'branch:id,name'])
             ->where('user_id', $actor->id)
             ->whereDate('date', '>=', $from)
@@ -133,11 +133,11 @@ class AttendanceSpreadsheet
             ->get()
             ->map(fn (Attendance $attendance): array => $this->row(
                 $attendance->date->toDateString(),
-                $attendance->user?->name,
-                $attendance->branch?->name,
+                $attendance->user->name,
+                $attendance->branch->name,
                 $attendance,
             ))
-            ->all();
+            ->all());
     }
 
     private function filename(string $from, string $to): string

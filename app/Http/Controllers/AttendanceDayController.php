@@ -83,7 +83,7 @@ class AttendanceDayController extends Controller
                     'department' => $record->user?->department,
                     'check_in' => $record->check_in?->format('H:i'),
                     'check_out' => $record->check_out?->format('H:i'),
-                    'status' => $record->status?->value,
+                    'status' => $record->status->value,
                     'work_hours' => $record->work_hours,
                 ])->values()->all(),
             ],

@@ -62,6 +62,34 @@ class SyncAttendanceEntriesRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array{date: string, entries: list<array{user_id: int, check_in?: string|null, check_out?: string|null}>}
+     */
+    public function payload(): array
+    {
+        $validated = $this->validated();
+        $entries = $validated['entries'] ?? [];
+
+        if (! is_array($entries)) {
+            $entries = [];
+        }
+
+        return [
+            'date' => (string) $validated['date'],
+            'entries' => array_values(array_map(function (mixed $entry): array {
+                if (! is_array($entry)) {
+                    return ['user_id' => 0];
+                }
+
+                return [
+                    'user_id' => (int) ($entry['user_id'] ?? 0),
+                    'check_in' => isset($entry['check_in']) && is_string($entry['check_in']) ? $entry['check_in'] : null,
+                    'check_out' => isset($entry['check_out']) && is_string($entry['check_out']) ? $entry['check_out'] : null,
+                ];
+            }, $entries)),
+        ];
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {

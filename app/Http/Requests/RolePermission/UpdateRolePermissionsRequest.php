@@ -58,6 +58,9 @@ class UpdateRolePermissionsRequest extends FormRequest
         return $rules;
     }
 
+    /**
+     * @return list<\Closure(Validator): void>
+     */
     public function after(): array
     {
         return [
@@ -135,7 +138,7 @@ class UpdateRolePermissionsRequest extends FormRequest
      */
     private function editableRoles(): array
     {
-        return Role::query()->assignable()->ordered()->get()->all();
+        return array_values(Role::query()->assignable()->ordered()->get()->all());
     }
 
     /**

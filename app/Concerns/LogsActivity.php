@@ -10,10 +10,18 @@ trait LogsActivity
     public static function bootLogsActivity(): void
     {
         static::created(function (Model $model): void {
+            if (! $model instanceof static) {
+                return;
+            }
+
             ActivityLogger::record('created', $model, $model->activitySnapshot());
         });
 
         static::updated(function (Model $model): void {
+            if (! $model instanceof static) {
+                return;
+            }
+
             $changes = $model->activityChanges();
 
             if ($changes === []) {
@@ -27,6 +35,10 @@ trait LogsActivity
         });
 
         static::deleted(function (Model $model): void {
+            if (! $model instanceof static) {
+                return;
+            }
+
             ActivityLogger::record('deleted', $model, $model->activitySnapshot());
         });
     }

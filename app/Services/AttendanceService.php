@@ -187,7 +187,7 @@ class AttendanceService
                 ActivityLogger::record('checked_in', $attendance, [
                     'name' => $user->name,
                     'date' => $today,
-                    'status' => $attendance->status?->value ?? $attendance->status,
+                    'status' => $attendance->status->value,
                 ], $user);
 
                 return $attendance->refresh();
@@ -237,8 +237,8 @@ class AttendanceService
 
         ActivityLogger::record('checked_out', $attendance, [
             'name' => $user->name,
-            'date' => $attendance->date?->toDateString() ?? now()->toDateString(),
-            'status' => $attendance->status?->value ?? $attendance->status,
+            'date' => $attendance->date->toDateString(),
+            'status' => $attendance->status->value,
         ], $user);
 
         return $attendance->refresh();
