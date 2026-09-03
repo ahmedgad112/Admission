@@ -238,7 +238,7 @@ test('rotating qr tokens also rotate the typed entry code', function () {
     openAttendanceDay($branch);
     $first = app(QrSessionService::class)->create($branch, QrSessionType::CheckIn);
 
-    $this->travel(19)->seconds();
+    $this->travel(((int) config('attendance.qr_ttl_seconds', 20)) - 1)->seconds();
 
     $second = app(QrSessionService::class)->currentOrCreate($branch, QrSessionType::CheckIn);
 
@@ -290,7 +290,7 @@ test('an active qr session is reused until it is close to expiring', function ()
 
     expect($reused->is($first))->toBeTrue();
 
-    $this->travel(16)->seconds();
+    $this->travel(((int) config('attendance.qr_ttl_seconds', 20)) - 4)->seconds();
 
     $rotated = app(QrSessionService::class)->currentOrCreate($branch, QrSessionType::CheckIn);
 
