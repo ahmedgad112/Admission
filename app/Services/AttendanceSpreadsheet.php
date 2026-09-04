@@ -25,7 +25,7 @@ class AttendanceSpreadsheet
         );
     }
 
-    public function downloadForDay(AttendanceDay $day): StreamedResponse
+    public function downloadForDay(AttendanceDay $day, User $actor): StreamedResponse
     {
         $day->loadMissing('branch:id,name');
         $date = $day->date->toDateString();
@@ -36,19 +36,28 @@ class AttendanceSpreadsheet
             ? 'attendance-'.$date.'.xlsx'
             : 'attendance-'.$slug.'-'.$date.'.xlsx';
 
-        $rows = Attendance::query()
-            ->with(['user:id,name', 'branch:id,name'])
+        $people = User::query()
+            ->visibleTo($actor)
+            ->withoutSuperAdmins()
+            ->with('branch:id,name')
+            ->where('status', UserStatus::Active)
+            ->where('branch_id', $day->branch_id)
+            ->orderBy('name')
+            ->get(['id', 'name', 'branch_id']);
+
+        $records = Attendance::query()
             ->where('branch_id', $day->branch_id)
             ->whereDate('date', $date)
-            ->orderBy('check_in')
+            ->whereIn('user_id', $people->modelKeys())
             ->get()
-            ->map(fn (Attendance $attendance): array => $this->row(
-                $date,
-                $attendance->user->name,
-                $attendance->branch->name,
-                $attendance,
-            ))
-            ->all();
+            ->keyBy('user_id');
+
+        $rows = $people->map(fn (User $member): array => $this->row(
+            $date,
+            $member->name,
+            $member->branch->name,
+            $records->get($member->id),
+        ))->all();
 
         return $this->xlsx->download(
             $filename,

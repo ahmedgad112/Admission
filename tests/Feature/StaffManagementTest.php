@@ -56,7 +56,7 @@ test('branch admins can view and create staff in their branch', function () {
         ->and($staff->permissions)->toBe([]);
 });
 
-test('branch admins only see staff in their department', function () {
+test('branch admins see all staff names in their branch', function () {
     $department = Department::factory()->create();
     $otherDepartment = Department::factory()->create(['branch_id' => $department->branch_id]);
     $admin = User::factory()->branchAdmin()->create([
@@ -81,9 +81,10 @@ test('branch admins only see staff in their department', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('staff/Index')
             ->where('canCreate', true)
-            ->has('staff.data', 2)
+            ->has('staff.data', 3)
             ->where('staff.data.0.name', 'Branch Admin')
-            ->where('staff.data.1.name', 'Dept Staff'));
+            ->where('staff.data.1.name', 'Dept Staff')
+            ->where('staff.data.2.name', 'Other Dept Staff'));
 });
 
 test('employees cannot open the staff page', function () {
@@ -126,6 +127,38 @@ test('managers can view department staff but cannot create them', function () {
             'email' => 'blocked@example.com',
         ]))
         ->assertForbidden();
+});
+
+test('department managers only see staff assigned under them', function () {
+    $department = Department::factory()->create();
+    $otherDepartment = Department::factory()->create();
+    $manager = User::factory()->manager()->create([
+        'name' => 'Department Lead',
+        'branch_id' => $department->branch_id,
+        'department_id' => null,
+    ]);
+    $department->update(['manager_id' => $manager->id]);
+    $report = User::factory()->employee()->create([
+        'name' => 'Report Nurse',
+        'department_id' => $department->id,
+        'branch_id' => $department->branch_id,
+    ]);
+    User::factory()->employee()->create([
+        'name' => 'Other Floor',
+        'department_id' => $otherDepartment->id,
+        'branch_id' => $otherDepartment->branch_id,
+    ]);
+
+    $this->actingAs($manager)
+        ->get(route('staff.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('staff/Index')
+            ->has('staff.data', 2)
+            ->where('staff.data.0.name', 'Department Lead')
+            ->where('staff.data.1.name', 'Report Nurse'));
+
+    expect(User::query()->whereKey($report->id)->visibleTo($manager)->exists())->toBeTrue();
 });
 
 test('branch admins can save staff and create another', function () {

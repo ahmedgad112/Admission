@@ -24,7 +24,7 @@ trait ValidatesTaskAssignees
                 match ($actor->recordScope()) {
                     'all' => null,
                     'branch' => $query->where('branch_id', $actor->branch_id),
-                    'team' => $query->where('department_id', $actor->department_id),
+                    'team' => $query->whereIn('department_id', $actor->visibleTeamDepartmentIds()),
                     default => $query->where('id', $actor->id),
                 };
             },

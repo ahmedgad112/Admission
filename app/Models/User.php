@@ -37,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
+ * @property bool $must_change_password
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Role|null $role
@@ -54,10 +55,13 @@ use Illuminate\Support\Carbon;
     'leave_days',
     'permissions',
     'device_uuid',
+    'must_change_password',
 ])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {
+    public const DEFAULT_IMPORT_PASSWORD = '123456789';
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, LogsActivity, Notifiable;
 
@@ -73,6 +77,7 @@ class User extends Authenticatable
             'status' => UserStatus::class,
             'leave_days' => 'integer',
             'permissions' => 'array',
+            'must_change_password' => 'boolean',
         ];
     }
 
@@ -146,6 +151,14 @@ class User extends Authenticatable
     public function leaveRequests(): HasMany
     {
         return $this->hasMany(LeaveRequest::class);
+    }
+
+    /**
+     * @return HasMany<Department, $this>
+     */
+    public function managedDepartments(): HasMany
+    {
+        return $this->hasMany(Department::class, 'manager_id');
     }
 
     public function usedLeaveDays(?int $year = null): int
@@ -374,8 +387,8 @@ class User extends Authenticatable
             return 'all';
         }
 
-        if ($this->isBranchAdmin() && $this->department_id !== null) {
-            return 'team';
+        if ($this->isBranchAdmin()) {
+            return 'branch';
         }
 
         if (
@@ -409,6 +422,31 @@ class User extends Authenticatable
     }
 
     /**
+     * Departments this person is responsible for. Falls back to their own department.
+     *
+     * @return list<int>
+     */
+    public function visibleTeamDepartmentIds(): array
+    {
+        $ids = $this->managedDepartments()
+            ->pluck('id')
+            ->map(fn (mixed $id): int => (int) $id)
+            ->all();
+
+        if ($ids === [] && $this->department_id !== null) {
+            return [(int) $this->department_id];
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    public function canSeeTeamDepartment(?int $departmentId): bool
+    {
+        return $departmentId !== null
+            && in_array($departmentId, $this->visibleTeamDepartmentIds(), true);
+    }
+
+    /**
      * @param  Builder<*>  $query
      */
     public function constrainAttendanceVisibility(Builder $query): void
@@ -416,10 +454,18 @@ class User extends Authenticatable
         match ($this->recordScope()) {
             'all' => null,
             'branch' => $query->where('branch_id', $this->branch_id),
-            'team' => $query->whereHas(
-                'user',
-                fn (Builder $builder) => $builder->where('department_id', $this->department_id),
-            ),
+            'team' => $query->where(function (Builder $builder): void {
+                $builder->where('user_id', $this->id);
+
+                $departmentIds = $this->visibleTeamDepartmentIds();
+
+                if ($departmentIds !== []) {
+                    $builder->orWhereHas(
+                        'user',
+                        fn (Builder $user) => $user->whereIn('department_id', $departmentIds),
+                    );
+                }
+            }),
             default => $query->where('user_id', $this->id),
         };
     }
@@ -441,7 +487,15 @@ class User extends Authenticatable
         match ($actor->recordScope()) {
             'all' => null,
             'branch' => $query->where('branch_id', $actor->branch_id),
-            'team' => $query->where('department_id', $actor->department_id),
+            'team' => $query->where(function (Builder $builder) use ($actor): void {
+                $builder->where('id', $actor->id);
+
+                $departmentIds = $actor->visibleTeamDepartmentIds();
+
+                if ($departmentIds !== []) {
+                    $builder->orWhereIn('department_id', $departmentIds);
+                }
+            }),
             default => $query->where('id', $actor->id),
         };
     }
@@ -472,10 +526,16 @@ class User extends Authenticatable
                 )->orWhere('causer_id', $this->id);
             }),
             'team' => $query->where(function (Builder $builder): void {
-                $builder->whereHas(
-                    'causer',
-                    fn (Builder $causer) => $causer->where('department_id', $this->department_id),
-                )->orWhere('causer_id', $this->id);
+                $builder->where('causer_id', $this->id);
+
+                $departmentIds = $this->visibleTeamDepartmentIds();
+
+                if ($departmentIds !== []) {
+                    $builder->orWhereHas(
+                        'causer',
+                        fn (Builder $causer) => $causer->whereIn('department_id', $departmentIds),
+                    );
+                }
             }),
             default => $query->where('causer_id', $this->id),
         };

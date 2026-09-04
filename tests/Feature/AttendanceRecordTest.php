@@ -8,6 +8,8 @@ use App\Models\Shift;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
+use function Pest\Laravel\actingAs;
+
 function recordPayload(User $employee, array $overrides = []): array
 {
     return [
@@ -36,7 +38,7 @@ test('admins can set check in and check out times for a chosen day', function ()
         'shift_id' => $shift->id,
     ]);
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->put(route('attendance.entries.sync'), recordPayload($employee, [
             'date' => '2026-08-20',
             'entries' => [[
@@ -73,7 +75,7 @@ test('chosen late check in is marked late', function () {
         'shift_id' => $shift->id,
     ]);
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->put(route('attendance.entries.sync'), recordPayload($employee, [
             'entries' => [[
                 'user_id' => $employee->id,
@@ -104,7 +106,7 @@ test('admins can update times on an existing record', function () {
         'check_out' => now()->setTime(12, 0),
     ]);
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->put(route('attendance.entries.sync'), recordPayload($employee, [
             'entries' => [[
                 'user_id' => $employee->id,
@@ -128,7 +130,7 @@ test('employees cannot record attendance times for other people', function () {
         'branch_id' => $branch->id,
     ]);
 
-    $this->actingAs($employee)
+    actingAs($employee)
         ->put(route('attendance.entries.sync'), recordPayload($other))
         ->assertForbidden();
 });
@@ -143,7 +145,7 @@ test('branch admins cannot record times for another branch', function () {
         'branch_id' => $other->id,
     ]);
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->put(route('attendance.entries.sync'), recordPayload($employee))
         ->assertSessionHasErrors('entries.0.user_id');
 
@@ -162,22 +164,50 @@ test('managers can record times for their department', function () {
         'department_id' => $department->id,
     ]);
 
-    $this->actingAs($manager)
+    actingAs($manager)
         ->put(route('attendance.entries.sync'), recordPayload($employee))
         ->assertRedirect();
 
     expect(Attendance::query()->first()?->user_id)->toBe($employee->id);
 });
 
+test('department managers cannot record times for staff outside their team', function () {
+    $branch = Branch::factory()->create();
+    $department = Department::factory()->create(['branch_id' => $branch->id]);
+    $other = Department::factory()->create(['branch_id' => $branch->id]);
+    $manager = User::factory()->manager()->create([
+        'branch_id' => $branch->id,
+        'department_id' => null,
+    ]);
+    $department->update(['manager_id' => $manager->id]);
+    $outsider = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+        'department_id' => $other->id,
+    ]);
+
+    actingAs($manager)
+        ->put(route('attendance.entries.sync'), recordPayload($outsider))
+        ->assertSessionHasErrors('entries.0.user_id');
+});
+
 test('the records page lists people and their times for the selected day', function () {
     $branch = Branch::factory()->create();
+    $department = Department::factory()->create(['branch_id' => $branch->id]);
+    $otherDepartment = Department::factory()->create(['branch_id' => $branch->id]);
     $admin = User::factory()->branchAdmin()->create([
         'name' => 'Ziad Admin',
         'branch_id' => $branch->id,
+        'department_id' => $department->id,
     ]);
     $employee = User::factory()->employee()->create([
         'name' => 'Mona Fathy',
         'branch_id' => $branch->id,
+        'department_id' => $department->id,
+    ]);
+    User::factory()->employee()->create([
+        'name' => 'Other Dept',
+        'branch_id' => $branch->id,
+        'department_id' => $otherDepartment->id,
     ]);
     Attendance::factory()->create([
         'user_id' => $employee->id,
@@ -187,17 +217,19 @@ test('the records page lists people and their times for the selected day', funct
         'check_out' => '2026-08-21 17:05:00',
     ]);
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->get(route('attendance.index', ['date' => '2026-08-21']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('attendance/Index')
-            ->where('date', '2026-08-21')
-            ->where('canRecord', true)
-            ->has('people', 2)
-            ->where('people.0.name', 'Mona Fathy')
-            ->where('people.0.check_in', '09:05')
-            ->where('people.0.check_out', '17:05'));
+            ->has('people', 3)
+            ->whereAll([
+                'date' => '2026-08-21',
+                'canRecord' => true,
+                'people.0.name' => 'Mona Fathy',
+                'people.0.check_in' => '09:05',
+                'people.0.check_out' => '17:05',
+            ]));
 });
 
 test('admins can download an excel sheet for the selected day', function () {
@@ -220,7 +252,7 @@ test('admins can download an excel sheet for the selected day', function () {
         'status' => AttendanceStatus::Present,
     ]);
 
-    $response = $this->actingAs($admin)
+    $response = actingAs($admin)
         ->get(route('attendance.export', ['date' => '2026-08-21']))
         ->assertOk()
         ->assertDownload('attendance-2026-08-21.xlsx');
@@ -266,7 +298,7 @@ test('admins can download an excel sheet for a chosen date range', function () {
         'check_out' => '2026-08-25 15:00:00',
     ]);
 
-    $response = $this->actingAs($admin)
+    $response = actingAs($admin)
         ->get(route('attendance.export', [
             'from' => '2026-08-20',
             'to' => '2026-08-22',
@@ -308,7 +340,7 @@ test('employees only download their own attendance row', function () {
     ]);
 
     $sheet = excelSheetXml(
-        $this->actingAs($employee)
+        actingAs($employee)
             ->get(route('attendance.export'))
             ->assertOk()
             ->streamedContent(),
@@ -338,7 +370,7 @@ test('admins can clear attendance records for a chosen day', function () {
         'date' => '2026-08-22',
     ]);
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->delete(route('attendance.records.clear'), ['date' => '2026-08-21'])
         ->assertRedirect(route('attendance.index', ['date' => '2026-08-21']));
 
@@ -373,7 +405,7 @@ test('admins can clear one employee attendance for a chosen day', function () {
         'date' => '2026-08-22',
     ]);
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->delete(route('attendance.records.clear'), [
             'date' => '2026-08-21',
             'user_id' => $employee->id,
@@ -410,7 +442,7 @@ test('admins can clear attendance records for a date range', function () {
         'date' => '2026-08-25',
     ]);
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->delete(route('attendance.records.clear'), [
             'from' => '2026-08-20',
             'to' => '2026-08-21',
@@ -436,7 +468,7 @@ test('branch admins cannot clear attendance records for another branch', functio
         'date' => '2026-08-21',
     ]);
 
-    $this->actingAs($admin)
+    actingAs($admin)
         ->delete(route('attendance.records.clear'), ['date' => '2026-08-21'])
         ->assertRedirect();
 
@@ -454,7 +486,7 @@ test('employees cannot clear attendance records', function () {
         'date' => now()->toDateString(),
     ]);
 
-    $this->actingAs($employee)
+    actingAs($employee)
         ->delete(route('attendance.records.clear'), ['date' => now()->toDateString()])
         ->assertForbidden();
 
@@ -497,7 +529,7 @@ test('employees can view their attendance table across a date range', function (
         'check_in' => '2026-08-12 09:00:00',
     ]);
 
-    $this->actingAs($employee)
+    actingAs($employee)
         ->get(route('attendance.index', [
             'from' => '2026-08-01',
             'to' => '2026-08-31',
@@ -505,13 +537,15 @@ test('employees can view their attendance table across a date range', function (
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('attendance/Index')
-            ->where('canRecord', false)
-            ->where('from', '2026-08-01')
-            ->where('to', '2026-08-31')
             ->has('attendances.data', 2)
-            ->where('attendances.data.0.id', $second->id)
-            ->where('attendances.data.1.id', $first->id)
-            ->where('attendances.data.0.branch.name', 'Nasr City'));
+            ->whereAll([
+                'canRecord' => false,
+                'from' => '2026-08-01',
+                'to' => '2026-08-31',
+                'attendances.data.0.id' => $second->id,
+                'attendances.data.1.id' => $first->id,
+                'attendances.data.0.branch.name' => 'Nasr City',
+            ]));
 });
 
 function excelSheetXml(string $binary): string

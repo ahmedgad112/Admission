@@ -222,3 +222,49 @@ test('managers see department requests on the index page', function () {
             ->where('canReview', true)
         );
 });
+
+test('department managers only see leave requests for people under them', function () {
+    $department = Department::factory()->create();
+    $otherDepartment = Department::factory()->create();
+    $manager = User::factory()->manager()->create([
+        'branch_id' => $department->branch_id,
+        'department_id' => null,
+    ]);
+    $department->update(['manager_id' => $manager->id]);
+    $report = User::factory()->employee()->create([
+        'branch_id' => $department->branch_id,
+        'department_id' => $department->id,
+    ]);
+    $outsider = User::factory()->employee()->create([
+        'branch_id' => $otherDepartment->branch_id,
+        'department_id' => $otherDepartment->id,
+    ]);
+    $teamRequest = LeaveRequest::factory()->create([
+        'user_id' => $report->id,
+        'branch_id' => $report->branch_id,
+        'department_id' => $report->department_id,
+    ]);
+    LeaveRequest::factory()->create([
+        'user_id' => $outsider->id,
+        'branch_id' => $outsider->branch_id,
+        'department_id' => $outsider->department_id,
+    ]);
+
+    $this->actingAs($manager)
+        ->get(route('leave-requests.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('leave-requests/Index')
+            ->has('leaveRequests.data', 1)
+            ->where('leaveRequests.data.0.id', $teamRequest->id)
+            ->where('canReview', true)
+        );
+
+    $this->actingAs($manager)
+        ->get(route('leave-requests.show', $teamRequest))
+        ->assertOk();
+
+    $this->actingAs($manager)
+        ->get(route('leave-requests.show', LeaveRequest::query()->where('user_id', $outsider->id)->first()))
+        ->assertForbidden();
+});

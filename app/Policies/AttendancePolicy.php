@@ -23,7 +23,8 @@ class AttendancePolicy
         }
 
         if ($user->limitsRecordsToTeam()) {
-            return $attendance->user?->department_id === $user->department_id;
+            return $attendance->user_id === $user->id
+                || $user->canSeeTeamDepartment($attendance->user?->department_id);
         }
 
         return $attendance->user_id === $user->id;

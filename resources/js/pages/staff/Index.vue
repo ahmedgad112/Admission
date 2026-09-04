@@ -40,6 +40,7 @@ const props = defineProps<{
 
 const page = usePage();
 const search = ref(props.filters.search);
+const importInput = ref<HTMLInputElement | null>(null);
 
 defineOptions({
     layout: {
@@ -90,6 +91,30 @@ function canImpersonate(member: StaffRow): boolean {
     );
 }
 
+function pickImportFile(): void {
+    importInput.value?.click();
+}
+
+function importSheet(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) {
+        return;
+    }
+
+    router.post(
+        '/staff/import',
+        { file },
+        {
+            forceFormData: true,
+            onFinish: () => {
+                input.value = '';
+            },
+        },
+    );
+}
+
 function hasActions(member: StaffRow): boolean {
     return canImpersonate(member) || props.canCreate || member.can_delete;
 }
@@ -118,6 +143,33 @@ function hasActions(member: StaffRow): boolean {
                 <Button v-if="canCreate" class="rounded-full" as-child>
                     <Link href="/staff/create">{{ trans('staff.new') }}</Link>
                 </Button>
+                <Button
+                    v-if="canCreate"
+                    variant="outline"
+                    class="rounded-full"
+                    as-child
+                >
+                    <a href="/staff/import/template">{{
+                        trans('staff.import_template')
+                    }}</a>
+                </Button>
+                <Button
+                    v-if="canCreate"
+                    variant="outline"
+                    class="rounded-full"
+                    type="button"
+                    @click="pickImportFile"
+                >
+                    {{ trans('staff.import') }}
+                </Button>
+                <input
+                    v-if="canCreate"
+                    ref="importInput"
+                    type="file"
+                    accept=".xlsx,.csv,text/csv"
+                    class="hidden"
+                    @change="importSheet"
+                />
             </template>
         </PageHeader>
 

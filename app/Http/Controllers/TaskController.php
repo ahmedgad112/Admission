@@ -293,7 +293,10 @@ class TaskController extends Controller
                 ->get(['id', 'name', 'department_id']),
             'departments' => Department::query()
                 ->when($user->limitsRecordsToBranch(), fn ($query) => $query->where('branch_id', $user->branch_id))
-                ->when($user->limitsRecordsToTeam() || $user->recordScope() === 'self', fn ($query) => $query->whereKey($user->department_id))
+                ->when(
+                    $user->limitsRecordsToTeam() || $user->recordScope() === 'self',
+                    fn ($query) => $query->whereIn('id', $user->visibleTeamDepartmentIds()),
+                )
                 ->orderBy('name')
                 ->get(['id', 'name']),
             'priorities' => array_map(fn (TaskPriority $priority) => $priority->value, TaskPriority::cases()),

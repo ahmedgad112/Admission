@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Concerns\RespondsWithInertiaOrJson;
 use App\Enums\Permission;
 use App\Enums\UserStatus;
+use App\Http\Requests\Staff\ImportStaffRequest;
 use App\Http\Requests\Staff\StoreStaffRequest;
 use App\Http\Requests\Staff\UpdateStaffRequest;
 use App\Models\AttendanceDay;
@@ -14,17 +15,22 @@ use App\Models\Role;
 use App\Models\Shift;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\StaffSpreadsheetImporter;
 use App\Support\RolePermissionCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StaffController extends Controller
 {
     use RespondsWithInertiaOrJson;
+
+    public function __construct(public StaffSpreadsheetImporter $importer) {}
 
     public function index(Request $request): Response
     {
@@ -167,6 +173,37 @@ class StaffController extends Controller
         return $this->flashRedirect($request, __('flash.staff.deleted'), route('staff.index'));
     }
 
+    public function template(): StreamedResponse
+    {
+        $this->authorize('create', User::class);
+
+        return $this->importer->template();
+    }
+
+    public function import(ImportStaffRequest $request): JsonResponse|RedirectResponse
+    {
+        $actor = $request->user();
+        abort_unless($actor !== null, 403);
+
+        $file = $request->file('file');
+        abort_unless($file instanceof UploadedFile, 422);
+
+        $result = $this->importer->import($actor, $file);
+        $type = $result['created'] > 0 ? 'success' : 'error';
+        $message = $result['created'] > 0
+            ? __('flash.staff.imported', [
+                'count' => $result['created'],
+                'skipped' => $result['skipped'],
+            ])
+            : __('flash.staff.import_none');
+
+        return $this->flashRedirect($request, $message, route('staff.index'), [
+            'imported' => $result['created'],
+            'skipped' => $result['skipped'],
+            'errors' => $result['errors'],
+        ], $type);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -186,7 +223,7 @@ class StaffController extends Controller
                 : Branch::query()->whereKey($user->branch_id)->get(['id', 'name']),
             'departments' => Department::query()
                 ->when($user->limitsRecordsToBranch(), fn ($query) => $query->where('branch_id', $user->branch_id))
-                ->when($user->limitsRecordsToTeam(), fn ($query) => $query->whereKey($user->department_id))
+                ->when($user->limitsRecordsToTeam(), fn ($query) => $query->whereIn('id', $user->visibleTeamDepartmentIds()))
                 ->orderBy('name')
                 ->get(['id', 'name', 'branch_id']),
             'shifts' => Shift::query()->orderBy('name')->get(['id', 'name']),

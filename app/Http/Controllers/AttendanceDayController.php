@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Concerns\RespondsWithInertiaOrJson;
+use App\Enums\UserStatus;
 use App\Http\Requests\Attendance\StoreAttendanceDayRequest;
 use App\Http\Requests\Attendance\UpdateAttendanceDayRequest;
 use App\Models\Attendance;
 use App\Models\AttendanceDay;
 use App\Models\Branch;
+use App\Models\User;
 use App\Services\AttendanceSpreadsheet;
 use App\Support\ActivityLogger;
 use Illuminate\Http\JsonResponse;
@@ -64,38 +66,54 @@ class AttendanceDayController extends Controller
             'creator:id,name',
         ]);
 
-        $attendances = Attendance::query()
+        $records = Attendance::query()
             ->with(['user:id,name,department_id', 'user.department:id,name'])
             ->where('branch_id', $attendanceDay->branch_id)
             ->whereDate('date', $attendanceDay->date)
-            ->orderBy('check_in')
-            ->get();
+            ->get()
+            ->keyBy('user_id');
+
+        $people = User::query()
+            ->visibleTo($user)
+            ->withoutSuperAdmins()
+            ->with('department:id,name')
+            ->where('status', UserStatus::Active)
+            ->where('branch_id', $attendanceDay->branch_id)
+            ->orderBy('name')
+            ->get(['id', 'name', 'department_id']);
 
         return Inertia::render('attendance/days/Show', [
             'day' => [
                 ...$attendanceDay->toWindowArray(),
                 'branch' => $attendanceDay->branch,
                 'creator' => $attendanceDay->creator,
-                'attendances' => $attendances->map(fn (Attendance $record): array => [
-                    'id' => $record->id,
-                    'user_id' => $record->user_id,
-                    'name' => $record->user?->name,
-                    'department' => $record->user?->department,
-                    'check_in' => $record->check_in?->format('H:i'),
-                    'check_out' => $record->check_out?->format('H:i'),
-                    'status' => $record->status->value,
-                    'work_hours' => $record->work_hours,
-                ])->values()->all(),
+                'attendances' => $people->map(function (User $member) use ($records): array {
+                    $record = $records->get($member->id);
+
+                    return [
+                        'id' => $record?->id,
+                        'user_id' => $member->id,
+                        'name' => $member->name,
+                        'department' => $member->department,
+                        'check_in' => $record?->check_in?->format('H:i'),
+                        'check_out' => $record?->check_out?->format('H:i'),
+                        'status' => $record?->status?->value,
+                        'work_hours' => $record?->work_hours,
+                    ];
+                })->values()->all(),
             ],
             'canUpdate' => $user->can('update', $attendanceDay),
         ]);
     }
 
-    public function export(AttendanceDay $attendanceDay): StreamedResponse
+    public function export(Request $request, AttendanceDay $attendanceDay): StreamedResponse
     {
         $this->authorize('view', $attendanceDay);
 
-        return $this->spreadsheet->downloadForDay($attendanceDay);
+        $user = $request->user();
+        abort_unless($user !== null, 403);
+
+        return $this->spreadsheet->downloadForDay($attendanceDay, $user);
     }
 
     public function create(Request $request): Response

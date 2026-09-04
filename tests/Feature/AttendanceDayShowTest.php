@@ -15,7 +15,9 @@ test('admins can open a roster day view', function () {
         'name' => 'Reception',
     ]);
     $admin = User::factory()->branchAdmin()->create([
+        'name' => 'Branch Lead',
         'branch_id' => $branch->id,
+        'department_id' => $department->id,
     ]);
     $employee = User::factory()->employee()->create([
         'name' => 'Sara Nabil',
@@ -52,10 +54,11 @@ test('admins can open a roster day view', function () {
             ->where('day.branch.name', 'Dokki')
             ->where('day.check_in_starts_at', '08:00')
             ->where('day.check_out_ends_at', '18:30')
-            ->has('day.attendances', 1)
-            ->where('day.attendances.0.name', 'Sara Nabil')
-            ->where('day.attendances.0.user_id', $employee->id)
-            ->where('day.attendances.0.check_in', '09:05'));
+            ->has('day.attendances', 2)
+            ->where('day.attendances.0.name', 'Branch Lead')
+            ->where('day.attendances.1.name', 'Sara Nabil')
+            ->where('day.attendances.1.user_id', $employee->id)
+            ->where('day.attendances.1.check_in', '09:05'));
 });
 
 test('admins can download a roster day as an excel sheet', function () {
@@ -127,7 +130,10 @@ test('employees can view a roster day for their branch', function () {
             ->component('attendance/days/Show')
             ->where('canUpdate', false)
             ->where('day.id', $day->id)
-            ->has('day.attendances', 0));
+            ->has('day.attendances', 1)
+            ->where('day.attendances.0.name', $employee->name)
+            ->where('day.attendances.0.user_id', $employee->id)
+            ->where('day.attendances.0.check_in', null));
 });
 
 test('employees cannot view a roster day for another branch', function () {

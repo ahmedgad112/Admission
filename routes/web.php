@@ -161,6 +161,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:view_staff,manage_staff,view_team_attendance')
         ->name('staff.index');
     Route::get('staff/create', [StaffController::class, 'create'])->name('staff.create');
+    Route::get('staff/import/template', [StaffController::class, 'template'])->name('staff.import.template');
+    Route::post('staff/import', [StaffController::class, 'import'])->name('staff.import');
     Route::post('staff', [StaffController::class, 'store'])->name('staff.store');
     Route::get('staff/{user}/edit', [StaffController::class, 'edit'])->name('staff.edit');
     Route::put('staff/{user}', [StaffController::class, 'update'])->name('staff.update');

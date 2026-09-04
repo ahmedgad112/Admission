@@ -13,6 +13,12 @@ return [
         'created' => 'Staff member created.',
         'updated' => 'Staff member updated.',
         'deleted' => 'Staff member deleted.',
+        'imported' => ':count staff created. :skipped rows skipped.',
+        'import_none' => 'No staff were created from the sheet.',
+        'import_invalid' => 'Row :line is missing a valid name or email.',
+        'import_duplicate' => 'Row :line email :email already exists.',
+        'import_department' => 'Row :line department :department was not found.',
+        'import_branch' => 'Row :line needs a department so the branch can be set.',
     ],
     'shift' => [
         'created' => 'Shift created.',

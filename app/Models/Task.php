@@ -127,11 +127,18 @@ class Task extends Model
                     ->orWhereHas('department', fn (Builder $department) => $department->where('branch_id', $user->branch_id));
             }),
             'team' => $query->where(function (Builder $builder) use ($user): void {
-                $builder->where('department_id', $user->department_id)
-                    ->orWhere('created_by', $user->id)
-                    ->orWhereHas('assignees', fn (Builder $assignee) => $assignee
-                        ->where('users.id', $user->id)
-                        ->orWhere('department_id', $user->department_id));
+                $departmentIds = $user->visibleTeamDepartmentIds();
+
+                $builder->where('created_by', $user->id)
+                    ->orWhereHas('assignees', fn (Builder $assignee) => $assignee->where('users.id', $user->id));
+
+                if ($departmentIds !== []) {
+                    $builder->orWhereIn('department_id', $departmentIds)
+                        ->orWhereHas(
+                            'assignees',
+                            fn (Builder $assignee) => $assignee->whereIn('department_id', $departmentIds),
+                        );
+                }
             }),
             default => $query->where(function (Builder $builder) use ($user): void {
                 $builder->whereHas('assignees', fn (Builder $assignee) => $assignee->where('users.id', $user->id))

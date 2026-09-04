@@ -144,8 +144,13 @@ class LeaveRequest extends Model
                     ->orWhere('branch_id', $actor->branch_id);
             }),
             'team' => $query->where(function (Builder $builder) use ($actor): void {
-                $builder->where('user_id', $actor->id)
-                    ->orWhere('department_id', $actor->department_id);
+                $builder->where('user_id', $actor->id);
+
+                $departmentIds = $actor->visibleTeamDepartmentIds();
+
+                if ($departmentIds !== []) {
+                    $builder->orWhereIn('department_id', $departmentIds);
+                }
             }),
             default => $query->where('user_id', $actor->id),
         };

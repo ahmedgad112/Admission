@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, usePage } from '@inertiajs/vue3';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -14,6 +14,7 @@ type Props = {
 };
 
 const props = defineProps<Props>();
+const page = usePage();
 
 defineOptions({
     layout: {
@@ -33,6 +34,12 @@ defineOptions({
     <h1 class="sr-only">{{ trans('settings.security.title') }}</h1>
 
     <div class="space-y-6">
+        <div
+            v-if="page.props.auth.user?.must_change_password"
+            class="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200"
+        >
+            {{ trans('settings.security.must_change') }}
+        </div>
         <Heading
             variant="small"
             :title="trans('settings.security.heading')"

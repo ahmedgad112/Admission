@@ -11,10 +11,16 @@ class TwoFactorLoginResponse implements TwoFactorLoginResponseContract
 {
     public function toResponse($request): JsonResponse|Response
     {
+        $user = $request->user();
+
         if ($request->wantsJson()) {
             return new JsonResponse('', 204);
         }
 
-        return redirect()->intended(app(HomeRedirect::class)->url($request->user()));
+        if ($user?->must_change_password) {
+            return redirect()->route('security.edit');
+        }
+
+        return redirect()->intended(app(HomeRedirect::class)->url($user));
     }
 }

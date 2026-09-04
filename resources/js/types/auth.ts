@@ -30,6 +30,7 @@ export type User = {
     permissions?: UserPermission[];
     branch_id?: number | null;
     department_id?: number | null;
+    must_change_password?: boolean;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;

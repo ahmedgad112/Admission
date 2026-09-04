@@ -13,6 +13,12 @@ return [
         'created' => 'تم إنشاء الموظف.',
         'updated' => 'تم تحديث الموظف.',
         'deleted' => 'تم حذف الموظف.',
+        'imported' => 'اتضاف :count موظف. واتخطى :skipped صف.',
+        'import_none' => 'مفيش موظفين اتعملوا من الشيت.',
+        'import_invalid' => 'الصف :line ناقص اسم أو إيميل صحيح.',
+        'import_duplicate' => 'الصف :line الإيميل :email موجود قبل كده.',
+        'import_department' => 'الصف :line القسم :department مش موجود.',
+        'import_branch' => 'الصف :line محتاج قسم عشان الفرع يتحدد.',
     ],
     'shift' => [
         'created' => 'تم إنشاء الوردية.',

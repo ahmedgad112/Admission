@@ -65,7 +65,7 @@ trait ValidatesStaffMember
                 ),
                 Rule::when(
                     $user !== null && $user->limitsRecordsToTeam(),
-                    Rule::in(array_filter([$user->department_id])),
+                    Rule::in($user->visibleTeamDepartmentIds()),
                 ),
             ],
             'shift_id' => ['nullable', 'integer', 'exists:shifts,id'],

@@ -143,7 +143,7 @@ function windowLabel(start: string, end: string): string {
                         <div class="grid gap-3 md:hidden">
                             <div
                                 v-for="record in day.attendances"
-                                :key="record.id"
+                                :key="record.user_id ?? record.id"
                                 class="rounded-2xl border bg-muted/20 p-4"
                             >
                                 <div
@@ -250,7 +250,7 @@ function windowLabel(start: string, end: string): string {
                                 <tbody>
                                     <tr
                                         v-for="record in day.attendances"
-                                        :key="record.id"
+                                        :key="record.user_id ?? record.id"
                                         class="border-t"
                                     >
                                         <td class="px-4 py-3 font-medium">
