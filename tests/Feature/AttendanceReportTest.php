@@ -11,7 +11,7 @@ use App\Models\LeaveRequest;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
-test('admins can open an attendance report with a column per employee', function () {
+test('admins can open an attendance report of staff rates', function () {
     $this->travelTo('2026-09-04');
 
     $branch = Branch::factory()->create();

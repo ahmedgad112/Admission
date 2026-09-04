@@ -2,18 +2,16 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { trans } from '@/composables/useTrans';
-
-type Mark =
-    | 'present'
-    | 'late'
-    | 'absent'
-    | 'leave'
-    | 'permission'
-    | 'off'
-    | 'upcoming';
 
 type Person = {
     id: number;
@@ -27,8 +25,9 @@ type Person = {
     permission_days: number;
     leave_days: number;
     attendance_rate: number;
-    marks: Record<string, Mark>;
 };
+
+type SegmentKey = 'present' | 'late' | 'absent' | 'leave' | 'permission';
 
 const props = defineProps<{
     month: string;
@@ -47,16 +46,72 @@ defineOptions({
     },
 });
 
-const marks: Mark[] = [
-    'present',
-    'late',
-    'absent',
-    'leave',
-    'permission',
+const segments: Array<{
+    key: SegmentKey;
+    label: string;
+    barClass: string;
+}> = [
+    {
+        key: 'present',
+        label: 'status.present',
+        barClass: 'bg-emerald-500 dark:bg-emerald-400',
+    },
+    {
+        key: 'late',
+        label: 'status.late',
+        barClass: 'bg-amber-500 dark:bg-amber-400',
+    },
+    {
+        key: 'absent',
+        label: 'status.absent',
+        barClass: 'bg-rose-500 dark:bg-rose-400',
+    },
+    {
+        key: 'leave',
+        label: 'staff.leave_days',
+        barClass: 'bg-sky-500 dark:bg-sky-400',
+    },
+    {
+        key: 'permission',
+        label: 'staff.permission_days',
+        barClass: 'bg-violet-500 dark:bg-violet-400',
+    },
 ];
 
-const weekdayFormatter = computed(
-    () => new Intl.DateTimeFormat(undefined, { weekday: 'short' }),
+const averageRate = computed(() => {
+    if (props.people.length === 0) {
+        return 0;
+    }
+
+    const total = props.people.reduce(
+        (sum, person) => sum + person.attendance_rate,
+        0,
+    );
+
+    return Math.round((total / props.people.length) * 10) / 10;
+});
+
+const chartPeople = computed(() =>
+    props.people.map((person) => {
+        const present = Math.max(person.present_days - person.late_days, 0);
+        const parts = {
+            present,
+            late: person.late_days,
+            absent: person.absent_days,
+            leave: person.leave_days,
+            permission: person.permission_days,
+        };
+        const total = Object.values(parts).reduce(
+            (sum, value) => sum + value,
+            0,
+        );
+
+        return {
+            ...person,
+            parts,
+            total,
+        };
+    }),
 );
 
 function filter(key: 'month' | 'branch_id', value: string): void {
@@ -76,30 +131,19 @@ function filter(key: 'month' | 'branch_id', value: string): void {
     );
 }
 
-function markLabel(mark: Mark): string {
-    return trans(`reports.mark.${mark}`);
-}
-
-function markClass(mark: Mark): string {
-    switch (mark) {
-        case 'present':
-            return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300';
-        case 'late':
-            return 'bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300';
-        case 'absent':
-            return 'bg-rose-100 text-rose-800 dark:bg-rose-400/15 dark:text-rose-300';
-        case 'leave':
-            return 'bg-sky-100 text-sky-800 dark:bg-sky-400/15 dark:text-sky-300';
-        case 'permission':
-            return 'bg-violet-100 text-violet-800 dark:bg-violet-400/15 dark:text-violet-300';
-        case 'upcoming':
-            return 'text-muted-foreground/50';
-        default:
-            return 'text-muted-foreground/40';
-    }
-}
-
 function rateClass(rate: number): string {
+    if (rate >= 90) {
+        return 'bg-emerald-500 dark:bg-emerald-400';
+    }
+
+    if (rate >= 75) {
+        return 'bg-amber-500 dark:bg-amber-400';
+    }
+
+    return 'bg-rose-500 dark:bg-rose-400';
+}
+
+function rateTextClass(rate: number): string {
     if (rate >= 90) {
         return 'text-emerald-700 dark:text-emerald-300';
     }
@@ -111,8 +155,20 @@ function rateClass(rate: number): string {
     return 'text-rose-700 dark:text-rose-300';
 }
 
-function weekday(date: string): string {
-    return weekdayFormatter.value.format(new Date(`${date}T00:00:00`));
+function barHeight(rate: number): string {
+    return `${Math.max(rate, 0)}%`;
+}
+
+function segmentHeight(value: number, total: number): string {
+    if (total <= 0) {
+        return '0%';
+    }
+
+    return `${(value / total) * 100}%`;
+}
+
+function firstName(name: string): string {
+    return name.trim().split(/\s+/)[0] ?? name;
 }
 </script>
 
@@ -164,101 +220,192 @@ function weekday(date: string): string {
             </div>
         </div>
 
-        <div class="flex flex-wrap gap-2 text-xs">
-            <span
-                v-for="mark in marks"
-                :key="mark"
-                :class="[
-                    'inline-flex items-center rounded-full px-2.5 py-1 font-medium',
-                    markClass(mark),
-                ]"
-            >
-                {{ markLabel(mark) }}
-            </span>
-        </div>
-
         <div
             v-if="people.length === 0"
             class="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground"
         >
             {{ trans('reports.empty') }}
         </div>
-        <div
-            v-else-if="dates.length === 0"
-            class="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground"
-        >
-            {{ trans('reports.no_days') }}
-        </div>
-        <div
-            v-else
-            class="overflow-auto rounded-2xl border bg-card shadow-sm"
-        >
-            <table class="min-w-max border-collapse text-center text-sm">
-                <thead>
-                    <tr class="border-b">
-                        <th
-                            class="sticky start-0 top-0 z-30 min-w-28 bg-card px-3 py-3 text-start text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+
+        <template v-else>
+            <dl class="grid gap-3 sm:grid-cols-3">
+                <Card class="shadow-sm">
+                    <CardHeader class="pb-2">
+                        <CardDescription>{{
+                            trans('reports.average_rate')
+                        }}</CardDescription>
+                        <CardTitle class="text-3xl tabular-nums">
+                            {{ averageRate }}%
+                        </CardTitle>
+                    </CardHeader>
+                </Card>
+                <Card class="shadow-sm">
+                    <CardHeader class="pb-2">
+                        <CardDescription>{{
+                            trans('common.staff')
+                        }}</CardDescription>
+                        <CardTitle class="text-3xl tabular-nums">
+                            {{ people.length }}
+                        </CardTitle>
+                    </CardHeader>
+                </Card>
+                <Card class="shadow-sm">
+                    <CardHeader class="pb-2">
+                        <CardDescription>{{
+                            trans('staff.month')
+                        }}</CardDescription>
+                        <CardTitle class="text-3xl tabular-nums">
+                            {{ filters.month }}
+                        </CardTitle>
+                    </CardHeader>
+                </Card>
+            </dl>
+
+            <Card class="shadow-sm">
+                <CardHeader>
+                    <CardTitle>{{ trans('reports.rate_chart') }}</CardTitle>
+                    <CardDescription>{{
+                        trans('reports.rate_chart_help')
+                    }}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div class="flex h-72 gap-3">
+                        <div
+                            class="flex h-full shrink-0 flex-col text-xs text-muted-foreground tabular-nums"
                         >
-                            {{ trans('common.date') }}
-                        </th>
-                        <th
-                            v-for="person in people"
-                            :key="person.id"
-                            class="sticky top-0 z-20 min-w-24 bg-card px-2 py-3"
-                        >
-                            <Link
-                                :href="`/staff/${person.id}`"
-                                class="block max-w-24 truncate text-xs font-semibold hover:underline"
+                            <div class="h-6 shrink-0" />
+                            <div
+                                class="flex flex-1 flex-col justify-between py-0.5"
                             >
-                                {{ person.name }}
-                            </Link>
-                            <p
-                                :class="[
-                                    'mt-1 text-lg font-semibold tabular-nums',
-                                    rateClass(person.attendance_rate),
-                                ]"
+                                <span>100%</span>
+                                <span>75%</span>
+                                <span>50%</span>
+                                <span>25%</span>
+                                <span>0%</span>
+                            </div>
+                            <div class="h-6 shrink-0" />
+                        </div>
+                        <div class="min-w-0 flex-1 overflow-x-auto">
+                            <div
+                                class="flex h-full min-w-full gap-3 border-b"
+                                :style="{
+                                    minWidth: `${Math.max(chartPeople.length * 4.5, 20)}rem`,
+                                }"
                             >
-                                {{ person.attendance_rate }}%
-                            </p>
-                            <p class="text-[11px] text-muted-foreground">
-                                {{ person.present_days }}/{{
-                                    person.expected_days
-                                }}
-                            </p>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr
-                        v-for="date in dates"
-                        :key="date"
-                        class="border-t"
+                                <Link
+                                    v-for="person in chartPeople"
+                                    :key="person.id"
+                                    :href="`/staff/${person.id}`"
+                                    class="group flex h-full min-w-16 flex-1 flex-col items-center gap-2 pt-1"
+                                >
+                                    <span
+                                        :class="[
+                                            'text-xs font-semibold tabular-nums',
+                                            rateTextClass(
+                                                person.attendance_rate,
+                                            ),
+                                        ]"
+                                    >
+                                        {{ person.attendance_rate }}%
+                                    </span>
+                                    <div
+                                        class="flex w-10 max-w-full flex-1 items-end"
+                                    >
+                                        <div
+                                            class="w-full rounded-t-lg transition-all duration-300 group-hover:brightness-110"
+                                            :class="
+                                                rateClass(
+                                                    person.attendance_rate,
+                                                )
+                                            "
+                                            :style="{
+                                                height: barHeight(
+                                                    person.attendance_rate,
+                                                ),
+                                            }"
+                                        />
+                                    </div>
+                                    <span
+                                        class="w-full truncate text-center text-[11px] font-medium text-muted-foreground group-hover:text-foreground"
+                                        :title="person.name"
+                                    >
+                                        {{ firstName(person.name) }}
+                                    </span>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card class="shadow-sm">
+                <CardHeader>
+                    <CardTitle>{{
+                        trans('reports.breakdown_chart')
+                    }}</CardTitle>
+                    <CardDescription>{{
+                        trans('reports.breakdown_chart_help')
+                    }}</CardDescription>
+                </CardHeader>
+                <CardContent class="space-y-4">
+                    <p
+                        v-if="dates.length === 0"
+                        class="text-sm text-muted-foreground"
                     >
-                        <th
-                            class="sticky start-0 z-10 bg-card px-3 py-2 text-start font-medium"
-                        >
-                            <span class="block tabular-nums">{{ date }}</span>
-                            <span class="text-[11px] text-muted-foreground">
-                                {{ weekday(date) }}
-                            </span>
-                        </th>
-                        <td
-                            v-for="person in people"
-                            :key="`${person.id}-${date}`"
-                            class="px-1 py-1"
+                        {{ trans('reports.no_days') }}
+                    </p>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <span
+                            v-for="segment in segments"
+                            :key="segment.key"
+                            class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium"
                         >
                             <span
-                                :class="[
-                                    'inline-flex min-w-10 items-center justify-center rounded-md px-1.5 py-1 text-[11px] font-semibold',
-                                    markClass(person.marks[date] ?? 'off'),
-                                ]"
+                                class="size-2.5 rounded-full"
+                                :class="segment.barClass"
+                            />
+                            {{ trans(segment.label) }}
+                        </span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <div
+                            class="flex h-64 min-w-full items-end gap-3 border-b"
+                            :style="{
+                                minWidth: `${Math.max(chartPeople.length * 4.5, 20)}rem`,
+                            }"
+                        >
+                            <Link
+                                v-for="person in chartPeople"
+                                :key="person.id"
+                                :href="`/staff/${person.id}`"
+                                class="group flex h-full min-w-16 flex-1 flex-col items-center justify-end gap-2"
                             >
-                                {{ markLabel(person.marks[date] ?? 'off') }}
-                            </span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                                <div
+                                    class="flex w-10 max-w-full flex-1 flex-col-reverse overflow-hidden rounded-t-lg bg-muted/40"
+                                >
+                                    <div
+                                        v-for="segment in segments"
+                                        :key="segment.key"
+                                        :class="segment.barClass"
+                                        :style="{
+                                            height: segmentHeight(
+                                                person.parts[segment.key],
+                                                person.total,
+                                            ),
+                                        }"
+                                    />
+                                </div>
+                                <span
+                                    class="w-full truncate text-center text-[11px] font-medium text-muted-foreground group-hover:text-foreground"
+                                    :title="person.name"
+                                >
+                                    {{ firstName(person.name) }}
+                                </span>
+                            </Link>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </template>
     </div>
 </template>
