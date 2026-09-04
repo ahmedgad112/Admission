@@ -222,7 +222,7 @@ test('the records page lists people and their times for the selected day', funct
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('attendance/Index')
-            ->has('people', 3)
+            ->has('people', 1)
             ->whereAll([
                 'date' => '2026-08-21',
                 'canRecord' => true,

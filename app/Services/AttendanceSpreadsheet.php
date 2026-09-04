@@ -49,15 +49,18 @@ class AttendanceSpreadsheet
             ->where('branch_id', $day->branch_id)
             ->whereDate('date', $date)
             ->whereIn('user_id', $people->modelKeys())
+            ->whereNotNull('check_in')
             ->get()
             ->keyBy('user_id');
 
-        $rows = $people->map(fn (User $member): array => $this->row(
-            $date,
-            $member->name,
-            $member->branch->name,
-            $records->get($member->id),
-        ))->all();
+        $rows = $people
+            ->filter(fn (User $member): bool => $records->has($member->id))
+            ->map(fn (User $member): array => $this->row(
+                $date,
+                $member->name,
+                $member->branch->name,
+                $records->get($member->id),
+            ))->all();
 
         return $this->xlsx->download(
             $filename,
@@ -97,17 +100,20 @@ class AttendanceSpreadsheet
             $records = Attendance::query()
                 ->whereDate('date', $from)
                 ->whereIn('user_id', $people->modelKeys())
+                ->whereNotNull('check_in')
                 ->get()
                 ->keyBy('user_id');
 
-            return array_values($people->map(function (User $member) use ($from, $records): array {
-                return $this->row(
-                    $from,
-                    $member->name,
-                    $member->branch?->name,
-                    $records->get($member->id),
-                );
-            })->all());
+            return array_values($people
+                ->filter(fn (User $member): bool => $records->has($member->id))
+                ->map(function (User $member) use ($from, $records): array {
+                    return $this->row(
+                        $from,
+                        $member->name,
+                        $member->branch?->name,
+                        $records->get($member->id),
+                    );
+                })->all());
         }
 
         return array_values(Attendance::query()

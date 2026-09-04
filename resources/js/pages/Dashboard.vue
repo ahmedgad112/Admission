@@ -427,7 +427,16 @@ function formatTime(checkIn: string | null): string {
                         <div class="min-w-0 flex-1 space-y-2">
                             <div class="flex items-start justify-between gap-2">
                                 <p class="font-medium text-foreground">
-                                    {{ row.user?.name || '—' }}
+                                    <Link
+                                        v-if="row.user?.id"
+                                        :href="`/staff/${row.user.id}`"
+                                        class="hover:underline"
+                                    >
+                                        {{ row.user?.name || '—' }}
+                                    </Link>
+                                    <span v-else>{{
+                                        row.user?.name || '—'
+                                    }}</span>
                                 </p>
                                 <StatusBadge
                                     :value="row.status"

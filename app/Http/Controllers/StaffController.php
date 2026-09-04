@@ -15,6 +15,7 @@ use App\Models\Role;
 use App\Models\Shift;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\StaffAttendanceSummary;
 use App\Services\StaffSpreadsheetImporter;
 use App\Support\RolePermissionCatalog;
 use Illuminate\Http\JsonResponse;
@@ -30,7 +31,10 @@ class StaffController extends Controller
 {
     use RespondsWithInertiaOrJson;
 
-    public function __construct(public StaffSpreadsheetImporter $importer) {}
+    public function __construct(
+        public StaffSpreadsheetImporter $importer,
+        public StaffAttendanceSummary $attendanceSummary,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -58,9 +62,8 @@ class StaffController extends Controller
             })
             ->when($request->string('status')->isNotEmpty(), fn ($query) => $query->where('status', $request->string('status')))
             ->orderBy('name')
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (User $member): array => [
+            ->get()
+            ->map(fn (User $member): array => [
                 'id' => $member->id,
                 'name' => $member->name,
                 'email' => $member->email,
@@ -73,10 +76,13 @@ class StaffController extends Controller
                 'shift' => $member->shift,
                 'leave_days' => $member->leave_days,
                 'can_delete' => $user->can('delete', $member),
-            ]);
+            ])
+            ->values();
 
         return Inertia::render('staff/Index', [
-            'staff' => $staff,
+            'staff' => [
+                'data' => $staff,
+            ],
             'filters' => [
                 'search' => $request->string('search')->toString(),
                 'role' => $request->string('role')->toString(),
@@ -87,6 +93,35 @@ class StaffController extends Controller
                 'label' => $role->label(),
             ]),
             'canCreate' => $user->can('create', User::class),
+        ]);
+    }
+
+    public function show(Request $request, User $user): Response
+    {
+        $this->authorize('view', $user);
+
+        $actor = $request->user();
+        abort_unless($actor !== null, 403);
+
+        $month = $this->attendanceSummary->resolveMonth($request->string('month')->toString());
+        $user->load(['branch:id,name', 'department:id,name', 'shift:id,name', 'role']);
+
+        return Inertia::render('staff/Show', [
+            'member' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role?->slug,
+                'role_label' => $user->role?->label(),
+                'status' => $user->status->value,
+                'branch' => $user->branch,
+                'department' => $user->department,
+                'shift' => $user->shift,
+                'leave_days' => $user->leave_days,
+            ],
+            'summary' => $this->attendanceSummary->for($user, $month),
+            'canUpdate' => $actor->can('update', $user),
         ]);
     }
 

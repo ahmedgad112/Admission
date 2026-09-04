@@ -56,6 +56,18 @@ test('branch admins can view and create staff in their branch', function () {
         ->and($staff->permissions)->toBe([]);
 });
 
+test('staff index lists every visible member on one page', function () {
+    $admin = User::factory()->superAdmin()->create(['name' => 'Admin']);
+    User::factory()->employee()->count(20)->create();
+
+    $this->actingAs($admin)
+        ->get(route('staff.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('staff/Index')
+            ->has('staff.data', 21));
+});
+
 test('branch admins see all staff names in their branch', function () {
     $department = Department::factory()->create();
     $otherDepartment = Department::factory()->create(['branch_id' => $department->branch_id]);

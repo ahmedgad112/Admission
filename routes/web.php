@@ -164,6 +164,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('staff/import/template', [StaffController::class, 'template'])->name('staff.import.template');
     Route::post('staff/import', [StaffController::class, 'import'])->name('staff.import');
     Route::post('staff', [StaffController::class, 'store'])->name('staff.store');
+    Route::get('staff/{user}', [StaffController::class, 'show'])->name('staff.show');
     Route::get('staff/{user}/edit', [StaffController::class, 'edit'])->name('staff.edit');
     Route::put('staff/{user}', [StaffController::class, 'update'])->name('staff.update');
     Route::delete('staff/{user}', [StaffController::class, 'destroy'])->name('staff.destroy');

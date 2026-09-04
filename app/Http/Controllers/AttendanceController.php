@@ -307,21 +307,24 @@ class AttendanceController extends Controller
         $records = Attendance::query()
             ->whereDate('date', $date)
             ->whereIn('user_id', $people->modelKeys())
+            ->whereNotNull('check_in')
             ->get()
             ->keyBy('user_id');
 
-        return array_values($people->map(function (User $member) use ($records): array {
-            $record = $records->get($member->id);
+        return array_values($people
+            ->filter(fn (User $member): bool => $records->has($member->id))
+            ->map(function (User $member) use ($records): array {
+                $record = $records->get($member->id);
 
-            return [
-                'id' => $member->id,
-                'name' => $member->name,
-                'check_in' => $record?->check_in?->format('H:i'),
-                'check_out' => $record?->check_out?->format('H:i'),
-                'work_hours' => $record?->work_hours,
-                'status' => $record?->status?->value,
-            ];
-        })->all());
+                return [
+                    'id' => $member->id,
+                    'name' => $member->name,
+                    'check_in' => $record?->check_in?->format('H:i'),
+                    'check_out' => $record?->check_out?->format('H:i'),
+                    'work_hours' => $record?->work_hours,
+                    'status' => $record?->status?->value,
+                ];
+            })->all());
     }
 
     private function attendanceError(Request $request, AttendanceException $exception): JsonResponse|RedirectResponse

@@ -151,7 +151,16 @@ function windowLabel(start: string, end: string): string {
                                 >
                                     <div class="min-w-0">
                                         <p class="text-sm font-medium">
-                                            {{ record.name ?? '—' }}
+                                            <Link
+                                                v-if="record.user_id"
+                                                :href="`/staff/${record.user_id}`"
+                                                class="hover:underline"
+                                            >
+                                                {{ record.name ?? '—' }}
+                                            </Link>
+                                            <span v-else>{{
+                                                record.name ?? '—'
+                                            }}</span>
                                         </p>
                                         <p
                                             class="text-xs text-muted-foreground"
@@ -254,7 +263,16 @@ function windowLabel(start: string, end: string): string {
                                         class="border-t"
                                     >
                                         <td class="px-4 py-3 font-medium">
-                                            {{ record.name ?? '—' }}
+                                            <Link
+                                                v-if="record.user_id"
+                                                :href="`/staff/${record.user_id}`"
+                                                class="hover:underline"
+                                            >
+                                                {{ record.name ?? '—' }}
+                                            </Link>
+                                            <span v-else>{{
+                                                record.name ?? '—'
+                                            }}</span>
                                         </td>
                                         <td class="px-4 py-3 tabular-nums">
                                             {{ record.check_in ?? '—' }}

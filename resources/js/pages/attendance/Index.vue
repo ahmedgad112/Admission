@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Download, Trash2 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
@@ -359,7 +359,12 @@ function clock(value: string | null): string {
                             class="mb-3 flex items-start justify-between gap-2"
                         >
                             <p class="min-w-0 text-sm leading-5 font-medium">
-                                {{ people[index]?.name }}
+                                <Link
+                                    :href="`/staff/${entry.user_id}`"
+                                    class="hover:underline"
+                                >
+                                    {{ people[index]?.name }}
+                                </Link>
                             </p>
                             <div class="flex shrink-0 items-center gap-1">
                                 <StatusBadge

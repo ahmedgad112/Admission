@@ -116,7 +116,7 @@ function importSheet(event: Event): void {
 }
 
 function hasActions(member: StaffRow): boolean {
-    return canImpersonate(member) || props.canCreate || member.can_delete;
+    return true;
 }
 </script>
 
@@ -226,7 +226,14 @@ function hasActions(member: StaffRow): boolean {
                     class="h-full shadow-sm"
                 >
                     <CardHeader>
-                        <CardTitle class="text-lg">{{ member.name }}</CardTitle>
+                        <CardTitle class="text-lg">
+                            <Link
+                                :href="`/staff/${member.id}`"
+                                class="hover:underline"
+                            >
+                                {{ member.name }}
+                            </Link>
+                        </CardTitle>
                         <CardDescription>{{ member.email }}</CardDescription>
                     </CardHeader>
                     <CardContent class="space-y-4">
@@ -283,6 +290,16 @@ function hasActions(member: StaffRow): boolean {
                         v-if="hasActions(member)"
                         class="mt-auto flex flex-wrap gap-2 border-t"
                     >
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            class="rounded-full"
+                            as-child
+                        >
+                            <Link :href="`/staff/${member.id}`">{{
+                                trans('staff.profile')
+                            }}</Link>
+                        </Button>
                         <Button
                             v-if="canImpersonate(member)"
                             variant="secondary"
@@ -352,7 +369,12 @@ function hasActions(member: StaffRow): boolean {
                             class="border-t"
                         >
                             <td class="px-4 py-3 font-medium">
-                                {{ member.name }}
+                                <Link
+                                    :href="`/staff/${member.id}`"
+                                    class="hover:underline"
+                                >
+                                    {{ member.name }}
+                                </Link>
                             </td>
                             <td class="px-4 py-3 text-muted-foreground">
                                 {{ member.email }}
@@ -381,6 +403,16 @@ function hasActions(member: StaffRow): boolean {
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        class="rounded-full"
+                                        as-child
+                                    >
+                                        <Link :href="`/staff/${member.id}`">{{
+                                            trans('staff.profile')
+                                        }}</Link>
+                                    </Button>
                                     <Button
                                         v-if="canImpersonate(member)"
                                         variant="secondary"

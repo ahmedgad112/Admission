@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Concerns\RespondsWithInertiaOrJson;
-use App\Enums\UserStatus;
 use App\Http\Requests\Attendance\StoreAttendanceDayRequest;
 use App\Http\Requests\Attendance\UpdateAttendanceDayRequest;
 use App\Models\Attendance;
@@ -66,41 +65,36 @@ class AttendanceDayController extends Controller
             'creator:id,name',
         ]);
 
+        $visibleUserIds = User::query()
+            ->visibleTo($user)
+            ->withoutSuperAdmins()
+            ->pluck('id');
+
         $records = Attendance::query()
             ->with(['user:id,name,department_id', 'user.department:id,name'])
             ->where('branch_id', $attendanceDay->branch_id)
             ->whereDate('date', $attendanceDay->date)
+            ->whereNotNull('check_in')
+            ->whereIn('user_id', $visibleUserIds)
             ->get()
-            ->keyBy('user_id');
-
-        $people = User::query()
-            ->visibleTo($user)
-            ->withoutSuperAdmins()
-            ->with('department:id,name')
-            ->where('status', UserStatus::Active)
-            ->where('branch_id', $attendanceDay->branch_id)
-            ->orderBy('name')
-            ->get(['id', 'name', 'department_id']);
+            ->sortBy(fn (Attendance $record): string => $record->user->name)
+            ->values();
 
         return Inertia::render('attendance/days/Show', [
             'day' => [
                 ...$attendanceDay->toWindowArray(),
                 'branch' => $attendanceDay->branch,
                 'creator' => $attendanceDay->creator,
-                'attendances' => $people->map(function (User $member) use ($records): array {
-                    $record = $records->get($member->id);
-
-                    return [
-                        'id' => $record?->id,
-                        'user_id' => $member->id,
-                        'name' => $member->name,
-                        'department' => $member->department,
-                        'check_in' => $record?->check_in?->format('H:i'),
-                        'check_out' => $record?->check_out?->format('H:i'),
-                        'status' => $record?->status?->value,
-                        'work_hours' => $record?->work_hours,
-                    ];
-                })->values()->all(),
+                'attendances' => $records->map(fn (Attendance $record): array => [
+                    'id' => $record->id,
+                    'user_id' => $record->user_id,
+                    'name' => $record->user?->name,
+                    'department' => $record->user?->department,
+                    'check_in' => $record->check_in?->format('H:i'),
+                    'check_out' => $record->check_out?->format('H:i'),
+                    'status' => $record->status?->value,
+                    'work_hours' => $record->work_hours,
+                ])->all(),
             ],
             'canUpdate' => $user->can('update', $attendanceDay),
         ]);
