@@ -232,9 +232,14 @@ class User extends Authenticatable
         return $this->hasPermission(Permission::ViewDashboard);
     }
 
+    public function tracksAttendance(): bool
+    {
+        return ! $this->isSuperAdmin();
+    }
+
     public function canScanAttendance(): bool
     {
-        return $this->hasPermission(Permission::ScanAttendance);
+        return $this->tracksAttendance() && $this->hasPermission(Permission::ScanAttendance);
     }
 
     public function canViewStaff(): bool
@@ -303,6 +308,11 @@ class User extends Authenticatable
     public function canViewTeamAttendance(): bool
     {
         return $this->hasPermission(Permission::ViewTeamAttendance);
+    }
+
+    public function canViewAttendanceReports(): bool
+    {
+        return $this->canViewTeamAttendance();
     }
 
     public function canReviewLeaveRequests(): bool

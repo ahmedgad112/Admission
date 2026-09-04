@@ -32,11 +32,7 @@ class AttendancePolicy
 
     public function create(User $user): bool
     {
-        if (! $user->canScanAttendance()) {
-            return false;
-        }
-
-        return $user->branch_id !== null || $user->isSuperAdmin();
+        return $user->canScanAttendance() && $user->branch_id !== null;
     }
 
     public function record(User $user): bool

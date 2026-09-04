@@ -393,6 +393,7 @@ function formatTime(checkIn: string | null): string {
                         لتسجيل الحضور اليومي.
                     </p>
                     <Link
+                        v-if="page.props.can?.scanAttendance"
                         href="/attendance/scan"
                         class="mt-4 inline-flex h-9 items-center gap-2 rounded-full bg-primary px-4 text-xs font-medium text-primary-foreground shadow-xs hover:bg-primary/90"
                     >

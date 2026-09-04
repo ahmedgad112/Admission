@@ -410,3 +410,27 @@ test('qr scan endpoints are rate limited', function () {
         'device_uuid' => (string) Str::uuid(),
     ])->assertTooManyRequests();
 });
+
+test('super admins cannot open the scan page or check in', function () {
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->superAdmin()->create([
+        'branch_id' => $branch->id,
+    ]);
+    openAttendanceDay($branch);
+    $session = app(QrSessionService::class)->create($branch, QrSessionType::CheckIn);
+
+    $this->actingAs($admin)
+        ->get(route('attendance.scan'))
+        ->assertForbidden();
+
+    $this->actingAs($admin)
+        ->postJson(route('api.attendance.check-in'), [
+            'token' => $session->token,
+            'latitude' => $branch->latitude,
+            'longitude' => $branch->longitude,
+            'device_uuid' => (string) Str::uuid(),
+        ])
+        ->assertForbidden();
+
+    expect(Attendance::query()->count())->toBe(0);
+});

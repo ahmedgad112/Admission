@@ -10,12 +10,16 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 test('the dashboard includes attendance and task analytics', function () {
     $branch = Branch::factory()->create();
-    $user = User::factory()->superAdmin()->create([
+    $admin = User::factory()->superAdmin()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $employee = User::factory()->employee()->create([
+        'name' => 'Late Employee',
         'branch_id' => $branch->id,
     ]);
 
     Attendance::factory()->create([
-        'user_id' => $user->id,
+        'user_id' => $employee->id,
         'branch_id' => $branch->id,
         'status' => AttendanceStatus::Late,
         'late_minutes' => 20,
@@ -23,13 +27,13 @@ test('the dashboard includes attendance and task analytics', function () {
         'check_out' => now(),
     ]);
 
-    Task::factory()->assignedTo($user)->create([
-        'created_by' => $user->id,
+    Task::factory()->assignedTo($employee)->create([
+        'created_by' => $admin->id,
         'status' => TaskStatus::Completed,
         'completed_at' => now(),
     ]);
 
-    $this->actingAs($user)
+    $this->actingAs($admin)
         ->get(route('dashboard'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -39,7 +43,7 @@ test('the dashboard includes attendance and task analytics', function () {
             ->where('metrics.late_today', 1)
             ->where('metrics.completed_tasks', 1)
             ->has('metrics.today_attendance', 1)
-            ->where('metrics.today_attendance.0.user.name', $user->name)
+            ->where('metrics.today_attendance.0.user.name', 'Late Employee')
             ->has('metrics.today_attendance.0.branch.name')
             ->has('metrics.today_attendance.0.status')
             ->has('metrics.today_attendance.0.check_in')

@@ -36,10 +36,12 @@ type Member = {
 
 type Summary = {
     month: string;
+    expected_days: number;
     present_days: number;
     absent_days: number;
     late_days: number;
     permission_days: number;
+    attendance_rate: number;
     leave_days_used: number;
     remaining_leave_days: number;
     records: Array<{
@@ -64,7 +66,8 @@ type Summary = {
 
 const props = defineProps<{
     member: Member;
-    summary: Summary;
+    summary: Summary | null;
+    tracksAttendance: boolean;
     canUpdate: boolean;
 }>();
 
@@ -131,7 +134,7 @@ function leaveRange(leave: Summary['leaves'][number]): string {
                     :tone="userStatusTone(member.status)"
                 />
             </div>
-            <div class="space-y-1">
+            <div v-if="summary" class="space-y-1">
                 <Label for="month">{{ trans('staff.month') }}</Label>
                 <Input
                     id="month"
@@ -143,7 +146,27 @@ function leaveRange(leave: Summary['leaves'][number]): string {
             </div>
         </div>
 
-        <dl class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div
+            v-if="!tracksAttendance"
+            class="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground"
+        >
+            {{ trans('staff.no_attendance_tracking') }}
+        </div>
+
+        <dl
+            v-else-if="summary"
+            class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5"
+        >
+            <Card class="shadow-sm">
+                <CardHeader class="pb-2">
+                    <CardDescription>{{
+                        trans('staff.attendance_rate')
+                    }}</CardDescription>
+                    <CardTitle class="text-3xl tabular-nums">
+                        {{ summary.attendance_rate }}%
+                    </CardTitle>
+                </CardHeader>
+            </Card>
             <Card class="shadow-sm">
                 <CardHeader class="pb-2">
                     <CardDescription>{{
@@ -191,6 +214,7 @@ function leaveRange(leave: Summary['leaves'][number]): string {
             </Card>
         </dl>
 
+        <template v-if="summary">
         <Card class="shadow-sm">
             <CardHeader class="border-b">
                 <CardTitle>{{ trans('staff.attendance_days') }}</CardTitle>
@@ -325,5 +349,6 @@ function leaveRange(leave: Summary['leaves'][number]): string {
                 </div>
             </CardContent>
         </Card>
+        </template>
     </div>
 </template>

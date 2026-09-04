@@ -120,7 +120,10 @@ class StaffController extends Controller
                 'shift' => $user->shift,
                 'leave_days' => $user->leave_days,
             ],
-            'summary' => $this->attendanceSummary->for($user, $month),
+            'tracksAttendance' => $user->tracksAttendance(),
+            'summary' => $user->tracksAttendance()
+                ? $this->attendanceSummary->for($user, $month)
+                : null,
             'canUpdate' => $actor->can('update', $user),
         ]);
     }

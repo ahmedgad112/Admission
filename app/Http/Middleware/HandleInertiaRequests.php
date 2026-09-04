@@ -66,9 +66,11 @@ class HandleInertiaRequests extends Middleware
                         Str::camel($permission->value) => $user?->hasPermission($permission) ?? false,
                     ],
                 )->all(),
+                'scanAttendance' => $user?->canScanAttendance() ?? false,
                 'viewStaff' => ($user?->canViewStaff() ?? false)
                     || ($user?->canManageStaff() ?? false)
                     || ($user?->canViewTeamAttendance() ?? false),
+                'viewAttendanceReports' => $user?->canViewAttendanceReports() ?? false,
                 'viewRoster' => $user?->canViewRoster() ?? false,
                 'viewTasks' => $user?->canViewTasks() ?? false,
                 'viewLeaveRequests' => $user?->canViewLeaveRequests() ?? false,

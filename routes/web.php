@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AttendanceDayController;
+use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
@@ -30,6 +31,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('attendance/export', [AttendanceController::class, 'export'])
         ->middleware('permission:view_attendance')
         ->name('attendance.export');
+    Route::get('attendance/reports', AttendanceReportController::class)
+        ->middleware('permission:view_team_attendance')
+        ->name('attendance.reports');
     Route::put('attendance/entries', [AttendanceController::class, 'syncEntries'])
         ->middleware('permission:view_team_attendance')
         ->name('attendance.entries.sync');

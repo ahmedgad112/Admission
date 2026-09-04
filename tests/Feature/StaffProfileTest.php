@@ -67,9 +67,25 @@ test('admins can open a staff profile with attendance and leave totals', functio
             ->where('summary.present_days', 1)
             ->where('summary.absent_days', 1)
             ->where('summary.permission_days', 1)
+            ->where('summary.expected_days', 3)
+            ->where('summary.attendance_rate', 50)
             ->has('summary.records', 1)
             ->has('summary.leaves', 1)
+            ->where('tracksAttendance', true)
             ->where('canUpdate', true));
+});
+
+test('super admin profiles do not include attendance tracking', function () {
+    $admin = User::factory()->superAdmin()->create();
+
+    $this->actingAs($admin)
+        ->get(route('staff.show', $admin))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('staff/Show')
+            ->where('member.id', $admin->id)
+            ->where('tracksAttendance', false)
+            ->where('summary', null));
 });
 
 test('employees can open their own profile but not another staff profile', function () {

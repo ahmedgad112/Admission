@@ -66,6 +66,7 @@ enum HomePage: string
             self::Staff => $user->canViewStaff()
                 || $user->canManageStaff()
                 || $user->canViewTeamAttendance(),
+            self::Scan => $user->canScanAttendance(),
             default => $user->hasPermission($this->permission()),
         };
     }

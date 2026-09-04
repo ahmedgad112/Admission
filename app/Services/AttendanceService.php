@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\AttendanceStatus;
 use App\Enums\QrSessionType;
 use App\Enums\TaskStatus;
+use App\Enums\UserStatus;
 use App\Exceptions\AttendanceException;
 use App\Models\Attendance;
 use App\Models\AttendanceDay;
@@ -151,6 +152,7 @@ class AttendanceService
      */
     public function checkIn(User $user, array $payload): Attendance
     {
+        $this->assertTracksAttendance($user);
         $session = $this->validatedSession($user, $payload['token'], QrSessionType::CheckIn);
         $this->assertOpenDay($session->branch_id, QrSessionType::CheckIn, $user);
         $this->assertDevice($user, $payload['device_uuid']);
@@ -206,6 +208,7 @@ class AttendanceService
      */
     public function checkOut(User $user, array $payload): Attendance
     {
+        $this->assertTracksAttendance($user);
         $session = $this->validatedSession($user, $payload['token'], QrSessionType::CheckOut);
         $this->assertOpenDay($session->branch_id, QrSessionType::CheckOut, $user);
         $this->assertDevice($user, $payload['device_uuid']);
@@ -266,7 +269,7 @@ class AttendanceService
                     ->whereKey($entry['user_id'])
                     ->first();
 
-                if (! $member instanceof User || $member->branch_id === null) {
+                if (! $member instanceof User || $member->branch_id === null || ! $member->tracksAttendance()) {
                     throw new AttendanceException(__('attendance.error.cannot_record'));
                 }
 
@@ -326,8 +329,15 @@ class AttendanceService
         $from = now()->startOfMonth();
 
         $attendanceQuery = Attendance::query()->whereDate('date', '>=', $from->toDateString());
-        $userQuery = User::query()->where('status', 'active')->visibleTo($user);
+        $userQuery = User::query()
+            ->where('status', UserStatus::Active)
+            ->visibleTo($user)
+            ->withoutSuperAdmins();
         $user->constrainAttendanceVisibility($attendanceQuery);
+        $attendanceQuery->whereIn(
+            'user_id',
+            User::query()->withoutSuperAdmins()->select('id'),
+        );
 
         $headcount = (clone $userQuery)->count();
         $presentToday = (clone $attendanceQuery)->whereDate('date', $today)->whereNotNull('check_in')->count();
@@ -365,6 +375,7 @@ class AttendanceService
             'today_attendance' => Attendance::query()
                 ->with(['user:id,name', 'branch:id,name'])
                 ->whereDate('date', $today)
+                ->whereIn('user_id', User::query()->withoutSuperAdmins()->select('id'))
                 ->tap(fn ($query) => $user->constrainAttendanceVisibility($query))
                 ->latest('check_in')
                 ->limit(8)
@@ -414,6 +425,13 @@ class AttendanceService
 
         if (! hash_equals($user->device_uuid, $deviceUuid)) {
             throw new AttendanceException(__('attendance.error.device'), 403);
+        }
+    }
+
+    private function assertTracksAttendance(User $user): void
+    {
+        if (! $user->tracksAttendance()) {
+            throw new AttendanceException(__('attendance.error.not_tracked'), 403);
         }
     }
 

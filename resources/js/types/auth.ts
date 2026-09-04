@@ -52,6 +52,7 @@ export type AppPermissions = {
     manageBranches: boolean;
     manageKiosk: boolean;
     viewAttendance: boolean;
+    viewAttendanceReports: boolean;
     viewTeamAttendance: boolean;
     viewActivityLog: boolean;
     viewTasks: boolean;

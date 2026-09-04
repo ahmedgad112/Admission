@@ -4,6 +4,7 @@ import {
     Building2,
     CalendarDays,
     CalendarOff,
+    ChartColumn,
     ClipboardList,
     Clock,
     History,
@@ -89,6 +90,14 @@ const navGroups = computed<NavGroup[]>(() => {
             title: trans('nav.records'),
             href: '/attendance',
             icon: Timer,
+        });
+    }
+
+    if (can?.viewAttendanceReports) {
+        attendance.push({
+            title: trans('nav.reports'),
+            href: '/attendance/reports',
+            icon: ChartColumn,
         });
     }
 
