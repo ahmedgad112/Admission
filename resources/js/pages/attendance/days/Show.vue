@@ -230,7 +230,7 @@ function windowLabel(start: string, end: string): string {
                             class="hidden overflow-x-auto rounded-2xl border md:block"
                         >
                             <table
-                                class="w-full min-w-[28rem] text-start text-sm"
+                                class="w-full min-w-[34rem] text-start text-sm"
                             >
                                 <thead
                                     class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase"
@@ -238,6 +238,9 @@ function windowLabel(start: string, end: string): string {
                                     <tr>
                                         <th class="px-4 py-3 font-semibold">
                                             {{ trans('common.name') }}
+                                        </th>
+                                        <th class="px-4 py-3 font-semibold">
+                                            {{ trans('common.department') }}
                                         </th>
                                         <th class="px-4 py-3 font-semibold">
                                             {{ trans('common.in') }}
@@ -273,6 +276,12 @@ function windowLabel(start: string, end: string): string {
                                             <span v-else>{{
                                                 record.name ?? '—'
                                             }}</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-muted-foreground">
+                                            {{
+                                                record.department?.name ??
+                                                trans('common.no_department')
+                                            }}
                                         </td>
                                         <td class="px-4 py-3 tabular-nums">
                                             {{ record.check_in ?? '—' }}

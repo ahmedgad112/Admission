@@ -277,10 +277,16 @@ test('branch admins can generate a time limited qr session', function () {
         ->assertOk()
         ->assertJsonPath('branch_id', $branch->id)
         ->assertJsonPath('type', 'check_in')
-        ->assertJsonStructure(['token', 'entry_code', 'expires_at', 'refresh_in_seconds']);
+        ->assertJsonStructure(['token', 'entry_code', 'scan_path', 'expires_at', 'refresh_in_seconds']);
+
+    $code = QrSession::query()->value('entry_code');
 
     expect(QrSession::query()->count())->toBe(1)
-        ->and(QrSession::query()->value('entry_code'))->toHaveLength(6);
+        ->and($code)->toHaveLength(6);
+
+    $this->actingAs($admin)
+        ->getJson(route('api.qr-sessions.current', ['type' => 'check_in']))
+        ->assertJsonPath('scan_path', '/attendance/open?token='.$code);
 });
 
 test('an active qr session is reused until it is close to expiring', function () {
@@ -306,7 +312,8 @@ test('employees can open the scan page', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('attendance/Scan')
-            ->where('recorded', null));
+            ->where('recorded', null)
+            ->where('token', null));
 });
 
 test('employees can check in from the scan page with the kiosk entry code', function () {
@@ -433,4 +440,104 @@ test('super admins cannot open the scan page or check in', function () {
         ->assertForbidden();
 
     expect(Attendance::query()->count())->toBe(0);
+});
+
+test('a scanned kiosk url is accepted as a check in token', function () {
+    $branch = Branch::factory()->create();
+    $user = staffedEmployee(['branch' => $branch]);
+    openAttendanceDay($branch);
+    $session = app(QrSessionService::class)->create($branch, QrSessionType::CheckIn);
+
+    $this->actingAs($user)
+        ->post(route('attendance.scan.store'), [
+            'token' => url('/attendance/open?token='.$session->entry_code),
+            'latitude' => $branch->latitude,
+            'longitude' => $branch->longitude,
+            'device_uuid' => (string) Str::uuid(),
+        ])
+        ->assertRedirect(route('attendance.scan'))
+        ->assertSessionHas('attendance_recorded', 'check_in');
+
+    expect(Attendance::query()->first()?->user_id)->toBe($user->id);
+});
+
+test('guests can open a kiosk qr link', function () {
+    $this->get(route('attendance.open', ['token' => '482193']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('attendance/Open')
+            ->where('token', '482193')
+            ->where('recorded', null));
+});
+
+test('signed in staff are sent from a kiosk qr link to the scan page', function () {
+    $branch = Branch::factory()->create();
+    $user = staffedEmployee(['branch' => $branch]);
+    $session = app(QrSessionService::class)->create($branch, QrSessionType::CheckIn);
+
+    $this->actingAs($user)
+        ->get(route('attendance.open', ['token' => $session->token]))
+        ->assertRedirect(route('attendance.scan', ['token' => $session->token]));
+
+    $this->actingAs($user)
+        ->get(route('attendance.scan', ['token' => $session->token]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('attendance/Scan')
+            ->where('token', $session->token));
+});
+
+test('a bound phone can record attendance from a kiosk qr without logging in', function () {
+    $branch = Branch::factory()->create();
+    $device = (string) Str::uuid();
+    $user = staffedEmployee([
+        'branch' => $branch,
+        'device_uuid' => $device,
+    ]);
+    openAttendanceDay($branch);
+    $session = app(QrSessionService::class)->create($branch, QrSessionType::CheckIn);
+
+    $this->post(route('attendance.open.store'), [
+        'token' => $session->token,
+        'latitude' => $branch->latitude,
+        'longitude' => $branch->longitude,
+        'device_uuid' => $device,
+    ])
+        ->assertRedirect(route('attendance.open'))
+        ->assertSessionHas('attendance_recorded', 'check_in');
+
+    $this->assertGuest();
+
+    expect(Attendance::query()->first()?->user_id)->toBe($user->id);
+});
+
+test('an unknown phone is asked to log in and then returns to the kiosk qr', function () {
+    $branch = Branch::factory()->create();
+    $user = staffedEmployee(['branch' => $branch]);
+    openAttendanceDay($branch);
+    $session = app(QrSessionService::class)->create($branch, QrSessionType::CheckIn);
+
+    $this->post(route('attendance.open.store'), [
+        'token' => $session->entry_code,
+        'latitude' => $branch->latitude,
+        'longitude' => $branch->longitude,
+        'device_uuid' => (string) Str::uuid(),
+    ])->assertRedirect(route('login'));
+
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ])->assertRedirect(route('attendance.open', ['token' => $session->entry_code], false));
+
+    $this->actingAs($user)
+        ->post(route('attendance.open.store'), [
+            'token' => $session->entry_code,
+            'latitude' => $branch->latitude,
+            'longitude' => $branch->longitude,
+            'device_uuid' => (string) Str::uuid(),
+        ])
+        ->assertRedirect(route('attendance.open'))
+        ->assertSessionHas('attendance_recorded', 'check_in');
+
+    expect(Attendance::query()->first()?->user_id)->toBe($user->id);
 });

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { trans } from '@/composables/useTrans';
 import { encodeQrSvg } from '@/lib/qrcode';
+import { kioskScanUrl } from '@/lib/qr-scan';
 
 type BranchOption = { id: number; name: string };
 type DaySession = {
@@ -23,12 +24,17 @@ type QrPayload = {
     token: string;
     entry_code: string | null;
     type: string;
+    scan_path?: string | null;
     expires_at: string;
     refresh_in_seconds: number;
     day?: DaySession;
     message?: string;
 };
-type PendingPerson = { id: number; name: string };
+type PendingPerson = {
+    id: number;
+    name: string;
+    department?: { id: number; name: string } | null;
+};
 
 const props = defineProps<{
     branches: BranchOption[];
@@ -102,7 +108,10 @@ function clearQr(): void {
 
 async function renderQr(payload: QrPayload): Promise<void> {
     session.value = payload;
-    qrSvg.value = await encodeQrSvg(payload.entry_code || payload.token);
+    const qrValue = payload.scan_path
+        ? new URL(payload.scan_path, window.location.origin).toString()
+        : kioskScanUrl(payload.entry_code || payload.token);
+    qrSvg.value = await encodeQrSvg(qrValue);
     remaining.value = Math.max(0, Math.ceil(payload.refresh_in_seconds));
     error.value = '';
 }
@@ -481,9 +490,17 @@ watch([type, branchId], () => {
                     >
                         {{ index + 1 }}
                     </span>
-                    <p class="min-w-0 text-sm leading-5 font-medium">
-                        {{ person.name }}
-                    </p>
+                    <div class="min-w-0">
+                        <p class="text-sm leading-5 font-medium">
+                            {{ person.name }}
+                        </p>
+                        <p class="text-xs text-muted-foreground">
+                            {{
+                                person.department?.name ??
+                                trans('common.no_department')
+                            }}
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

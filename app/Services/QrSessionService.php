@@ -157,12 +157,15 @@ class QrSessionService
      */
     public function payload(QrSession $session): array
     {
+        $code = $session->entry_code ?: $session->token;
+
         return [
             'id' => $session->id,
             'branch_id' => $session->branch_id,
             'token' => $session->token,
             'entry_code' => $session->entry_code,
             'type' => $session->type->value,
+            'scan_path' => '/attendance/open?token='.rawurlencode($code),
             'expires_at' => $session->expires_at->toIso8601String(),
             'refresh_in_seconds' => max(1, (int) now()->diffInSeconds($session->expires_at, false)),
         ];

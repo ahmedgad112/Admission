@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Attendance;
 
+use App\Support\AttendanceToken;
+
 trait NormalizesAttendanceToken
 {
     protected function prepareForValidation(): void
@@ -13,7 +15,7 @@ trait NormalizesAttendanceToken
         }
 
         $this->merge([
-            'token' => strtolower((string) preg_replace('/\s+/', '', $token)),
+            'token' => AttendanceToken::fromScannedValue($token),
         ]);
     }
 

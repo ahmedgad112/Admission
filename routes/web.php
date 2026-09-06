@@ -20,6 +20,12 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'Welcome')->name('home');
 Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');
 
+Route::get('attendance/open', [AttendanceController::class, 'open'])
+    ->name('attendance.open');
+Route::post('attendance/open', [AttendanceController::class, 'recordOpen'])
+    ->middleware('throttle:qr-scan')
+    ->name('attendance.open.store');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)
         ->middleware('permission:view_dashboard')

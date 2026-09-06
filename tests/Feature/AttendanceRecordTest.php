@@ -227,6 +227,7 @@ test('the records page lists people and their times for the selected day', funct
                 'date' => '2026-08-21',
                 'canRecord' => true,
                 'people.0.name' => 'Mona Fathy',
+                'people.0.department.name' => $department->name,
                 'people.0.check_in' => '09:05',
                 'people.0.check_out' => '17:05',
             ]));

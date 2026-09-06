@@ -232,7 +232,7 @@ class AttendanceDay extends Model
     }
 
     /**
-     * @return list<array{id: int, name: string}>
+     * @return list<array{id: int, name: string, department: array{id: int, name: string}|null}>
      */
     public function pendingStaff(QrSessionType $type): array
     {
@@ -240,8 +240,9 @@ class AttendanceDay extends Model
             ->withoutSuperAdmins()
             ->where('status', UserStatus::Active)
             ->where('branch_id', $this->branch_id)
+            ->with('department:id,name')
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'department_id']);
 
         if ($staff->isEmpty()) {
             return [];
@@ -269,6 +270,10 @@ class AttendanceDay extends Model
             ->map(fn (User $user): array => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'department' => $user->department === null ? null : [
+                    'id' => $user->department->id,
+                    'name' => $user->department->name,
+                ],
             ])
             ->all());
     }

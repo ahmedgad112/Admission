@@ -129,6 +129,13 @@ class AttendanceService
         ];
     }
 
+    public function userForDevice(string $deviceUuid): ?User
+    {
+        return User::query()
+            ->where('device_uuid', $deviceUuid)
+            ->first();
+    }
+
     /**
      * Record check-in or check-out from the scanned kiosk code.
      *

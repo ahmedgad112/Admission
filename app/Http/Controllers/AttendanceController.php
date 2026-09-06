@@ -8,12 +8,14 @@ use App\Exceptions\AttendanceException;
 use App\Http\Requests\Attendance\CheckInRequest;
 use App\Http\Requests\Attendance\CheckOutRequest;
 use App\Http\Requests\Attendance\ClearAttendanceRecordsRequest;
+use App\Http\Requests\Attendance\OpenAttendanceRequest;
 use App\Http\Requests\Attendance\SyncAttendanceEntriesRequest;
 use App\Models\Attendance;
 use App\Models\AttendanceDay;
 use App\Models\User;
 use App\Services\AttendanceService;
 use App\Services\AttendanceSpreadsheet;
+use App\Support\AttendanceToken;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -132,7 +134,60 @@ class AttendanceController extends Controller
         return Inertia::render('attendance/Scan', [
             'day' => $day instanceof AttendanceDay ? $day->toWindowArray() : null,
             'recorded' => $this->pulledRecordedType($request),
+            'token' => $this->queryToken($request),
         ]);
+    }
+
+    public function open(Request $request): Response|RedirectResponse
+    {
+        $token = $this->queryToken($request);
+
+        if ($request->user() !== null) {
+            return redirect()->route('attendance.scan', array_filter([
+                'token' => $token,
+            ]));
+        }
+
+        return Inertia::render('attendance/Open', [
+            'token' => $token,
+            'recorded' => $this->pulledRecordedType($request),
+        ]);
+    }
+
+    public function recordOpen(OpenAttendanceRequest $request): JsonResponse|RedirectResponse
+    {
+        $payload = $this->openScanPayload($request);
+        $user = $request->user() ?? $this->attendanceService->userForDevice($payload['device_uuid']);
+
+        if ($user === null || ! $user->can('create', Attendance::class)) {
+            $request->session()->put(
+                'url.intended',
+                route('attendance.open', ['token' => $payload['token']], false),
+            );
+
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => __('attendance.error.login_required'),
+                ], 401);
+            }
+
+            return redirect()->route('login');
+        }
+
+        try {
+            $attendance = $this->attendanceService->recordFromKiosk($user, $payload);
+        } catch (AttendanceException $exception) {
+            return $this->attendanceError($request, $exception);
+        }
+
+        $checkedOut = $attendance->check_out !== null;
+
+        return $this->scanSuccessRedirect(
+            $request,
+            $checkedOut ? 'check_out' : 'check_in',
+            $attendance,
+            route('attendance.open'),
+        );
     }
 
     public function recordScan(CheckInRequest $request): JsonResponse|RedirectResponse
@@ -183,8 +238,12 @@ class AttendanceController extends Controller
         return $this->scanSuccessRedirect($request, 'check_out', $attendance);
     }
 
-    private function scanSuccessRedirect(Request $request, string $type, Attendance $attendance): JsonResponse|RedirectResponse
-    {
+    private function scanSuccessRedirect(
+        Request $request,
+        string $type,
+        Attendance $attendance,
+        ?string $redirectTo = null,
+    ): JsonResponse|RedirectResponse {
         $message = $type === 'check_out'
             ? __('flash.attendance.checked_out')
             : __('flash.attendance.checked_in');
@@ -192,7 +251,7 @@ class AttendanceController extends Controller
         $response = $this->flashRedirect(
             $request,
             $message,
-            route('attendance.scan'),
+            $redirectTo ?? route('attendance.scan'),
             ['attendance' => $attendance],
         );
 
@@ -201,6 +260,29 @@ class AttendanceController extends Controller
         }
 
         return $response;
+    }
+
+    private function queryToken(Request $request): ?string
+    {
+        $token = AttendanceToken::fromScannedValue($request->string('token')->toString());
+
+        return $token !== '' ? $token : null;
+    }
+
+    /**
+     * @return array{token: string, latitude: float, longitude: float, device_uuid: string}
+     */
+    private function openScanPayload(OpenAttendanceRequest $request): array
+    {
+        /** @var array{token: string, latitude?: float|int|string|null, longitude?: float|int|string|null, device_uuid: string} $validated */
+        $validated = $request->validated();
+
+        return [
+            'token' => $validated['token'],
+            'latitude' => (float) ($validated['latitude'] ?? 0),
+            'longitude' => (float) ($validated['longitude'] ?? 0),
+            'device_uuid' => $validated['device_uuid'],
+        ];
     }
 
     private function pulledRecordedType(Request $request): ?string
@@ -302,7 +384,8 @@ class AttendanceController extends Controller
             ->where('status', UserStatus::Active)
             ->whereNotNull('branch_id')
             ->orderBy('name')
-            ->get(['id', 'name', 'branch_id']);
+            ->with('department:id,name')
+            ->get(['id', 'name', 'branch_id', 'department_id']);
 
         $records = Attendance::query()
             ->whereDate('date', $date)
@@ -319,6 +402,7 @@ class AttendanceController extends Controller
                 return [
                     'id' => $member->id,
                     'name' => $member->name,
+                    'department' => $member->department,
                     'check_in' => $record?->check_in?->format('H:i'),
                     'check_out' => $record?->check_out?->format('H:i'),
                     'work_hours' => $record?->work_hours,

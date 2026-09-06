@@ -20,6 +20,7 @@ import { attendanceTone } from '@/lib/status';
 type PersonRow = {
     id: number;
     name: string;
+    department?: { id: number; name: string } | null;
     check_in: string | null;
     check_out: string | null;
     work_hours: string | number | null;
@@ -358,14 +359,22 @@ function clock(value: string | null): string {
                         <div
                             class="mb-3 flex items-start justify-between gap-2"
                         >
-                            <p class="min-w-0 text-sm leading-5 font-medium">
-                                <Link
-                                    :href="`/staff/${entry.user_id}`"
-                                    class="hover:underline"
-                                >
-                                    {{ people[index]?.name }}
-                                </Link>
-                            </p>
+                            <div class="min-w-0">
+                                <p class="text-sm leading-5 font-medium">
+                                    <Link
+                                        :href="`/staff/${entry.user_id}`"
+                                        class="hover:underline"
+                                    >
+                                        {{ people[index]?.name }}
+                                    </Link>
+                                </p>
+                                <p class="text-xs text-muted-foreground">
+                                    {{
+                                        people[index]?.department?.name ??
+                                        trans('common.no_department')
+                                    }}
+                                </p>
+                            </div>
                             <div class="flex shrink-0 items-center gap-1">
                                 <StatusBadge
                                     v-if="people[index]?.status"

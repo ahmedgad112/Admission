@@ -3,6 +3,7 @@ import AttendanceController from './AttendanceController'
 import TaskController from './TaskController'
 import LocaleController from './LocaleController'
 import DashboardController from './DashboardController'
+import AttendanceReportController from './AttendanceReportController'
 import AttendanceDayController from './AttendanceDayController'
 import BranchController from './BranchController'
 import ShiftController from './ShiftController'
@@ -19,6 +20,7 @@ AttendanceController: Object.assign(AttendanceController, AttendanceController),
 TaskController: Object.assign(TaskController, TaskController),
 LocaleController: Object.assign(LocaleController, LocaleController),
 DashboardController: Object.assign(DashboardController, DashboardController),
+AttendanceReportController: Object.assign(AttendanceReportController, AttendanceReportController),
 AttendanceDayController: Object.assign(AttendanceDayController, AttendanceDayController),
 BranchController: Object.assign(BranchController, BranchController),
 ShiftController: Object.assign(ShiftController, ShiftController),

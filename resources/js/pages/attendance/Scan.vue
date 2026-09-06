@@ -17,9 +17,10 @@ import { trans } from '@/composables/useTrans';
 import { getDeviceUuid } from '@/lib/device';
 import {
     createQrDetector,
-    drawVideoFrame,
+    detectQrFromImageFile,
     normalizeScannedValue,
     startRearCamera,
+    waitForVideo,
 } from '@/lib/qr-scan';
 import type { QrFrameDetector } from '@/lib/qr-scan';
 
@@ -36,6 +37,7 @@ type DaySession = {
 const props = defineProps<{
     day: DaySession | null;
     recorded: 'check_in' | 'check_out' | null;
+    token?: string | null;
 }>();
 
 defineOptions({
@@ -51,6 +53,7 @@ const status = ref(trans('scan.requesting'));
 const cameraFailed = ref(false);
 const successOpen = ref(props.recorded !== null);
 const video = ref<HTMLVideoElement | null>(null);
+const photoInput = ref<HTMLInputElement | null>(null);
 const canvas = document.createElement('canvas');
 let stream: MediaStream | null = null;
 let scanTimer: number | undefined;
@@ -95,6 +98,7 @@ async function startCamera(): Promise<void> {
 
     video.value.srcObject = stream;
     await video.value.play();
+    await waitForVideo(video.value);
 
     detectQr ??= await createQrDetector();
     cameraFailed.value = false;
@@ -154,7 +158,7 @@ async function scanFrame(): Promise<void> {
     detecting = true;
 
     try {
-        const value = await detectQr(canvas);
+        const value = await detectQr(video.value, canvas);
 
         if (value) {
             applyScan(value);
@@ -194,6 +198,10 @@ onMounted(async () => {
         // Location is recorded when available and never blocks check-in.
     }
 
+    if (props.token && props.recorded === null) {
+        applyScan(props.token);
+    }
+
     try {
         await startCamera();
     } catch (error) {
@@ -211,6 +219,8 @@ onUnmounted(() => {
 });
 
 function submit(): void {
+    form.token = normalizeScannedValue(form.token);
+
     if (!form.token || form.processing) {
         return;
     }
@@ -242,6 +252,32 @@ async function retryCamera(): Promise<void> {
             error instanceof Error
                 ? error.message
                 : trans('scan.camera_failed');
+    }
+}
+
+async function onPhoto(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+
+    if (!file) {
+        return;
+    }
+
+    status.value = trans('scan.reading_photo');
+
+    try {
+        const value = await detectQrFromImageFile(file);
+
+        if (!value) {
+            status.value = trans('scan.photo_failed');
+
+            return;
+        }
+
+        applyScan(value);
+    } catch {
+        status.value = trans('scan.photo_failed');
     }
 }
 </script>
@@ -308,7 +344,7 @@ async function retryCamera(): Promise<void> {
                     <Input
                         id="token"
                         v-model="form.token"
-                        maxlength="32"
+                        maxlength="255"
                         inputmode="numeric"
                         :placeholder="trans('scan.code_placeholder')"
                         class="font-mono tracking-[0.2em]"
@@ -317,6 +353,21 @@ async function retryCamera(): Promise<void> {
                         {{ trans('scan.code_hint') }}
                     </p>
                 </div>
+                <input
+                    ref="photoInput"
+                    type="file"
+                    accept="image/*"
+                    class="sr-only"
+                    @change="onPhoto"
+                />
+                <Button
+                    variant="outline"
+                    class="w-full rounded-full"
+                    type="button"
+                    @click="photoInput?.click()"
+                >
+                    {{ trans('scan.choose_photo') }}
+                </Button>
                 <Button
                     class="w-full rounded-full"
                     :disabled="form.processing || !form.token"
