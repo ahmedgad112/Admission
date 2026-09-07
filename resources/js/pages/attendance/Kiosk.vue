@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { trans } from '@/composables/useTrans';
-import { encodeQrSvg } from '@/lib/qrcode';
 import { kioskScanUrl } from '@/lib/qr-scan';
+import { encodeQrPng } from '@/lib/qrcode';
+import { edit as editTimer } from '@/routes/timer';
 
 type BranchOption = { id: number; name: string };
 type DaySession = {
@@ -41,6 +43,9 @@ const props = defineProps<{
     defaultBranchId: number | null;
     todaySessions: DaySession[];
     qrTtlSeconds: number;
+    minTtl: number;
+    maxTtl: number;
+    presets: number[];
     entryCodeLength: number;
 }>();
 
@@ -59,8 +64,11 @@ const branchId = ref<number | null>(
 );
 const days = ref<DaySession[]>([...props.todaySessions]);
 const session = ref<QrPayload | null>(null);
-const qrSvg = ref('');
+const qrPng = ref('');
 const remaining = ref(0);
+const ttlSeconds = ref(props.qrTtlSeconds);
+const ttlSaving = ref(false);
+const ttlError = ref('');
 const error = ref('');
 const processing = ref(false);
 const pending = ref<PendingPerson[]>([]);
@@ -92,6 +100,46 @@ function csrfToken(): string {
     return token ? decodeURIComponent(token) : '';
 }
 
+async function saveTimer(): Promise<void> {
+    ttlSaving.value = true;
+    ttlError.value = '';
+
+    try {
+        const response = await fetch('/settings/timer', {
+            method: 'PUT',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-XSRF-TOKEN': csrfToken(),
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                qr_ttl_seconds: Number(ttlSeconds.value),
+            }),
+        });
+        const body = (await response.json()) as {
+            qr_ttl_seconds?: number;
+            message?: string;
+            errors?: { qr_ttl_seconds?: string[] };
+        };
+
+        if (!response.ok) {
+            ttlError.value =
+                body.errors?.qr_ttl_seconds?.[0] ??
+                body.message ??
+                trans('kiosk.timer_settings');
+
+            return;
+        }
+
+        ttlSeconds.value = body.qr_ttl_seconds ?? Number(ttlSeconds.value);
+        await loadSession();
+    } finally {
+        ttlSaving.value = false;
+    }
+}
+
 function applyDay(day?: DaySession): void {
     if (!day) {
         return;
@@ -102,7 +150,7 @@ function applyDay(day?: DaySession): void {
 
 function clearQr(): void {
     session.value = null;
-    qrSvg.value = '';
+    qrPng.value = '';
     remaining.value = 0;
 }
 
@@ -111,7 +159,7 @@ async function renderQr(payload: QrPayload): Promise<void> {
     const qrValue = payload.scan_path
         ? new URL(payload.scan_path, window.location.origin).toString()
         : kioskScanUrl(payload.entry_code || payload.token);
-    qrSvg.value = await encodeQrSvg(qrValue);
+    qrPng.value = await encodeQrPng(qrValue);
     remaining.value = Math.max(0, Math.ceil(payload.refresh_in_seconds));
     error.value = '';
 }
@@ -334,13 +382,18 @@ watch([type, branchId], () => {
                     }}
                 </p>
                 <div
-                    v-if="qrSvg"
-                    class="flex aspect-square w-full max-w-md items-center justify-center overflow-hidden rounded-[1.7rem] border bg-white p-5 text-black [&>svg]:size-full"
-                    v-html="qrSvg"
-                />
+                    v-if="qrPng"
+                    class="flex aspect-square w-full max-w-xl items-center justify-center overflow-hidden rounded-[1.7rem] border bg-white p-6"
+                >
+                    <img
+                        :src="qrPng"
+                        alt=""
+                        class="size-full bg-white object-contain [image-rendering:pixelated]"
+                    />
+                </div>
                 <div
                     v-else
-                    class="flex aspect-square w-full max-w-md items-center justify-center rounded-[1.7rem] border border-dashed text-sm text-muted-foreground"
+                    class="flex aspect-square w-full max-w-xl items-center justify-center rounded-[1.7rem] border border-dashed text-sm text-muted-foreground"
                 >
                     {{ trans('kiosk.open_to_show') }}
                 </div>
@@ -367,7 +420,7 @@ watch([type, branchId], () => {
                     <p class="text-xs">
                         {{
                             trans('kiosk.ttl_hint', {
-                                seconds: props.qrTtlSeconds,
+                                seconds: ttlSeconds,
                                 digits: props.entryCodeLength,
                             })
                         }}
@@ -432,6 +485,62 @@ watch([type, branchId], () => {
                 >
                     {{ trans('kiosk.refresh') }}
                 </Button>
+                <div class="space-y-3 border-t pt-4">
+                    <div class="flex items-center justify-between gap-2">
+                        <Label for="qr_ttl_seconds">{{
+                            trans('settings.timer.heading')
+                        }}</Label>
+                        <Link
+                            :href="editTimer()"
+                            class="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                        >
+                            {{ trans('kiosk.timer_settings') }}
+                        </Link>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <Button
+                            v-for="preset in presets"
+                            :key="preset"
+                            type="button"
+                            :variant="
+                                Number(ttlSeconds) === preset
+                                    ? 'default'
+                                    : 'outline'
+                            "
+                            class="rounded-full"
+                            :disabled="ttlSaving"
+                            @click="ttlSeconds = preset"
+                        >
+                            {{ preset }}
+                        </Button>
+                    </div>
+                    <Input
+                        id="qr_ttl_seconds"
+                        v-model="ttlSeconds"
+                        type="number"
+                        :min="minTtl"
+                        :max="maxTtl"
+                    />
+                    <p class="text-xs text-muted-foreground">
+                        {{
+                            trans('settings.timer.hint', {
+                                min: minTtl,
+                                max: maxTtl,
+                            })
+                        }}
+                    </p>
+                    <p v-if="ttlError" class="text-sm text-destructive">
+                        {{ ttlError }}
+                    </p>
+                    <Button
+                        variant="outline"
+                        class="w-full rounded-full"
+                        :disabled="ttlSaving"
+                        @click="saveTimer"
+                    >
+                        {{ trans('common.save') }}
+                    </Button>
+                </div>
             </div>
         </div>
 

@@ -286,7 +286,7 @@ test('branch admins can generate a time limited qr session', function () {
 
     $this->actingAs($admin)
         ->getJson(route('api.qr-sessions.current', ['type' => 'check_in']))
-        ->assertJsonPath('scan_path', '/attendance/open?token='.$code);
+        ->assertJsonPath('scan_path', '/q/'.$code);
 });
 
 test('an active qr session is reused until it is close to expiring', function () {
@@ -450,6 +450,25 @@ test('a scanned kiosk url is accepted as a check in token', function () {
 
     $this->actingAs($user)
         ->post(route('attendance.scan.store'), [
+            'token' => url('/q/'.$session->entry_code),
+            'latitude' => $branch->latitude,
+            'longitude' => $branch->longitude,
+            'device_uuid' => (string) Str::uuid(),
+        ])
+        ->assertRedirect(route('attendance.scan'))
+        ->assertSessionHas('attendance_recorded', 'check_in');
+
+    expect(Attendance::query()->first()?->user_id)->toBe($user->id);
+});
+
+test('legacy kiosk urls are still accepted as a check in token', function () {
+    $branch = Branch::factory()->create();
+    $user = staffedEmployee(['branch' => $branch]);
+    openAttendanceDay($branch);
+    $session = app(QrSessionService::class)->create($branch, QrSessionType::CheckIn);
+
+    $this->actingAs($user)
+        ->post(route('attendance.scan.store'), [
             'token' => url('/attendance/open?token='.$session->entry_code),
             'latitude' => $branch->latitude,
             'longitude' => $branch->longitude,
@@ -468,6 +487,13 @@ test('guests can open a kiosk qr link', function () {
             ->component('attendance/Open')
             ->where('token', '482193')
             ->where('recorded', null));
+
+    $this->get(route('attendance.qr', ['token' => '482193']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('attendance/Open')
+            ->where('token', '482193')
+            ->where('recorded', null));
 });
 
 test('signed in staff are sent from a kiosk qr link to the scan page', function () {
@@ -478,6 +504,10 @@ test('signed in staff are sent from a kiosk qr link to the scan page', function 
     $this->actingAs($user)
         ->get(route('attendance.open', ['token' => $session->token]))
         ->assertRedirect(route('attendance.scan', ['token' => $session->token]));
+
+    $this->actingAs($user)
+        ->get(route('attendance.qr', ['token' => $session->entry_code]))
+        ->assertRedirect(route('attendance.scan', ['token' => $session->entry_code]));
 
     $this->actingAs($user)
         ->get(route('attendance.scan', ['token' => $session->token]))

@@ -40,10 +40,20 @@ class AttendanceToken
                     return strtolower($token);
                 }
             }
+
+            $path = parse_url($candidate, PHP_URL_PATH);
+
+            if (is_string($path) && preg_match('#/q/([A-Za-z0-9]+)/?$#', $path, $matches) === 1) {
+                return strtolower($matches[1]);
+            }
         }
 
         if (preg_match('/(?:^|[?&])token=([^&#]+)/', $value, $matches) === 1) {
             return strtolower((string) rawurldecode($matches[1]));
+        }
+
+        if (preg_match('#(?:^|/)q/([A-Za-z0-9]+)/?$#', $value, $matches) === 1) {
+            return strtolower($matches[1]);
         }
 
         return '';

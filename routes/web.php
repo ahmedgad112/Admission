@@ -20,6 +20,9 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'Welcome')->name('home');
 Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');
 
+Route::get('q/{token}', [AttendanceController::class, 'open'])
+    ->where('token', '[A-Za-z0-9]{6,32}')
+    ->name('attendance.qr');
 Route::get('attendance/open', [AttendanceController::class, 'open'])
     ->name('attendance.open');
 Route::post('attendance/open', [AttendanceController::class, 'recordOpen'])

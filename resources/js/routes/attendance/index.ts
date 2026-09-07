@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
 import openF2f3f6 from './open'
 import entries from './entries'
 import records from './records'
@@ -6,6 +6,103 @@ import scan195c99 from './scan'
 import days from './days'
 import kiosk3dab19 from './kiosk'
 import qrSessions from './qr-sessions'
+/**
+* @see \App\Http\Controllers\AttendanceController::qr
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+export const qr = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: qr.url(args, options),
+    method: 'get',
+})
+
+qr.definition = {
+    methods: ["get","head"],
+    url: '/q/{token}',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\AttendanceController::qr
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+qr.url = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { token: args }
+    }
+
+    
+    if (Array.isArray(args)) {
+        args = {
+                    token: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        token: args.token,
+                }
+
+    return qr.definition.url
+            .replace('{token}', parsedArgs.token.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\AttendanceController::qr
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+qr.get = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: qr.url(args, options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\AttendanceController::qr
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+qr.head = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: qr.url(args, options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\AttendanceController::qr
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+    const qrForm = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: qr.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\AttendanceController::qr
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+        qrForm.get = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: qr.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\AttendanceController::qr
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+        qrForm.head = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: qr.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    qr.form = qrForm
 /**
 * @see \App\Http\Controllers\AttendanceController::open
  * @see app/Http/Controllers/AttendanceController.php:141
@@ -508,7 +605,7 @@ checkOut.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     checkOut.form = checkOutForm
 /**
 * @see \App\Http\Controllers\QrSessionController::kiosk
- * @see app/Http/Controllers/QrSessionController.php:21
+ * @see app/Http/Controllers/QrSessionController.php:25
  * @route '/attendance/kiosk'
  */
 export const kiosk = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -523,7 +620,7 @@ kiosk.definition = {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::kiosk
- * @see app/Http/Controllers/QrSessionController.php:21
+ * @see app/Http/Controllers/QrSessionController.php:25
  * @route '/attendance/kiosk'
  */
 kiosk.url = (options?: RouteQueryOptions) => {
@@ -532,7 +629,7 @@ kiosk.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\QrSessionController::kiosk
- * @see app/Http/Controllers/QrSessionController.php:21
+ * @see app/Http/Controllers/QrSessionController.php:25
  * @route '/attendance/kiosk'
  */
 kiosk.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -541,7 +638,7 @@ kiosk.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\QrSessionController::kiosk
- * @see app/Http/Controllers/QrSessionController.php:21
+ * @see app/Http/Controllers/QrSessionController.php:25
  * @route '/attendance/kiosk'
  */
 kiosk.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -551,7 +648,7 @@ kiosk.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\QrSessionController::kiosk
- * @see app/Http/Controllers/QrSessionController.php:21
+ * @see app/Http/Controllers/QrSessionController.php:25
  * @route '/attendance/kiosk'
  */
     const kioskForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -561,7 +658,7 @@ kiosk.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\QrSessionController::kiosk
- * @see app/Http/Controllers/QrSessionController.php:21
+ * @see app/Http/Controllers/QrSessionController.php:25
  * @route '/attendance/kiosk'
  */
         kioskForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -570,7 +667,7 @@ kiosk.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\QrSessionController::kiosk
- * @see app/Http/Controllers/QrSessionController.php:21
+ * @see app/Http/Controllers/QrSessionController.php:25
  * @route '/attendance/kiosk'
  */
         kioskForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -585,7 +682,8 @@ kiosk.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     
     kiosk.form = kioskForm
 const attendance = {
-    open: Object.assign(open, openF2f3f6),
+    qr: Object.assign(qr, qr),
+open: Object.assign(open, openF2f3f6),
 index: Object.assign(index, index),
 export: Object.assign(exportMethod, exportMethod),
 reports: Object.assign(reports, reports),

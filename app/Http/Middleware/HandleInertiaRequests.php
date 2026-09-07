@@ -57,6 +57,7 @@ class HandleInertiaRequests extends Middleware
                     ...$user->toArray(),
                     'role' => $user->role?->slug,
                     'role_label' => $user->role?->label(),
+                    'two_factor_enabled' => $user->hasEnabledTwoFactorAuthentication(),
                 ],
             ],
             'home' => app(HomeRedirect::class)->url($user),

@@ -11,7 +11,7 @@ return [
     'qr_created' => 'تم إنشاء جلسة QR لـ :name.',
     'qr_expired' => 'انتهت جلسة QR لـ :name.',
     'session_opened' => 'تم فتح جلسة الحضور (:name).',
-    'session_closed' => 'تم إغلاق جلسة الحضور (:name).',
+    'timer_updated' => 'تم ضبط مؤقت الـ QR على :name ثانية.',
     'logged_in' => ':name سجّل الدخول.',
     'logged_out' => ':name سجّل الخروج.',
     'login_failed' => 'محاولة دخول فاشلة لـ :name.',

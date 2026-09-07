@@ -11,7 +11,7 @@ return [
     'qr_created' => 'QR session created for :name.',
     'qr_expired' => 'QR session expired for :name.',
     'session_opened' => 'Attendance session opened (:name).',
-    'session_closed' => 'Attendance session closed (:name).',
+    'timer_updated' => 'QR timer set to :name seconds.',
     'logged_in' => ':name logged in.',
     'logged_out' => ':name logged out.',
     'login_failed' => 'Failed login attempt for :name.',

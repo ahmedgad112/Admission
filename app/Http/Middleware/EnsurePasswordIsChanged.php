@@ -26,6 +26,8 @@ class EnsurePasswordIsChanged
             'password.confirm',
             'logout',
             'locale.update',
+            'two-factor.*',
+            'passkey.*',
         )) {
             return $next($request);
         }

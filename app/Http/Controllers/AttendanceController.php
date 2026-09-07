@@ -264,7 +264,13 @@ class AttendanceController extends Controller
 
     private function queryToken(Request $request): ?string
     {
-        $token = AttendanceToken::fromScannedValue($request->string('token')->toString());
+        $raw = $request->route('token');
+
+        if (! is_string($raw) || $raw === '') {
+            $raw = $request->string('token')->toString();
+        }
+
+        $token = AttendanceToken::fromScannedValue($raw);
 
         return $token !== '' ? $token : null;
     }

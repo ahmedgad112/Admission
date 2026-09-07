@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -9,24 +10,37 @@ import { toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
+import { edit as editTimer } from '@/routes/timer';
 import type { NavItem } from '@/types';
 
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'settings.profile',
-        href: editProfile(),
-    },
-    {
-        title: 'settings.security',
-        href: editSecurity(),
-    },
-    {
-        title: 'settings.appearance',
-        href: editAppearance(),
-    },
-];
-
+const page = usePage();
 const { isCurrentOrParentUrl } = useCurrentUrl();
+
+const sidebarNavItems = computed((): NavItem[] => {
+    const items: NavItem[] = [
+        {
+            title: 'settings.profile',
+            href: editProfile(),
+        },
+        {
+            title: 'settings.security',
+            href: editSecurity(),
+        },
+        {
+            title: 'settings.appearance',
+            href: editAppearance(),
+        },
+    ];
+
+    if (page.props.can?.manageKiosk) {
+        items.push({
+            title: 'settings.timer',
+            href: editTimer(),
+        });
+    }
+
+    return items;
+});
 </script>
 
 <template>

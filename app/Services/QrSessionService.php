@@ -11,6 +11,8 @@ use Illuminate\Support\Str;
 
 class QrSessionService
 {
+    public function __construct(public AttendanceSettings $settings) {}
+
     public function currentOrCreate(Branch $branch, QrSessionType $type): QrSession
     {
         $existing = QrSession::query()
@@ -52,7 +54,7 @@ class QrSessionService
         $this->expireActive($branch, $type);
 
         $token = Str::lower(Str::random(32));
-        $expiresAt = now()->addSeconds((int) config('attendance.qr_ttl_seconds', 20));
+        $expiresAt = now()->addSeconds($this->settings->qrTtlSeconds());
 
         $session = QrSession::query()->create([
             'branch_id' => $branch->id,
@@ -165,7 +167,7 @@ class QrSessionService
             'token' => $session->token,
             'entry_code' => $session->entry_code,
             'type' => $session->type->value,
-            'scan_path' => '/attendance/open?token='.rawurlencode($code),
+            'scan_path' => '/q/'.$code,
             'expires_at' => $session->expires_at->toIso8601String(),
             'refresh_in_seconds' => max(1, (int) now()->diffInSeconds($session->expires_at, false)),
         ];

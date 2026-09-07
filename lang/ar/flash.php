@@ -60,6 +60,9 @@ return [
     'password' => [
         'updated' => 'تم تحديث كلمة المرور.',
     ],
+    'timer' => [
+        'updated' => 'كود الـ QR هيبقى صالح لمدة :seconds ثانية.',
+    ],
     'permissions' => [
         'updated' => 'تم تحديث صلاحيات الأدوار.',
         'role_created' => 'تم إنشاء الدور.',

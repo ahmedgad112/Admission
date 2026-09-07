@@ -60,6 +60,9 @@ return [
     'password' => [
         'updated' => 'Password updated.',
     ],
+    'timer' => [
+        'updated' => 'QR codes now last :seconds seconds.',
+    ],
     'permissions' => [
         'updated' => 'Role permissions updated.',
         'role_created' => 'Role created.',

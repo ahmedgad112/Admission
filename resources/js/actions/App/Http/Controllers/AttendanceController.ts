@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\AttendanceController::recordScan
  * @see app/Http/Controllers/AttendanceController.php:193
@@ -365,14 +365,111 @@ export const checkOut = {
 /**
 * @see \App\Http\Controllers\AttendanceController::open
  * @see app/Http/Controllers/AttendanceController.php:141
- * @route '/attendance/open'
+ * @route '/q/{token}'
  */
-export const open = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: open.url(options),
+const openfa218040de12b4ef0c54297902ae2bc8 = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: openfa218040de12b4ef0c54297902ae2bc8.url(args, options),
     method: 'get',
 })
 
-open.definition = {
+openfa218040de12b4ef0c54297902ae2bc8.definition = {
+    methods: ["get","head"],
+    url: '/q/{token}',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\AttendanceController::open
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+openfa218040de12b4ef0c54297902ae2bc8.url = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { token: args }
+    }
+
+    
+    if (Array.isArray(args)) {
+        args = {
+                    token: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        token: args.token,
+                }
+
+    return openfa218040de12b4ef0c54297902ae2bc8.definition.url
+            .replace('{token}', parsedArgs.token.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\AttendanceController::open
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+openfa218040de12b4ef0c54297902ae2bc8.get = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: openfa218040de12b4ef0c54297902ae2bc8.url(args, options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\AttendanceController::open
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+openfa218040de12b4ef0c54297902ae2bc8.head = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: openfa218040de12b4ef0c54297902ae2bc8.url(args, options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\AttendanceController::open
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+    const openfa218040de12b4ef0c54297902ae2bc8Form = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: openfa218040de12b4ef0c54297902ae2bc8.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\AttendanceController::open
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+        openfa218040de12b4ef0c54297902ae2bc8Form.get = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: openfa218040de12b4ef0c54297902ae2bc8.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\AttendanceController::open
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/q/{token}'
+ */
+        openfa218040de12b4ef0c54297902ae2bc8Form.head = (args: { token: string | number } | [token: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: openfa218040de12b4ef0c54297902ae2bc8.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    openfa218040de12b4ef0c54297902ae2bc8.form = openfa218040de12b4ef0c54297902ae2bc8Form
+    /**
+* @see \App\Http\Controllers\AttendanceController::open
+ * @see app/Http/Controllers/AttendanceController.php:141
+ * @route '/attendance/open'
+ */
+const open4376a2f5d911608fb94e642a7e8d7a51 = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: open4376a2f5d911608fb94e642a7e8d7a51.url(options),
+    method: 'get',
+})
+
+open4376a2f5d911608fb94e642a7e8d7a51.definition = {
     methods: ["get","head"],
     url: '/attendance/open',
 } satisfies RouteDefinition<["get","head"]>
@@ -382,8 +479,8 @@ open.definition = {
  * @see app/Http/Controllers/AttendanceController.php:141
  * @route '/attendance/open'
  */
-open.url = (options?: RouteQueryOptions) => {
-    return open.definition.url + queryParams(options)
+open4376a2f5d911608fb94e642a7e8d7a51.url = (options?: RouteQueryOptions) => {
+    return open4376a2f5d911608fb94e642a7e8d7a51.definition.url + queryParams(options)
 }
 
 /**
@@ -391,8 +488,8 @@ open.url = (options?: RouteQueryOptions) => {
  * @see app/Http/Controllers/AttendanceController.php:141
  * @route '/attendance/open'
  */
-open.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: open.url(options),
+open4376a2f5d911608fb94e642a7e8d7a51.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: open4376a2f5d911608fb94e642a7e8d7a51.url(options),
     method: 'get',
 })
 /**
@@ -400,8 +497,8 @@ open.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
  * @see app/Http/Controllers/AttendanceController.php:141
  * @route '/attendance/open'
  */
-open.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: open.url(options),
+open4376a2f5d911608fb94e642a7e8d7a51.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: open4376a2f5d911608fb94e642a7e8d7a51.url(options),
     method: 'head',
 })
 
@@ -410,8 +507,8 @@ open.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
  * @see app/Http/Controllers/AttendanceController.php:141
  * @route '/attendance/open'
  */
-    const openForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: open.url(options),
+    const open4376a2f5d911608fb94e642a7e8d7a51Form = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: open4376a2f5d911608fb94e642a7e8d7a51.url(options),
         method: 'get',
     })
 
@@ -420,8 +517,8 @@ open.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
  * @see app/Http/Controllers/AttendanceController.php:141
  * @route '/attendance/open'
  */
-        openForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: open.url(options),
+        open4376a2f5d911608fb94e642a7e8d7a51Form.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: open4376a2f5d911608fb94e642a7e8d7a51.url(options),
             method: 'get',
         })
             /**
@@ -429,8 +526,8 @@ open.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
  * @see app/Http/Controllers/AttendanceController.php:141
  * @route '/attendance/open'
  */
-        openForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: open.url({
+        open4376a2f5d911608fb94e642a7e8d7a51Form.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: open4376a2f5d911608fb94e642a7e8d7a51.url({
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
                             ...(options?.query ?? options?.mergeQuery ?? {}),
@@ -439,7 +536,18 @@ open.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
             method: 'get',
         })
     
-    open.form = openForm
+    open4376a2f5d911608fb94e642a7e8d7a51.form = open4376a2f5d911608fb94e642a7e8d7a51Form
+
+/**
+* Multiple routes resolve to \App\Http\Controllers\AttendanceController::open, so this export is a
+* dictionary keyed by URI rather than a callable. Call a specific route with `open['<uri>'](...)`,
+* or import the route by name from your generated `routes/` directory.
+*/
+export const open = {
+    '/q/{token}': openfa218040de12b4ef0c54297902ae2bc8,
+    '/attendance/open': open4376a2f5d911608fb94e642a7e8d7a51,
+}
+
 /**
 * @see \App\Http\Controllers\AttendanceController::recordOpen
  * @see app/Http/Controllers/AttendanceController.php:157

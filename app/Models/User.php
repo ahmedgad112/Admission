@@ -17,6 +17,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Laravel\Fortify\Contracts\PasskeyUser;
+use Laravel\Fortify\PasskeyAuthenticatable;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
  * @property int $id
@@ -58,12 +61,12 @@ use Illuminate\Support\Carbon;
     'must_change_password',
 ])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements PasskeyUser
 {
     public const DEFAULT_IMPORT_PASSWORD = '123456789';
 
     /** @use HasFactory<UserFactory> */
-    use HasFactory, LogsActivity, Notifiable;
+    use HasFactory, LogsActivity, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
      * @return array<string, string>
@@ -78,6 +81,7 @@ class User extends Authenticatable
             'leave_days' => 'integer',
             'permissions' => 'array',
             'must_change_password' => 'boolean',
+            'two_factor_confirmed_at' => 'datetime',
         ];
     }
 

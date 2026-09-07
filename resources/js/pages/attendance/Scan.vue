@@ -54,6 +54,7 @@ const cameraFailed = ref(false);
 const successOpen = ref(props.recorded !== null);
 const video = ref<HTMLVideoElement | null>(null);
 const photoInput = ref<HTMLInputElement | null>(null);
+const cameraInput = ref<HTMLInputElement | null>(null);
 const canvas = document.createElement('canvas');
 let stream: MediaStream | null = null;
 let scanTimer: number | undefined;
@@ -96,11 +97,17 @@ async function startCamera(): Promise<void> {
         throw new Error(trans('scan.camera_failed'));
     }
 
+    const detectorPromise = detectQr ? Promise.resolve(detectQr) : createQrDetector();
+
     video.value.srcObject = stream;
+    video.value.muted = true;
+    video.value.playsInline = true;
+    video.value.setAttribute('playsinline', '');
+    video.value.setAttribute('webkit-playsinline', '');
     await video.value.play();
     await waitForVideo(video.value);
 
-    detectQr ??= await createQrDetector();
+    detectQr = await detectorPromise;
     cameraFailed.value = false;
     status.value = trans('scan.point_camera');
     startScanLoop();
@@ -145,16 +152,11 @@ async function scanFrame(): Promise<void> {
 
     const now = performance.now();
 
-    if (now - lastScanAt < 250) {
+    if (now - lastScanAt < 180) {
         return;
     }
 
     lastScanAt = now;
-
-    if (!drawVideoFrame(video.value, canvas)) {
-        return;
-    }
-
     detecting = true;
 
     try {
@@ -164,7 +166,7 @@ async function scanFrame(): Promise<void> {
             applyScan(value);
         }
     } catch {
-        // Keep scanning.
+        // Keep scanning even if a single frame fails.
     } finally {
         detecting = false;
     }
@@ -312,10 +314,16 @@ async function onPhoto(event: Event): Promise<void> {
                 <button
                     v-if="cameraFailed"
                     type="button"
-                    class="absolute inset-0 z-10 flex items-center justify-center bg-black/55 px-6 text-sm font-medium text-white"
+                    class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/55 px-6 text-sm font-medium text-white"
                     @click="retryCamera"
                 >
-                    {{ trans('scan.start_camera') }}
+                    <span>{{ trans('scan.start_camera') }}</span>
+                    <span
+                        class="rounded-full bg-white/15 px-4 py-2"
+                        @click.stop="cameraInput?.click()"
+                    >
+                        {{ trans('scan.take_photo') }}
+                    </span>
                 </button>
                 <p
                     class="absolute inset-x-0 bottom-0 bg-black/55 px-4 py-3 text-sm text-white"
@@ -354,12 +362,28 @@ async function onPhoto(event: Event): Promise<void> {
                     </p>
                 </div>
                 <input
+                    ref="cameraInput"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    class="sr-only"
+                    @change="onPhoto"
+                />
+                <input
                     ref="photoInput"
                     type="file"
                     accept="image/*"
                     class="sr-only"
                     @change="onPhoto"
                 />
+                <Button
+                    variant="outline"
+                    class="w-full rounded-full"
+                    type="button"
+                    @click="cameraInput?.click()"
+                >
+                    {{ trans('scan.take_photo') }}
+                </Button>
                 <Button
                     variant="outline"
                     class="w-full rounded-full"

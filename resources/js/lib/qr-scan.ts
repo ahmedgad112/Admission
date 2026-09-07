@@ -14,7 +14,7 @@ export type QrFrameDetector = (
     canvas: HTMLCanvasElement,
 ) => Promise<string | null>;
 
-const JSQR_MAX_WIDTH = 640;
+const JSQR_MAX_WIDTH = 960;
 
 function barcodeDetectorCtor(): BarcodeDetectorCtor | null {
     const Detector = (
@@ -87,13 +87,22 @@ function enhanceContrast(data: Uint8ClampedArray): void {
 }
 
 function detectWithJsQr(image: ImageData): string | null {
-    enhanceContrast(image.data);
-
     const result = jsQR(image.data, image.width, image.height, {
         inversionAttempts: 'attemptBoth',
     });
 
-    return result?.data?.trim() || null;
+    if (result?.data?.trim()) {
+        return result.data.trim();
+    }
+
+    const boosted = new Uint8ClampedArray(image.data);
+    enhanceContrast(boosted);
+
+    const enhanced = jsQR(boosted, image.width, image.height, {
+        inversionAttempts: 'attemptBoth',
+    });
+
+    return enhanced?.data?.trim() || null;
 }
 
 function detectCanvasWithJsQr(canvas: HTMLCanvasElement): string | null {
@@ -110,11 +119,18 @@ function detectCanvasWithJsQr(canvas: HTMLCanvasElement): string | null {
         return fullValue;
     }
 
-    const crop = Math.floor(Math.min(canvas.width, canvas.height) * 0.72);
-    const x = Math.floor((canvas.width - crop) / 2);
-    const y = Math.floor((canvas.height - crop) / 2);
+    for (const ratio of [0.72, 0.5]) {
+        const crop = Math.floor(Math.min(canvas.width, canvas.height) * ratio);
+        const x = Math.floor((canvas.width - crop) / 2);
+        const y = Math.floor((canvas.height - crop) / 2);
+        const cropped = detectWithJsQr(context.getImageData(x, y, crop, crop));
 
-    return detectWithJsQr(context.getImageData(x, y, crop, crop));
+        if (cropped) {
+            return cropped;
+        }
+    }
+
+    return null;
 }
 
 async function detectWithBarcode(
@@ -122,7 +138,7 @@ async function detectWithBarcode(
     source: ImageBitmapSource,
 ): Promise<string | null> {
     try {
-        const codes = await withTimeout(detector.detect(source), 600);
+        const codes = await withTimeout(detector.detect(source), 300);
         const value = codes[0]?.rawValue?.trim();
 
         return value || null;
@@ -132,33 +148,50 @@ async function detectWithBarcode(
 }
 
 export async function createQrDetector(): Promise<QrFrameDetector> {
-    const barcodeDetector = await createBarcodeDetector();
+    let barcodeDetector: BarcodeDetectorLike | null = null;
+    let nativeEnabled = false;
+
+    void createBarcodeDetector().then((detector) => {
+        barcodeDetector = detector;
+        nativeEnabled = detector !== null;
+    });
 
     return async (
         video: HTMLVideoElement,
         canvas: HTMLCanvasElement,
     ): Promise<string | null> => {
-        if (barcodeDetector) {
-            const nativeValue = await detectWithBarcode(barcodeDetector, video);
-
-            if (nativeValue) {
-                return nativeValue;
-            }
-        }
-
         if (!drawVideoFrame(video, canvas)) {
             return null;
         }
 
-        if (barcodeDetector) {
-            const canvasValue = await detectWithBarcode(barcodeDetector, canvas);
+        const jsQrValue = detectCanvasWithJsQr(canvas);
 
-            if (canvasValue) {
-                return canvasValue;
-            }
+        if (jsQrValue) {
+            return jsQrValue;
         }
 
-        return detectCanvasWithJsQr(canvas);
+        if (!barcodeDetector || !nativeEnabled) {
+            return null;
+        }
+
+        const started = performance.now();
+        const fromVideo = await detectWithBarcode(barcodeDetector, video);
+
+        if (fromVideo) {
+            return fromVideo;
+        }
+
+        const nativeValue = await detectWithBarcode(barcodeDetector, canvas);
+
+        if (nativeValue) {
+            return nativeValue;
+        }
+
+        if (performance.now() - started > 400) {
+            nativeEnabled = false;
+        }
+
+        return null;
     };
 }
 
@@ -207,6 +240,14 @@ export async function startRearCamera(): Promise<MediaStream> {
     }
 
     const attempts: MediaStreamConstraints[] = [
+        {
+            audio: false,
+            video: {
+                facingMode: { ideal: 'environment' },
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+            },
+        },
         { audio: false, video: { facingMode: { ideal: 'environment' } } },
         { audio: false, video: { facingMode: 'environment' } },
         { audio: false, video: true },
@@ -246,11 +287,19 @@ export async function startRearCamera(): Promise<MediaStream> {
 
 export async function detectQrFromImageFile(file: File): Promise<string | null> {
     const bitmap = await createImageBitmap(file);
-    const canvas = document.createElement('canvas');
-    const scale = Math.min(1, JSQR_MAX_WIDTH / Math.max(bitmap.width, 1));
-    canvas.width = even(Math.floor(bitmap.width * scale));
-    canvas.height = even(Math.floor(bitmap.height * scale));
+    const detector = await createBarcodeDetector();
 
+    if (detector) {
+        const nativeValue = await detectWithBarcode(detector, bitmap);
+
+        if (nativeValue) {
+            bitmap.close();
+
+            return nativeValue;
+        }
+    }
+
+    const canvas = document.createElement('canvas');
     const context = canvasContext(canvas);
 
     if (!context) {
@@ -259,27 +308,28 @@ export async function detectQrFromImageFile(file: File): Promise<string | null> 
         return null;
     }
 
-    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    bitmap.close();
+    for (const maxWidth of [1280, 960, 640]) {
+        const scale = Math.min(1, maxWidth / Math.max(bitmap.width, 1));
+        canvas.width = even(Math.floor(bitmap.width * scale));
+        canvas.height = even(Math.floor(bitmap.height * scale));
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
 
-    const detector = await createBarcodeDetector();
+        const jsQrValue = detectCanvasWithJsQr(canvas);
 
-    if (detector) {
-        const nativeValue = await detectWithBarcode(detector, canvas);
+        if (jsQrValue) {
+            bitmap.close();
 
-        if (nativeValue) {
-            return nativeValue;
+            return jsQrValue;
         }
     }
 
-    return detectCanvasWithJsQr(canvas);
+    bitmap.close();
+
+    return detector ? detectWithBarcode(detector, canvas) : null;
 }
 
 export function kioskScanUrl(token: string, origin = window.location.origin): string {
-    const url = new URL('/attendance/open', origin);
-    url.searchParams.set('token', token);
-
-    return url.toString();
+    return `${origin.replace(/\/$/, '')}/q/${encodeURIComponent(token)}`;
 }
 
 export function normalizeScannedValue(value: string): string {
@@ -292,17 +342,33 @@ export function normalizeScannedValue(value: string): string {
         if (token) {
             return token.trim();
         }
+
+        const pathMatch = url.pathname.match(/\/q\/([^/]+)\/?$/i);
+
+        if (pathMatch?.[1]) {
+            return decodeURIComponent(pathMatch[1]).trim();
+        }
     } catch {
         // Not an absolute URL.
     }
 
-    const match = trimmed.match(/[?&]token=([^&#]+)/i);
+    const queryMatch = trimmed.match(/[?&]token=([^&#]+)/i);
 
-    if (match?.[1]) {
+    if (queryMatch?.[1]) {
         try {
-            return decodeURIComponent(match[1]).trim();
+            return decodeURIComponent(queryMatch[1]).trim();
         } catch {
-            return match[1];
+            return queryMatch[1];
+        }
+    }
+
+    const shortMatch = trimmed.match(/(?:^|\/)q\/([^/?#]+)\/?$/i);
+
+    if (shortMatch?.[1]) {
+        try {
+            return decodeURIComponent(shortMatch[1]).trim();
+        } catch {
+            return shortMatch[1];
         }
     }
 

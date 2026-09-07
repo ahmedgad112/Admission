@@ -7,6 +7,7 @@ use App\Http\Requests\Attendance\GenerateQrSessionRequest;
 use App\Models\Attendance;
 use App\Models\AttendanceDay;
 use App\Models\Branch;
+use App\Services\AttendanceSettings;
 use App\Services\QrSessionService;
 use App\Support\ActivityLogger;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +17,10 @@ use Inertia\Response;
 
 class QrSessionController extends Controller
 {
-    public function __construct(public QrSessionService $qrSessions) {}
+    public function __construct(
+        public QrSessionService $qrSessions,
+        public AttendanceSettings $settings,
+    ) {}
 
     public function kiosk(Request $request): Response
     {
@@ -37,7 +41,10 @@ class QrSessionController extends Controller
             'branches' => $branches,
             'defaultBranchId' => $user->branch_id,
             'todaySessions' => $todaySessions,
-            'qrTtlSeconds' => (int) config('attendance.qr_ttl_seconds', 20),
+            'qrTtlSeconds' => $this->settings->qrTtlSeconds(),
+            'minTtl' => $this->settings->minTtl(),
+            'maxTtl' => $this->settings->maxTtl(),
+            'presets' => $this->settings->presets(),
             'entryCodeLength' => (int) config('attendance.entry_code_length', 6),
         ]);
     }
