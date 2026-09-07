@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\SimpleXlsx;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia as Assert;
 
 test('admins can download a staff import template', function () {
     $admin = User::factory()->superAdmin()->create();
@@ -79,6 +80,112 @@ test('branch admins can import staff into their branch', function () {
         ->and($staff->branch_id)->toBe($branch->id)
         ->and($staff->department_id)->toBe($department->id)
         ->and($staff->must_change_password)->toBeTrue();
+});
+
+test('admins can import staff into a selected department', function () {
+    $branch = Branch::factory()->create();
+    $nursing = Department::factory()->create([
+        'name' => 'Nursing',
+        'branch_id' => $branch->id,
+    ]);
+    $reception = Department::factory()->create([
+        'name' => 'Reception',
+        'branch_id' => $branch->id,
+    ]);
+    $admin = User::factory()->superAdmin()->create(['branch_id' => $branch->id]);
+    $binary = app(SimpleXlsx::class)->binary(
+        'Staff',
+        ['name', 'email', 'phone'],
+        [['Nour Hassan', 'nour.import@example.com', '01033333333']],
+    );
+    $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'staff-import-'.uniqid().'.xlsx';
+    file_put_contents($path, $binary);
+    $file = new UploadedFile($path, 'staff.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+
+    $this->actingAs($admin)
+        ->post(route('staff.import'), [
+            'file' => $file,
+            'department_id' => $reception->id,
+        ])
+        ->assertRedirect(route('staff.index'));
+
+    $staff = User::query()->where('email', 'nour.import@example.com')->first();
+
+    expect($staff)->not->toBeNull()
+        ->and($staff->department_id)->toBe($reception->id)
+        ->and($staff->branch_id)->toBe($branch->id)
+        ->and($staff->department_id)->not->toBe($nursing->id);
+});
+
+test('selected department overrides the excel department column', function () {
+    $branch = Branch::factory()->create();
+    $nursing = Department::factory()->create([
+        'name' => 'Nursing',
+        'branch_id' => $branch->id,
+    ]);
+    $lab = Department::factory()->create([
+        'name' => 'Lab',
+        'branch_id' => $branch->id,
+    ]);
+    $admin = User::factory()->superAdmin()->create(['branch_id' => $branch->id]);
+    $binary = app(SimpleXlsx::class)->binary(
+        'Staff',
+        ['name', 'email', 'phone', 'department'],
+        [['Hana Tarek', 'hana.import@example.com', '01044444444', 'Nursing']],
+    );
+    $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'staff-import-'.uniqid().'.xlsx';
+    file_put_contents($path, $binary);
+    $file = new UploadedFile($path, 'staff.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+
+    $this->actingAs($admin)
+        ->post(route('staff.import'), [
+            'file' => $file,
+            'department_id' => $lab->id,
+        ])
+        ->assertRedirect(route('staff.index'));
+
+    expect(User::query()->where('email', 'hana.import@example.com')->value('department_id'))
+        ->toBe($lab->id)
+        ->not->toBe($nursing->id);
+});
+
+test('staff cannot be imported into another branch department', function () {
+    $branch = Branch::factory()->create();
+    $other = Department::factory()->create();
+    $admin = User::factory()->branchAdmin()->create(['branch_id' => $branch->id]);
+    $binary = app(SimpleXlsx::class)->binary(
+        'Staff',
+        ['name', 'email', 'phone'],
+        [['Omar Saleh', 'omar.import@example.com', '01055555555']],
+    );
+    $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'staff-import-'.uniqid().'.xlsx';
+    file_put_contents($path, $binary);
+    $file = new UploadedFile($path, 'staff.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+
+    $this->actingAs($admin)
+        ->post(route('staff.import'), [
+            'file' => $file,
+            'department_id' => $other->id,
+        ])
+        ->assertSessionHasErrors('department_id');
+
+    expect(User::query()->where('email', 'omar.import@example.com')->exists())->toBeFalse();
+});
+
+test('staff index includes departments for excel import', function () {
+    $department = Department::factory()->create(['name' => 'Nursing']);
+    $admin = User::factory()->superAdmin()->create([
+        'branch_id' => $department->branch_id,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('staff.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('staff/Index')
+            ->has('departments', 1)
+            ->where('departments.0.id', $department->id)
+            ->where('departments.0.name', 'Nursing'));
 });
 
 test('imported staff must change the default password after login', function () {

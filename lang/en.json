@@ -169,6 +169,8 @@
     "staff.new": "New staff",
     "staff.import": "Upload Excel",
     "staff.import_template": "Download template",
+    "staff.import_department": "Import into department",
+    "staff.import_pick_department": "Choose a department before uploading the Excel file.",
     "staff.add": "Add staff",
     "staff.add_description": "Create an account, assign a branch, then pick them on the daily roster.",
     "staff.edit": "Edit staff",

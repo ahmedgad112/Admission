@@ -169,6 +169,8 @@
     "staff.new": "موظف جديد",
     "staff.import": "رفع إكسل",
     "staff.import_template": "تحميل النموذج",
+    "staff.import_department": "القسم اللي هتنزل فيه الأسماء",
+    "staff.import_pick_department": "اختار القسم الأول وبعدين ارفع ملف الإكسل.",
     "staff.add": "إضافة موظف",
     "staff.add_description": "أنشئ حسابًا، اربطه بفرع، وبعدين اختاره في الجدول اليومي.",
     "staff.edit": "تعديل موظف",

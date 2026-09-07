@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { toast } from 'vue-sonner';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
@@ -35,11 +36,18 @@ const props = defineProps<{
     staff: { data: StaffRow[] };
     filters: { search: string; role: string; status: string };
     roleOptions: { value: string; label: string }[];
+    departments: {
+        id: number;
+        name: string;
+        branch_id: number;
+        branch: string | null;
+    }[];
     canCreate: boolean;
 }>();
 
 const page = usePage();
 const search = ref(props.filters.search);
+const importDepartmentId = ref('');
 const importInput = ref<HTMLInputElement | null>(null);
 
 defineOptions({
@@ -92,6 +100,12 @@ function canImpersonate(member: StaffRow): boolean {
 }
 
 function pickImportFile(): void {
+    if (!importDepartmentId.value) {
+        toast.error(trans('staff.import_pick_department'));
+
+        return;
+    }
+
     importInput.value?.click();
 }
 
@@ -105,7 +119,10 @@ function importSheet(event: Event): void {
 
     router.post(
         '/staff/import',
-        { file },
+        {
+            file,
+            department_id: importDepartmentId.value,
+        },
         {
             forceFormData: true,
             onFinish: () => {
@@ -153,6 +170,26 @@ function hasActions(member: StaffRow): boolean {
                         trans('staff.import_template')
                     }}</a>
                 </Button>
+                <select
+                    v-if="canCreate"
+                    v-model="importDepartmentId"
+                    class="field-control max-w-52"
+                >
+                    <option value="">
+                        {{ trans('staff.import_department') }}
+                    </option>
+                    <option
+                        v-for="department in departments"
+                        :key="department.id"
+                        :value="String(department.id)"
+                    >
+                        {{
+                            department.branch
+                                ? `${department.name} — ${department.branch}`
+                                : department.name
+                        }}
+                    </option>
+                </select>
                 <Button
                     v-if="canCreate"
                     variant="outline"

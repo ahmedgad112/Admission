@@ -92,6 +92,9 @@ class StaffController extends Controller
                 'value' => $role->slug,
                 'label' => $role->label(),
             ]),
+            'departments' => $user->can('create', User::class)
+                ? $this->importableDepartments($user)
+                : [],
             'canCreate' => $user->can('create', User::class),
         ]);
     }
@@ -226,7 +229,12 @@ class StaffController extends Controller
         $file = $request->file('file');
         abort_unless($file instanceof UploadedFile, 422);
 
-        $result = $this->importer->import($actor, $file);
+        $departmentId = $request->validated('department_id');
+        $department = is_numeric($departmentId)
+            ? Department::query()->visibleTo($actor)->find((int) $departmentId)
+            : null;
+
+        $result = $this->importer->import($actor, $file, $department);
         $type = $result['created'] > 0 ? 'success' : 'error';
         $message = $result['created'] > 0
             ? __('flash.staff.imported', [
@@ -281,5 +289,29 @@ class StaffController extends Controller
             ], UserStatus::cases()),
             'defaultBranchId' => $user->branch_id,
         ];
+    }
+
+    /**
+     * @return list<array{id: int, name: string, branch_id: int, branch: string|null}>
+     */
+    private function importableDepartments(User $user): array
+    {
+        return Department::query()
+            ->visibleTo($user)
+            ->when(
+                $user->limitsRecordsToTeam(),
+                fn ($query) => $query->whereIn('id', $user->visibleTeamDepartmentIds()),
+            )
+            ->with('branch:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'branch_id'])
+            ->map(fn (Department $department): array => [
+                'id' => $department->id,
+                'name' => $department->name,
+                'branch_id' => $department->branch_id,
+                'branch' => $department->branch?->name,
+            ])
+            ->values()
+            ->all();
     }
 }

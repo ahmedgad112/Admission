@@ -35,7 +35,7 @@ class StaffSpreadsheetImporter
     /**
      * @return array{created: int, skipped: int, errors: list<string>}
      */
-    public function import(User $actor, UploadedFile $file): array
+    public function import(User $actor, UploadedFile $file, ?Department $selectedDepartment = null): array
     {
         $rows = $this->rows($file);
         $created = 0;
@@ -44,7 +44,7 @@ class StaffSpreadsheetImporter
         $role = Role::requireBySlug(UserRole::Employee->value);
         $departments = $this->departmentsFor($actor);
 
-        DB::transaction(function () use ($rows, $actor, $role, $departments, &$created, &$skipped, &$errors): void {
+        DB::transaction(function () use ($rows, $actor, $role, $departments, $selectedDepartment, &$created, &$skipped, &$errors): void {
             foreach ($rows as $index => $row) {
                 $line = $index + 2;
                 $name = trim($row['name'] ?? '');
@@ -70,9 +70,9 @@ class StaffSpreadsheetImporter
                     continue;
                 }
 
-                $department = $this->matchDepartment($departments, $departmentName);
+                $department = $selectedDepartment ?? $this->matchDepartment($departments, $departmentName);
 
-                if ($departmentName !== '' && $department === null) {
+                if ($selectedDepartment === null && $departmentName !== '' && $department === null) {
                     $skipped++;
                     $errors[] = __('flash.staff.import_department', ['line' => $line, 'department' => $departmentName]);
 
