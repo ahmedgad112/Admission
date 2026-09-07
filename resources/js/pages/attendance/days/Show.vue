@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Download, Trash2 } from '@lucide/vue';
+import { computed, ref } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
@@ -39,10 +40,38 @@ type Day = {
     attendances: AttendanceRow[];
 };
 
+type DepartmentOption = {
+    id: number;
+    name: string;
+};
+
 const props = defineProps<{
     day: Day;
+    departments: DepartmentOption[];
     canUpdate: boolean;
 }>();
+
+const exportDepartmentId = ref('');
+
+const visibleAttendances = computed(() => {
+    if (exportDepartmentId.value === '') {
+        return props.day.attendances;
+    }
+
+    return props.day.attendances.filter(
+        (record) => String(record.department?.id ?? '') === exportDepartmentId.value,
+    );
+});
+
+const exportUrl = computed(() => {
+    const url = `/attendance/days/${props.day.id}/export`;
+
+    if (exportDepartmentId.value === '') {
+        return url;
+    }
+
+    return `${url}?department_id=${exportDepartmentId.value}`;
+});
 
 defineOptions({
     layout: {
@@ -94,8 +123,24 @@ function windowLabel(start: string, end: string): string {
             :description="day.branch?.name ?? trans('roster.title')"
         >
             <template #actions>
+                <select
+                    v-if="departments.length > 0"
+                    v-model="exportDepartmentId"
+                    class="field-control w-full max-w-52"
+                >
+                    <option value="">
+                        {{ trans('attendance.all_departments') }}
+                    </option>
+                    <option
+                        v-for="department in departments"
+                        :key="department.id"
+                        :value="String(department.id)"
+                    >
+                        {{ department.name }}
+                    </option>
+                </select>
                 <Button variant="outline" class="rounded-full" as-child>
-                    <a :href="`/attendance/days/${day.id}/export`">
+                    <a :href="exportUrl">
                         <Download class="size-4" />
                         {{ trans('attendance.download') }}
                     </a>
@@ -129,20 +174,24 @@ function windowLabel(start: string, end: string): string {
                     }}</CardTitle>
                     <CardDescription>
                         {{ trans('common.staff') }} ·
-                        {{ day.attendances.length }}
+                        {{ visibleAttendances.length }}
                     </CardDescription>
                 </CardHeader>
                 <CardContent class="pt-4 sm:pt-6">
                     <div
-                        v-if="day.attendances.length === 0"
+                        v-if="visibleAttendances.length === 0"
                         class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground"
                     >
-                        {{ trans('roster.empty_attendance') }}
+                        {{
+                            day.attendances.length === 0
+                                ? trans('roster.empty_attendance')
+                                : trans('roster.empty_department')
+                        }}
                     </div>
                     <div v-else>
                         <div class="grid gap-3 md:hidden">
                             <div
-                                v-for="record in day.attendances"
+                                v-for="record in visibleAttendances"
                                 :key="record.user_id ?? record.id"
                                 class="rounded-2xl border bg-muted/20 p-4"
                             >
@@ -261,7 +310,7 @@ function windowLabel(start: string, end: string): string {
                                 </thead>
                                 <tbody>
                                     <tr
-                                        v-for="record in day.attendances"
+                                        v-for="record in visibleAttendances"
                                         :key="record.user_id ?? record.id"
                                         class="border-t"
                                     >

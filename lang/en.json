@@ -327,6 +327,8 @@
     "attendance.range_label": ":from to :to",
     "attendance.export": "Excel export",
     "attendance.download": "Download Excel",
+    "attendance.all_departments": "All departments",
+    "roster.empty_department": "Nobody from this department has scanned in.",
     "attendance.daily_times": "Daily times",
     "attendance.people_day": ":count people · :date",
     "attendance.no_staff_day": "No staff available for this day.",

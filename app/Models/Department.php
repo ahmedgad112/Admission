@@ -69,4 +69,41 @@ class Department extends Model
 
         $query->where('branch_id', $actor->branch_id);
     }
+
+    /**
+     * @param  Builder<Department>  $query
+     */
+    public function scopeExportableTo($query, User $actor, ?int $branchId = null): void
+    {
+        $query->visibleTo($actor)
+            ->when($branchId !== null, fn ($builder) => $builder->where('branch_id', $branchId))
+            ->when(
+                $actor->limitsRecordsToTeam(),
+                fn ($builder) => $builder->whereIn('id', $actor->visibleTeamDepartmentIds()),
+            );
+    }
+
+    /**
+     * @return list<array{id: int, name: string}>
+     */
+    public static function exportOptionsFor(User $actor, ?int $branchId = null): array
+    {
+        return static::query()
+            ->exportableTo($actor, $branchId)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (self $department): array => [
+                'id' => $department->id,
+                'name' => $department->name,
+            ])
+            ->values()
+            ->all();
+    }
+
+    public static function findExportableTo(User $actor, int $id, ?int $branchId = null): ?self
+    {
+        return static::query()
+            ->exportableTo($actor, $branchId)
+            ->find($id);
+    }
 }

@@ -58,7 +58,10 @@ test('admins can open a roster day view', function () {
             ->where('day.attendances.0.name', 'Sara Nabil')
             ->where('day.attendances.0.department.name', 'Reception')
             ->where('day.attendances.0.user_id', $employee->id)
-            ->where('day.attendances.0.check_in', '09:05'));
+            ->where('day.attendances.0.check_in', '09:05')
+            ->has('departments', 1)
+            ->where('departments.0.id', $department->id)
+            ->where('departments.0.name', 'Reception'));
 });
 
 test('admins can download a roster day as an excel sheet', function () {
@@ -97,6 +100,91 @@ test('admins can download a roster day as an excel sheet', function () {
         ->toContain('Dokki')
         ->toContain('09:05')
         ->toContain('17:00');
+});
+
+test('admins can download a roster day excel sheet for one department', function () {
+    $branch = Branch::factory()->create(['name' => 'Dokki']);
+    $nursing = Department::factory()->create([
+        'branch_id' => $branch->id,
+        'name' => 'Nursing',
+    ]);
+    $reception = Department::factory()->create([
+        'branch_id' => $branch->id,
+        'name' => 'Reception',
+    ]);
+    $admin = User::factory()->branchAdmin()->create([
+        'branch_id' => $branch->id,
+        'department_id' => $nursing->id,
+    ]);
+    $nurse = User::factory()->employee()->create([
+        'name' => 'Sara Nabil',
+        'branch_id' => $branch->id,
+        'department_id' => $nursing->id,
+    ]);
+    $receptionist = User::factory()->employee()->create([
+        'name' => 'Mona Fathy',
+        'branch_id' => $branch->id,
+        'department_id' => $reception->id,
+    ]);
+    $day = AttendanceDay::factory()->create([
+        'branch_id' => $branch->id,
+        'date' => '2026-08-29',
+        'created_by' => $admin->id,
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $nurse->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-29',
+        'check_in' => '2026-08-29 09:05:00',
+        'check_out' => '2026-08-29 17:00:00',
+        'work_hours' => 7.92,
+        'status' => AttendanceStatus::Present,
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $receptionist->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-29',
+        'check_in' => '2026-08-29 08:50:00',
+        'check_out' => '2026-08-29 16:40:00',
+        'work_hours' => 7.83,
+        'status' => AttendanceStatus::Present,
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->get(route('attendance.days.export', [
+            'attendanceDay' => $day,
+            'department_id' => $nursing->id,
+        ]))
+        ->assertOk()
+        ->assertDownload('attendance-dokki-nursing-2026-08-29.xlsx');
+
+    $sheet = excelSheetXml($response->streamedContent());
+
+    expect($sheet)
+        ->toContain('Sara Nabil')
+        ->not->toContain('Mona Fathy');
+});
+
+test('admins cannot download a roster day excel sheet for a department in another branch', function () {
+    $branch = Branch::factory()->create();
+    $other = Branch::factory()->create();
+    $otherDepartment = Department::factory()->create([
+        'branch_id' => $other->id,
+    ]);
+    $admin = User::factory()->branchAdmin()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $day = AttendanceDay::factory()->create([
+        'branch_id' => $branch->id,
+        'created_by' => $admin->id,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('attendance.days.export', [
+            'attendanceDay' => $day,
+            'department_id' => $otherDepartment->id,
+        ]))
+        ->assertNotFound();
 });
 
 test('employees cannot download a roster day for another branch', function () {

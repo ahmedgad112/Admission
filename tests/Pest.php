@@ -53,3 +53,20 @@ function something()
 {
     // ..
 }
+
+function excelSheetXml(string $binary): string
+{
+    $path = tempnam(sys_get_temp_dir(), 'xlsx');
+    file_put_contents($path, $binary);
+
+    $zip = new ZipArchive;
+    expect($zip->open($path))->toBeTrue();
+
+    $sheet = $zip->getFromName('xl/worksheets/sheet1.xml');
+    $zip->close();
+    unlink($path);
+
+    expect($sheet)->toBeString();
+
+    return $sheet;
+}

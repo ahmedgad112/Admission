@@ -12,6 +12,7 @@ use App\Http\Requests\Attendance\OpenAttendanceRequest;
 use App\Http\Requests\Attendance\SyncAttendanceEntriesRequest;
 use App\Models\Attendance;
 use App\Models\AttendanceDay;
+use App\Models\Department;
 use App\Models\User;
 use App\Services\AttendanceService;
 use App\Services\AttendanceSpreadsheet;
@@ -117,7 +118,12 @@ class AttendanceController extends Controller
 
         [$from, $to] = $this->requestedDateRange($request);
 
-        return $this->spreadsheet->downloadFor($user, $from, $to);
+        return $this->spreadsheet->downloadFor(
+            $user,
+            $from,
+            $to,
+            $this->departmentFromRequest($request, $user),
+        );
     }
 
     public function scan(Request $request): Response
@@ -415,6 +421,19 @@ class AttendanceController extends Controller
                     'status' => $record?->status?->value,
                 ];
             })->all());
+    }
+
+    private function departmentFromRequest(Request $request, User $user): ?Department
+    {
+        if (! $request->filled('department_id')) {
+            return null;
+        }
+
+        $department = Department::findExportableTo($user, $request->integer('department_id'));
+
+        abort_unless($department instanceof Department, 404);
+
+        return $department;
     }
 
     private function attendanceError(Request $request, AttendanceException $exception): JsonResponse|RedirectResponse

@@ -8,6 +8,7 @@ use App\Http\Requests\Attendance\UpdateAttendanceDayRequest;
 use App\Models\Attendance;
 use App\Models\AttendanceDay;
 use App\Models\Branch;
+use App\Models\Department;
 use App\Models\User;
 use App\Services\AttendanceSpreadsheet;
 use App\Support\ActivityLogger;
@@ -96,6 +97,7 @@ class AttendanceDayController extends Controller
                     'work_hours' => $record->work_hours,
                 ])->all(),
             ],
+            'departments' => Department::exportOptionsFor($user, $attendanceDay->branch_id),
             'canUpdate' => $user->can('update', $attendanceDay),
         ]);
     }
@@ -107,7 +109,11 @@ class AttendanceDayController extends Controller
         $user = $request->user();
         abort_unless($user !== null, 403);
 
-        return $this->spreadsheet->downloadForDay($attendanceDay, $user);
+        return $this->spreadsheet->downloadForDay(
+            $attendanceDay,
+            $user,
+            $this->departmentFromRequest($request, $user, $attendanceDay->branch_id),
+        );
     }
 
     public function create(Request $request): Response
@@ -187,5 +193,22 @@ class AttendanceDayController extends Controller
                 : Branch::query()->whereKey($user->branch_id)->get(['id', 'name']),
             'defaultBranchId' => $user->branch_id,
         ];
+    }
+
+    private function departmentFromRequest(Request $request, User $user, ?int $branchId = null): ?Department
+    {
+        if (! $request->filled('department_id')) {
+            return null;
+        }
+
+        $department = Department::findExportableTo(
+            $user,
+            $request->integer('department_id'),
+            $branchId,
+        );
+
+        abort_unless($department instanceof Department, 404);
+
+        return $department;
     }
 }

@@ -327,6 +327,8 @@
     "attendance.range_label": "من :from إلى :to",
     "attendance.export": "تصدير إكسل",
     "attendance.download": "تحميل إكسل",
+    "attendance.all_departments": "كل الأقسام",
+    "roster.empty_department": "مفيش حضور في القسم ده.",
     "attendance.daily_times": "مواعيد اليوم",
     "attendance.people_day": ":count أشخاص · :date",
     "attendance.no_staff_day": "مفيش استاف متاح اليوم ده.",

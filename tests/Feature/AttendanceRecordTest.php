@@ -267,6 +267,65 @@ test('admins can download an excel sheet for the selected day', function () {
         ->toContain('17:05');
 });
 
+test('admins can download an excel sheet for one department', function () {
+    $branch = Branch::factory()->create(['name' => 'Cairo HQ']);
+    $nursing = Department::factory()->create([
+        'branch_id' => $branch->id,
+        'name' => 'Nursing',
+    ]);
+    $reception = Department::factory()->create([
+        'branch_id' => $branch->id,
+        'name' => 'Reception',
+    ]);
+    $admin = User::factory()->branchAdmin()->create([
+        'name' => 'Ziad Admin',
+        'branch_id' => $branch->id,
+        'department_id' => $nursing->id,
+    ]);
+    $nurse = User::factory()->employee()->create([
+        'name' => 'Mona Fathy',
+        'branch_id' => $branch->id,
+        'department_id' => $nursing->id,
+    ]);
+    $receptionist = User::factory()->employee()->create([
+        'name' => 'Omar Said',
+        'branch_id' => $branch->id,
+        'department_id' => $reception->id,
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $nurse->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-21',
+        'check_in' => '2026-08-21 09:05:00',
+        'check_out' => '2026-08-21 17:05:00',
+        'work_hours' => 8,
+        'status' => AttendanceStatus::Present,
+    ]);
+    Attendance::factory()->create([
+        'user_id' => $receptionist->id,
+        'branch_id' => $branch->id,
+        'date' => '2026-08-21',
+        'check_in' => '2026-08-21 08:50:00',
+        'check_out' => '2026-08-21 16:40:00',
+        'work_hours' => 7.83,
+        'status' => AttendanceStatus::Present,
+    ]);
+
+    $response = actingAs($admin)
+        ->get(route('attendance.export', [
+            'date' => '2026-08-21',
+            'department_id' => $nursing->id,
+        ]))
+        ->assertOk()
+        ->assertDownload('attendance-nursing-2026-08-21.xlsx');
+
+    $sheet = excelSheetXml($response->streamedContent());
+
+    expect($sheet)
+        ->toContain('Mona Fathy')
+        ->not->toContain('Omar Said');
+});
+
 test('admins can download an excel sheet for a chosen date range', function () {
     $branch = Branch::factory()->create(['name' => 'Cairo HQ']);
     $admin = User::factory()->branchAdmin()->create([
@@ -548,20 +607,3 @@ test('employees can view their attendance table across a date range', function (
                 'attendances.data.0.branch.name' => 'Nasr City',
             ]));
 });
-
-function excelSheetXml(string $binary): string
-{
-    $path = tempnam(sys_get_temp_dir(), 'xlsx');
-    file_put_contents($path, $binary);
-
-    $zip = new ZipArchive;
-    expect($zip->open($path))->toBeTrue();
-
-    $sheet = $zip->getFromName('xl/worksheets/sheet1.xml');
-    $zip->close();
-    unlink($path);
-
-    expect($sheet)->toBeString();
-
-    return $sheet;
-}

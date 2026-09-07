@@ -6,8 +6,10 @@ use App\Enums\AttendanceStatus;
 use App\Enums\UserStatus;
 use App\Models\Attendance;
 use App\Models\AttendanceDay;
+use App\Models\Department;
 use App\Models\User;
 use App\Support\SimpleXlsx;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -15,35 +17,22 @@ class AttendanceSpreadsheet
 {
     public function __construct(public SimpleXlsx $xlsx) {}
 
-    public function downloadFor(User $actor, string $from, string $to): StreamedResponse
+    public function downloadFor(User $actor, string $from, string $to, ?Department $department = null): StreamedResponse
     {
         return $this->xlsx->download(
-            $this->filename($from, $to),
+            $this->filename($from, $to, $department),
             'Attendance',
             $this->headers(),
-            $this->rows($actor, $from, $to),
+            $this->rows($actor, $from, $to, $department),
         );
     }
 
-    public function downloadForDay(AttendanceDay $day, User $actor): StreamedResponse
+    public function downloadForDay(AttendanceDay $day, User $actor, ?Department $department = null): StreamedResponse
     {
         $day->loadMissing('branch:id,name');
         $date = $day->date->toDateString();
-        $branchName = $day->branch?->name;
-        $slug = Str::slug((string) $branchName);
 
-        $filename = $slug === ''
-            ? 'attendance-'.$date.'.xlsx'
-            : 'attendance-'.$slug.'-'.$date.'.xlsx';
-
-        $people = User::query()
-            ->visibleTo($actor)
-            ->withoutSuperAdmins()
-            ->with('branch:id,name')
-            ->where('status', UserStatus::Active)
-            ->where('branch_id', $day->branch_id)
-            ->orderBy('name')
-            ->get(['id', 'name', 'branch_id']);
+        $people = $this->people($actor, $day->branch_id, $department);
 
         $records = Attendance::query()
             ->where('branch_id', $day->branch_id)
@@ -63,7 +52,7 @@ class AttendanceSpreadsheet
             ))->all();
 
         return $this->xlsx->download(
-            $filename,
+            $this->filenameForDay($day, $date, $department),
             'Attendance',
             $this->headers(),
             array_values($rows),
@@ -73,10 +62,10 @@ class AttendanceSpreadsheet
     /**
      * @return list<list<string|int|float|null>>
      */
-    public function rows(User $actor, string $from, string $to): array
+    public function rows(User $actor, string $from, string $to, ?Department $department = null): array
     {
         if ($actor->can('record', Attendance::class)) {
-            return $this->teamRows($actor, $from, $to);
+            return $this->teamRows($actor, $from, $to, $department);
         }
 
         return $this->personalRows($actor, $from, $to);
@@ -85,16 +74,9 @@ class AttendanceSpreadsheet
     /**
      * @return list<list<string|int|float|null>>
      */
-    private function teamRows(User $actor, string $from, string $to): array
+    private function teamRows(User $actor, string $from, string $to, ?Department $department = null): array
     {
-        $people = User::query()
-            ->visibleTo($actor)
-            ->withoutSuperAdmins()
-            ->with('branch:id,name')
-            ->where('status', UserStatus::Active)
-            ->whereNotNull('branch_id')
-            ->orderBy('name')
-            ->get(['id', 'name', 'branch_id']);
+        $people = $this->people($actor, department: $department);
 
         if ($from === $to) {
             $records = Attendance::query()
@@ -155,13 +137,77 @@ class AttendanceSpreadsheet
             ->all());
     }
 
-    private function filename(string $from, string $to): string
+    /**
+     * @return Collection<int, User>
+     */
+    private function people(User $actor, ?int $branchId = null, ?Department $department = null): Collection
     {
-        if ($from === $to) {
-            return 'attendance-'.$from.'.xlsx';
+        return User::query()
+            ->visibleTo($actor)
+            ->withoutSuperAdmins()
+            ->with('branch:id,name')
+            ->where('status', UserStatus::Active)
+            ->when(
+                $branchId !== null,
+                fn ($query) => $query->where('branch_id', $branchId),
+                fn ($query) => $query->whereNotNull('branch_id'),
+            )
+            ->when($department !== null, fn ($query) => $query->where('department_id', $department->id))
+            ->orderBy('name')
+            ->get(['id', 'name', 'branch_id']);
+    }
+
+    private function filename(string $from, string $to, ?Department $department = null): string
+    {
+        $parts = ['attendance'];
+        $departmentPart = $this->departmentFilenamePart($department);
+
+        if ($departmentPart !== null) {
+            $parts[] = $departmentPart;
         }
 
-        return 'attendance-'.$from.'-to-'.$to.'.xlsx';
+        if ($from === $to) {
+            $parts[] = $from;
+
+            return implode('-', $parts).'.xlsx';
+        }
+
+        $parts[] = $from;
+        $parts[] = 'to';
+        $parts[] = $to;
+
+        return implode('-', $parts).'.xlsx';
+    }
+
+    private function filenameForDay(AttendanceDay $day, string $date, ?Department $department = null): string
+    {
+        $parts = ['attendance'];
+        $branchSlug = Str::slug((string) $day->branch?->name);
+
+        if ($branchSlug !== '') {
+            $parts[] = $branchSlug;
+        }
+
+        $departmentPart = $this->departmentFilenamePart($department);
+
+        if ($departmentPart !== null) {
+            $parts[] = $departmentPart;
+        }
+
+        $parts[] = $date;
+
+        return implode('-', $parts).'.xlsx';
+    }
+
+    private function departmentFilenamePart(?Department $department): ?string
+    {
+        if ($department === null) {
+            return null;
+        }
+
+        $slug = Str::slug($department->name);
+
+        return $slug !== '' ? $slug : 'dept-'.$department->id;
     }
 
     /**
