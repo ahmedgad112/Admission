@@ -2,6 +2,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Download, Trash2 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
+import ManualAttendanceForm from '@/components/ManualAttendanceForm.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
@@ -21,10 +22,10 @@ type PersonRow = {
     id: number;
     name: string;
     department?: { id: number; name: string } | null;
-    check_in: string | null;
-    check_out: string | null;
-    work_hours: string | number | null;
-    status: string | null;
+    check_in?: string | null;
+    check_out?: string | null;
+    work_hours?: string | number | null;
+    status?: string | null;
 };
 
 type AttendanceRow = {
@@ -46,6 +47,7 @@ const props = defineProps<{
     to: string;
     canRecord: boolean;
     people: PersonRow[];
+    candidates: PersonRow[];
     attendances: {
         data: AttendanceRow[];
     };
@@ -81,6 +83,18 @@ watch(
         exportTo.value = to;
         historyFrom.value = from;
         historyTo.value = to;
+    },
+);
+
+watch(
+    () => [props.date, props.people] as const,
+    () => {
+        form.date = props.date;
+        form.entries = props.people.map((person) => ({
+            user_id: person.id,
+            check_in: person.check_in ?? '',
+            check_out: person.check_out ?? '',
+        }));
     },
 );
 
@@ -344,11 +358,20 @@ function clock(value: string | null): string {
                 <p v-if="firstError" class="pb-4 text-sm text-destructive">
                     {{ firstError }}
                 </p>
+                <ManualAttendanceForm
+                    class="mb-4"
+                    :date="date"
+                    :candidates="candidates"
+                />
                 <div
                     v-if="people.length === 0"
                     class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground sm:p-8"
                 >
-                    {{ trans('attendance.no_staff_day') }}
+                    {{
+                        candidates.length === 0
+                            ? trans('attendance.no_staff_day')
+                            : trans('attendance.empty_day')
+                    }}
                 </div>
                 <div v-else class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     <div

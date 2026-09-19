@@ -4,6 +4,7 @@ namespace App\Http\Requests\Attendance;
 
 use App\Enums\UserStatus;
 use App\Models\Attendance;
+use App\Models\AttendanceDay;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -55,6 +56,7 @@ class SyncAttendanceEntriesRequest extends FormRequest
     {
         return [
             'date' => ['required', 'date'],
+            'attendance_day_id' => ['nullable', 'integer', 'exists:attendance_days,id'],
             'entries' => ['required', 'array'],
             'entries.*.user_id' => ['required', 'integer', 'distinct', 'exists:users,id'],
             'entries.*.check_in' => ['nullable', 'date_format:H:i'],
@@ -114,6 +116,22 @@ class SyncAttendanceEntriesRequest extends FormRequest
                 ->whereIn('id', $userIds)
                 ->pluck('id')
                 ->all();
+
+            if ($this->filled('attendance_day_id')) {
+                $day = AttendanceDay::query()->find($this->integer('attendance_day_id'));
+
+                if (! $day instanceof AttendanceDay || ! $actor->can('view', $day)) {
+                    $validator->errors()->add(
+                        'attendance_day_id',
+                        'You cannot record attendance for this day.',
+                    );
+                } elseif ($day->date->toDateString() !== $this->string('date')->toString()) {
+                    $validator->errors()->add(
+                        'attendance_day_id',
+                        'The selected day does not match this date.',
+                    );
+                }
+            }
 
             foreach ($entries as $index => $entry) {
                 if (! is_array($entry)) {

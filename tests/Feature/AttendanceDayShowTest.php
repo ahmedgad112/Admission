@@ -61,7 +61,45 @@ test('admins can open a roster day view', function () {
             ->where('day.attendances.0.check_in', '09:05')
             ->has('departments', 1)
             ->where('departments.0.id', $department->id)
-            ->where('departments.0.name', 'Reception'));
+            ->where('departments.0.name', 'Reception')
+            ->where('canRecord', true)
+            ->has('candidates', 1)
+            ->where('candidates.0.name', 'Branch Lead'));
+});
+
+test('admins can mark a person present from a roster day', function () {
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->branchAdmin()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $employee = User::factory()->employee()->create([
+        'name' => 'Omar Said',
+        'branch_id' => $branch->id,
+    ]);
+    $day = AttendanceDay::factory()->create([
+        'branch_id' => $branch->id,
+        'date' => '2026-08-29',
+        'created_by' => $admin->id,
+    ]);
+
+    $this->actingAs($admin)
+        ->put(route('attendance.entries.sync'), [
+            'date' => '2026-08-29',
+            'attendance_day_id' => $day->id,
+            'entries' => [[
+                'user_id' => $employee->id,
+                'check_in' => '09:12',
+                'check_out' => null,
+            ]],
+        ])
+        ->assertRedirect(route('attendance.days.show', $day));
+
+    $attendance = Attendance::query()->first();
+
+    expect($attendance)->not->toBeNull()
+        ->and($attendance->user_id)->toBe($employee->id)
+        ->and($attendance->date->toDateString())->toBe('2026-08-29')
+        ->and($attendance->check_in->format('H:i'))->toBe('09:12');
 });
 
 test('admins can download a roster day as an excel sheet', function () {
@@ -217,8 +255,38 @@ test('employees can view a roster day for their branch', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('attendance/days/Show')
             ->where('canUpdate', false)
+            ->where('canRecord', false)
             ->where('day.id', $day->id)
-            ->has('day.attendances', 0));
+            ->has('day.attendances', 0)
+            ->has('candidates', 0));
+});
+
+test('admins cannot use a roster day id from a different date', function () {
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->branchAdmin()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $employee = User::factory()->employee()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $day = AttendanceDay::factory()->create([
+        'branch_id' => $branch->id,
+        'date' => '2026-08-29',
+        'created_by' => $admin->id,
+    ]);
+
+    $this->actingAs($admin)
+        ->put(route('attendance.entries.sync'), [
+            'date' => '2026-08-21',
+            'attendance_day_id' => $day->id,
+            'entries' => [[
+                'user_id' => $employee->id,
+                'check_in' => '09:12',
+            ]],
+        ])
+        ->assertSessionHasErrors('attendance_day_id');
+
+    expect(Attendance::query()->count())->toBe(0);
 });
 
 test('employees cannot view a roster day for another branch', function () {

@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Download, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import ManualAttendanceForm from '@/components/ManualAttendanceForm.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
@@ -45,10 +46,18 @@ type DepartmentOption = {
     name: string;
 };
 
+type Candidate = {
+    id: number;
+    name: string;
+    department?: { id: number; name: string } | null;
+};
+
 const props = defineProps<{
     day: Day;
     departments: DepartmentOption[];
+    candidates: Candidate[];
     canUpdate: boolean;
+    canRecord: boolean;
 }>();
 
 const exportDepartmentId = ref('');
@@ -178,6 +187,13 @@ function windowLabel(start: string, end: string): string {
                     </CardDescription>
                 </CardHeader>
                 <CardContent class="pt-4 sm:pt-6">
+                    <ManualAttendanceForm
+                        v-if="canRecord"
+                        class="mb-4"
+                        :date="day.date"
+                        :candidates="candidates"
+                        :attendance-day-id="day.id"
+                    />
                     <div
                         v-if="visibleAttendances.length === 0"
                         class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground"

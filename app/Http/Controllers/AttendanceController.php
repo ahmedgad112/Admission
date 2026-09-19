@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Concerns\RespondsWithInertiaOrJson;
-use App\Enums\UserStatus;
 use App\Exceptions\AttendanceException;
 use App\Http\Requests\Attendance\CheckInRequest;
 use App\Http\Requests\Attendance\CheckOutRequest;
@@ -58,20 +57,28 @@ class AttendanceController extends Controller
             ->paginate($canRecord ? 15 : 31)
             ->withQueryString();
 
+        $timesheet = $canRecord
+            ? $this->attendanceService->timesheet($user, $date)
+            : ['people' => [], 'candidates' => []];
+
         return Inertia::render('attendance/Index', [
             'date' => $date,
             'from' => $from,
             'to' => $to,
             'canRecord' => $canRecord,
-            'people' => $canRecord ? $this->peopleForDate($user, $date) : [],
+            'people' => $timesheet['people'],
+            'candidates' => $timesheet['candidates'],
             'attendances' => $attendances,
         ]);
     }
 
     public function syncEntries(SyncAttendanceEntriesRequest $request): JsonResponse|RedirectResponse
     {
+        $user = $request->user();
+        abort_unless($user !== null, 403);
+
         try {
-            $this->attendanceService->recordEntries($request->user(), $request->payload());
+            $this->attendanceService->recordEntries($user, $request->payload());
         } catch (AttendanceException $exception) {
             return $this->attendanceError($request, $exception);
         }
@@ -79,7 +86,7 @@ class AttendanceController extends Controller
         return $this->flashRedirect(
             $request,
             __('flash.attendance.saved'),
-            route('attendance.index', ['date' => $request->validated('date')]),
+            $this->entriesRedirect($request),
         );
     }
 
@@ -385,42 +392,15 @@ class AttendanceController extends Controller
         }
     }
 
-    /**
-     * @return list<array<string, mixed>>
-     */
-    private function peopleForDate(User $user, string $date): array
+    private function entriesRedirect(SyncAttendanceEntriesRequest $request): string
     {
-        $people = User::query()
-            ->visibleTo($user)
-            ->withoutSuperAdmins()
-            ->where('status', UserStatus::Active)
-            ->whereNotNull('branch_id')
-            ->orderBy('name')
-            ->with('department:id,name')
-            ->get(['id', 'name', 'branch_id', 'department_id']);
+        $dayId = $request->validated('attendance_day_id') ?? null;
 
-        $records = Attendance::query()
-            ->whereDate('date', $date)
-            ->whereIn('user_id', $people->modelKeys())
-            ->whereNotNull('check_in')
-            ->get()
-            ->keyBy('user_id');
+        if (is_numeric($dayId)) {
+            return route('attendance.days.show', (int) $dayId);
+        }
 
-        return array_values($people
-            ->filter(fn (User $member): bool => $records->has($member->id))
-            ->map(function (User $member) use ($records): array {
-                $record = $records->get($member->id);
-
-                return [
-                    'id' => $member->id,
-                    'name' => $member->name,
-                    'department' => $member->department,
-                    'check_in' => $record?->check_in?->format('H:i'),
-                    'check_out' => $record?->check_out?->format('H:i'),
-                    'work_hours' => $record?->work_hours,
-                    'status' => $record?->status?->value,
-                ];
-            })->all());
+        return route('attendance.index', ['date' => $request->validated('date')]);
     }
 
     private function departmentFromRequest(Request $request, User $user): ?Department

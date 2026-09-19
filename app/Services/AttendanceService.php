@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Support\ActivityLogger;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -162,7 +163,7 @@ class AttendanceService
         $this->assertTracksAttendance($user);
         $session = $this->validatedSession($user, $payload['token'], QrSessionType::CheckIn);
         $this->assertOpenDay($session->branch_id, QrSessionType::CheckIn, $user);
-        $this->assertDevice($user, $payload['device_uuid']);
+        $this->rememberDevice($user, $payload['device_uuid']);
 
         $today = now()->toDateString();
         $existing = Attendance::query()
@@ -218,7 +219,7 @@ class AttendanceService
         $this->assertTracksAttendance($user);
         $session = $this->validatedSession($user, $payload['token'], QrSessionType::CheckOut);
         $this->assertOpenDay($session->branch_id, QrSessionType::CheckOut, $user);
-        $this->assertDevice($user, $payload['device_uuid']);
+        $this->rememberDevice($user, $payload['device_uuid']);
 
         $attendance = Attendance::query()
             ->where('user_id', $user->id)
@@ -320,11 +321,84 @@ class AttendanceService
                 }
 
                 $attendance->save();
-                $saved[] = $attendance->refresh();
+                $attendance = $attendance->refresh();
+
+                ActivityLogger::record('checked_in', $attendance, [
+                    'name' => $member->name,
+                    'date' => $date,
+                    'status' => $attendance->status->value,
+                    'manual' => true,
+                ], $actor);
+
+                $saved[] = $attendance;
             }
 
             return $saved;
         });
+    }
+
+    /**
+     * Staff the actor can record, split into people already present and people still available.
+     *
+     * @return array{people: list<array<string, mixed>>, candidates: list<array<string, mixed>>}
+     */
+    public function timesheet(User $actor, string $date, ?int $branchId = null): array
+    {
+        $staff = $this->recordableStaff($actor, $branchId);
+        $records = Attendance::query()
+            ->whereDate('date', $date)
+            ->whereIn('user_id', $staff->modelKeys())
+            ->whereNotNull('check_in')
+            ->get()
+            ->keyBy('user_id');
+
+        $people = [];
+        $candidates = [];
+
+        foreach ($staff as $member) {
+            $record = $records->get($member->id);
+
+            if ($record instanceof Attendance) {
+                $people[] = [
+                    'id' => $member->id,
+                    'name' => $member->name,
+                    'department' => $member->department,
+                    'check_in' => $record->check_in?->format('H:i'),
+                    'check_out' => $record->check_out?->format('H:i'),
+                    'work_hours' => $record->work_hours,
+                    'status' => $record->status?->value,
+                ];
+
+                continue;
+            }
+
+            $candidates[] = [
+                'id' => $member->id,
+                'name' => $member->name,
+                'department' => $member->department,
+            ];
+        }
+
+        return [
+            'people' => $people,
+            'candidates' => $candidates,
+        ];
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    private function recordableStaff(User $actor, ?int $branchId = null): Collection
+    {
+        return User::query()
+            ->visibleTo($actor)
+            ->withoutSuperAdmins()
+            ->where('status', UserStatus::Active)
+            ->whereNotNull('branch_id')
+            ->when($branchId !== null, fn ($query) => $query->where('branch_id', $branchId))
+            ->orderBy('name')
+            ->with('department:id,name')
+            ->get(['id', 'name', 'branch_id', 'department_id']);
     }
 
     /**
@@ -422,17 +496,13 @@ class AttendanceService
         }
     }
 
-    private function assertDevice(User $user, string $deviceUuid): void
+    private function rememberDevice(User $user, string $deviceUuid): void
     {
-        if ($user->device_uuid === null) {
-            $user->forceFill(['device_uuid' => $deviceUuid])->save();
-
+        if ($user->device_uuid !== null) {
             return;
         }
 
-        if (! hash_equals($user->device_uuid, $deviceUuid)) {
-            throw new AttendanceException(__('attendance.error.device'), 403);
-        }
+        $user->forceFill(['device_uuid' => $deviceUuid])->save();
     }
 
     private function assertTracksAttendance(User $user): void

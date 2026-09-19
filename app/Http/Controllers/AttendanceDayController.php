@@ -10,6 +10,7 @@ use App\Models\AttendanceDay;
 use App\Models\Branch;
 use App\Models\Department;
 use App\Models\User;
+use App\Services\AttendanceService;
 use App\Services\AttendanceSpreadsheet;
 use App\Support\ActivityLogger;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +24,10 @@ class AttendanceDayController extends Controller
 {
     use RespondsWithInertiaOrJson;
 
-    public function __construct(public AttendanceSpreadsheet $spreadsheet) {}
+    public function __construct(
+        public AttendanceSpreadsheet $spreadsheet,
+        public AttendanceService $attendanceService,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -81,6 +85,15 @@ class AttendanceDayController extends Controller
             ->sortBy(fn (Attendance $record): string => $record->user->name)
             ->values();
 
+        $canRecord = $user->can('record', Attendance::class);
+        $timesheet = $canRecord
+            ? $this->attendanceService->timesheet(
+                $user,
+                $attendanceDay->date->toDateString(),
+                $attendanceDay->branch_id,
+            )
+            : ['candidates' => []];
+
         return Inertia::render('attendance/days/Show', [
             'day' => [
                 ...$attendanceDay->toWindowArray(),
@@ -98,7 +111,9 @@ class AttendanceDayController extends Controller
                 ])->all(),
             ],
             'departments' => Department::exportOptionsFor($user, $attendanceDay->branch_id),
+            'candidates' => $timesheet['candidates'],
             'canUpdate' => $user->can('update', $attendanceDay),
+            'canRecord' => $canRecord,
         ]);
     }
 

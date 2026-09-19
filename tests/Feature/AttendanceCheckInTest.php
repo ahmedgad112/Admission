@@ -116,11 +116,12 @@ test('duplicate daily check ins are prevented', function () {
         ->assertJsonPath('message', 'You have already checked in today.');
 });
 
-test('a different device uuid is rejected after the account is bound', function () {
+test('employees can check in from a different device after the account is bound', function () {
     $branch = Branch::factory()->create();
+    $boundDevice = (string) Str::uuid();
     $user = staffedEmployee([
         'branch' => $branch,
-        'device_uuid' => (string) Str::uuid(),
+        'device_uuid' => $boundDevice,
     ]);
     openAttendanceDay($branch);
     $session = app(QrSessionService::class)->create($branch, QrSessionType::CheckIn);
@@ -132,8 +133,10 @@ test('a different device uuid is rejected after the account is bound', function 
             'longitude' => $branch->longitude,
             'device_uuid' => (string) Str::uuid(),
         ])
-        ->assertForbidden()
-        ->assertJsonPath('message', 'This device is not registered to your account.');
+        ->assertOk()
+        ->assertJsonPath('message', 'Checked in successfully.');
+
+    expect($user->refresh()->device_uuid)->toBe($boundDevice);
 });
 
 test('employees can check out with a valid checkout token', function () {

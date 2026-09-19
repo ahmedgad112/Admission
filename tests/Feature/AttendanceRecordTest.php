@@ -223,6 +223,7 @@ test('the records page lists people and their times for the selected day', funct
         ->assertInertia(fn (Assert $page) => $page
             ->component('attendance/Index')
             ->has('people', 1)
+            ->has('candidates', 2)
             ->whereAll([
                 'date' => '2026-08-21',
                 'canRecord' => true,
@@ -230,7 +231,39 @@ test('the records page lists people and their times for the selected day', funct
                 'people.0.department.name' => $department->name,
                 'people.0.check_in' => '09:05',
                 'people.0.check_out' => '17:05',
+                'candidates.0.name' => 'Other Dept',
+                'candidates.1.name' => 'Ziad Admin',
             ]));
+});
+
+test('admins can mark a person present who has not scanned yet', function () {
+    $branch = Branch::factory()->create();
+    $admin = User::factory()->branchAdmin()->create([
+        'branch_id' => $branch->id,
+    ]);
+    $employee = User::factory()->employee()->create([
+        'name' => 'Omar Said',
+        'branch_id' => $branch->id,
+    ]);
+
+    actingAs($admin)
+        ->put(route('attendance.entries.sync'), recordPayload($employee, [
+            'date' => '2026-08-21',
+            'entries' => [[
+                'user_id' => $employee->id,
+                'check_in' => '09:05',
+                'check_out' => null,
+            ]],
+        ]))
+        ->assertRedirect(route('attendance.index', ['date' => '2026-08-21']));
+
+    $attendance = Attendance::query()->first();
+
+    expect($attendance)->not->toBeNull()
+        ->and($attendance->user_id)->toBe($employee->id)
+        ->and($attendance->date->toDateString())->toBe('2026-08-21')
+        ->and($attendance->check_in->format('H:i'))->toBe('09:05')
+        ->and($attendance->check_out)->toBeNull();
 });
 
 test('admins can download an excel sheet for the selected day', function () {
