@@ -93,17 +93,15 @@ const visibleAttendances = computed(() => {
     });
 });
 
-const visibleCandidates = computed(() => {
-    return props.candidates.filter((person) => {
-        if (
-            exportDepartmentId.value !== '' &&
-            String(person.department?.id ?? '') !== exportDepartmentId.value
-        ) {
-            return false;
-        }
+const manualCandidates = computed(() => {
+    if (exportDepartmentId.value === '') {
+        return props.candidates;
+    }
 
-        return matchesQuery(person.name, person.department?.name);
-    });
+    return props.candidates.filter(
+        (person) =>
+            String(person.department?.id ?? '') === exportDepartmentId.value,
+    );
 });
 
 const emptyAttendanceMessage = computed(() => {
@@ -249,7 +247,7 @@ function windowLabel(start: string, end: string): string {
                         v-if="canRecord"
                         class="mb-4"
                         :date="day.date"
-                        :candidates="visibleCandidates"
+                        :candidates="manualCandidates"
                         :attendance-day-id="day.id"
                     />
                     <div

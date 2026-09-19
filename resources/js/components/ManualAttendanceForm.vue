@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { UserPlus } from '@lucide/vue';
-import { computed, watch } from 'vue';
+import { UserPlus, X } from '@lucide/vue';
+import { onClickOutside } from '@vueuse/core';
+import { computed, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,16 +39,52 @@ function nowYearMonthDay(): string {
     return `${year}-${month}-${day}`;
 }
 
+function personLabel(person: Candidate): string {
+    return person.department
+        ? `${person.name} · ${person.department.name}`
+        : person.name;
+}
+
 const form = useForm({
     user_id: '',
     check_in: defaultCheckIn(props.date),
     check_out: '',
 });
 
+const query = ref('');
+const open = ref(false);
+const pickerRoot = ref<HTMLElement | null>(null);
+
 const firstError = computed(() => Object.values(form.errors)[0] ?? '');
 const canSubmit = computed(
     () => Boolean(form.user_id) && Boolean(form.check_in) && !form.processing,
 );
+
+const selectedPerson = computed(
+    () =>
+        props.candidates.find(
+            (person) => String(person.id) === String(form.user_id),
+        ) ?? null,
+);
+
+const filteredCandidates = computed(() => {
+    const needle = query.value.trim().toLowerCase();
+
+    if (needle === '') {
+        return props.candidates;
+    }
+
+    return props.candidates.filter((person) => {
+        const haystack =
+            `${person.name} ${person.department?.name ?? ''}`.toLowerCase();
+
+        return haystack.includes(needle);
+    });
+});
+
+onClickOutside(pickerRoot, () => {
+    open.value = false;
+});
 
 watch(
     () => props.date,
@@ -62,12 +99,34 @@ watch(
     (candidates) => {
         if (
             form.user_id !== '' &&
-            !candidates.some((person) => String(person.id) === String(form.user_id))
+            !candidates.some(
+                (person) => String(person.id) === String(form.user_id),
+            )
         ) {
-            form.user_id = '';
+            clearPerson();
         }
     },
 );
+
+function clearPerson(): void {
+    form.user_id = '';
+    query.value = '';
+    open.value = false;
+}
+
+function onQueryInput(): void {
+    if (form.user_id !== '') {
+        form.user_id = '';
+    }
+
+    open.value = true;
+}
+
+function selectPerson(person: Candidate): void {
+    form.user_id = String(person.id);
+    query.value = personLabel(person);
+    open.value = false;
+}
 
 function submit(): void {
     form
@@ -87,6 +146,8 @@ function submit(): void {
             onSuccess: () => {
                 form.reset();
                 form.check_in = defaultCheckIn(props.date);
+                query.value = '';
+                open.value = false;
             },
         });
 }
@@ -111,32 +172,67 @@ function submit(): void {
         <p v-if="firstError" class="pb-3 text-sm text-destructive">
             {{ firstError }}
         </p>
-        <div class="grid gap-3 md:grid-cols-[1.4fr_repeat(2,minmax(0,8rem))_auto]">
-            <div class="space-y-1">
+        <div
+            class="grid gap-3 md:grid-cols-[1.4fr_repeat(2,minmax(0,8rem))_auto]"
+        >
+            <div ref="pickerRoot" class="relative space-y-1">
                 <Label for="manual-person">{{
                     trans('attendance.manual_person')
                 }}</Label>
-                <select
-                    id="manual-person"
-                    v-model="form.user_id"
-                    class="field-control"
-                >
-                    <option value="">
-                        {{ trans('attendance.choose_person') }}
-                    </option>
-                    <option
-                        v-for="person in candidates"
-                        :key="person.id"
-                        :value="String(person.id)"
+                <div class="relative">
+                    <Input
+                        id="manual-person"
+                        v-model="query"
+                        type="search"
+                        autocomplete="off"
+                        :placeholder="trans('attendance.search_person')"
+                        class="pe-9"
+                        @focus="open = true"
+                        @input="onQueryInput"
+                    />
+                    <button
+                        v-if="selectedPerson || query !== ''"
+                        type="button"
+                        class="absolute end-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        :aria-label="trans('roster.clear')"
+                        @click="clearPerson"
                     >
-                        {{ person.name
-                        }}{{
-                            person.department
-                                ? ` · ${person.department.name}`
+                        <X class="size-3.5" />
+                    </button>
+                </div>
+                <div
+                    v-if="open"
+                    class="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border bg-popover p-1 shadow-md"
+                >
+                    <p
+                        v-if="filteredCandidates.length === 0"
+                        class="px-3 py-6 text-center text-sm text-muted-foreground"
+                    >
+                        {{ trans('attendance.no_person_match') }}
+                    </p>
+                    <button
+                        v-for="person in filteredCandidates"
+                        :key="person.id"
+                        type="button"
+                        class="flex w-full flex-col rounded-lg px-3 py-2 text-start hover:bg-muted/70"
+                        :class="
+                            String(person.id) === String(form.user_id)
+                                ? 'bg-muted'
                                 : ''
-                        }}
-                    </option>
-                </select>
+                        "
+                        @mousedown.prevent="selectPerson(person)"
+                    >
+                        <span class="text-sm font-medium">{{
+                            person.name
+                        }}</span>
+                        <span class="text-xs text-muted-foreground">
+                            {{
+                                person.department?.name ??
+                                trans('common.no_department')
+                            }}
+                        </span>
+                    </button>
+                </div>
             </div>
             <div class="space-y-1">
                 <Label for="manual-in">{{ trans('common.in') }}</Label>

@@ -351,6 +351,8 @@
     "attendance.manual_person": "Person",
     "attendance.manual_submit": "Save attendance",
     "attendance.choose_person": "Choose a person",
+    "attendance.search_person": "Type a name to find staff",
+    "attendance.no_person_match": "No staff match this name.",
     "scan.eyebrow": "On site",
     "scan.title": "Scan the kiosk",
     "scan.description": "Scan the kiosk QR or type the code. The admin kiosk decides check-in or check-out.",

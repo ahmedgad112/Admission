@@ -351,6 +351,8 @@
     "attendance.manual_person": "الموظف",
     "attendance.manual_submit": "تسجيل الحضور",
     "attendance.choose_person": "اختار موظف",
+    "attendance.search_person": "اكتب الاسم عشان يظهر الموظف",
+    "attendance.no_person_match": "مفيش موظف مطابق للاسم ده.",
     "scan.eyebrow": "في الموقع",
     "scan.title": "امسح شاشة الحضور",
     "scan.description": "امسح QR الشاشة أو اكتب الكود. الأدمن هو اللي بيحدد حضور ولا انصراف.",
