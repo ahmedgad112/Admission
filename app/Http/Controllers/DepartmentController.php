@@ -29,6 +29,20 @@ class DepartmentController extends Controller
             ->with(['branch:id,name', 'manager:id,name'])
             ->withCount('users')
             ->tap(fn ($query) => $query->visibleTo($user))
+            ->when($request->string('search')->isNotEmpty(), function ($query) use ($request): void {
+                $search = $request->string('search')->toString();
+                $query->where(function ($builder) use ($search): void {
+                    $builder->where('name', 'like', '%'.$search.'%')
+                        ->orWhereHas(
+                            'branch',
+                            fn ($branch) => $branch->where('name', 'like', '%'.$search.'%'),
+                        )
+                        ->orWhereHas(
+                            'manager',
+                            fn ($manager) => $manager->where('name', 'like', '%'.$search.'%'),
+                        );
+                });
+            })
             ->orderBy('name')
             ->paginate(12)
             ->through(fn (Department $department): array => $this->departmentAttributes($department))
@@ -36,6 +50,9 @@ class DepartmentController extends Controller
 
         return Inertia::render('departments/Index', [
             'departments' => $departments,
+            'filters' => [
+                'search' => $request->string('search')->toString(),
+            ],
             'canCreate' => $user->can('create', Department::class),
         ]);
     }

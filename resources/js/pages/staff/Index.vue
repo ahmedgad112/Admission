@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { toast } from 'vue-sonner';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
@@ -34,7 +34,12 @@ type StaffRow = {
 
 const props = defineProps<{
     staff: { data: StaffRow[] };
-    filters: { search: string; role: string; status: string };
+    filters: {
+        search: string;
+        role: string;
+        status: string;
+        department_id: string;
+    };
     roleOptions: { value: string; label: string }[];
     departments: {
         id: number;
@@ -59,7 +64,18 @@ defineOptions({
     },
 });
 
-function filter(key: 'search' | 'role' | 'status', value: string): void {
+const hasActiveFilters = computed(
+    () =>
+        Boolean(props.filters.search) ||
+        Boolean(props.filters.role) ||
+        Boolean(props.filters.status) ||
+        Boolean(props.filters.department_id),
+);
+
+function filter(
+    key: 'search' | 'role' | 'status' | 'department_id',
+    value: string,
+): void {
     router.get(
         '/staff',
         {
@@ -75,6 +91,10 @@ function filter(key: 'search' | 'role' | 'status', value: string): void {
                 key === 'status'
                     ? value || undefined
                     : props.filters.status || undefined,
+            department_id:
+                key === 'department_id'
+                    ? value || undefined
+                    : props.filters.department_id || undefined,
         },
         { preserveState: true, replace: true },
     );
@@ -213,10 +233,36 @@ function hasActions(member: StaffRow): boolean {
         <div class="flex flex-wrap gap-3">
             <Input
                 v-model="search"
+                type="search"
                 class="max-w-64"
                 :placeholder="trans('staff.search')"
                 @keyup.enter="filter('search', search)"
+                @change="filter('search', search)"
             />
+            <select
+                v-if="departments.length > 0"
+                :value="filters.department_id"
+                class="field-control max-w-52"
+                @change="
+                    filter(
+                        'department_id',
+                        ($event.target as HTMLSelectElement).value,
+                    )
+                "
+            >
+                <option value="">{{ trans('staff.all_departments') }}</option>
+                <option
+                    v-for="department in departments"
+                    :key="department.id"
+                    :value="String(department.id)"
+                >
+                    {{
+                        department.branch
+                            ? `${department.name} — ${department.branch}`
+                            : department.name
+                    }}
+                </option>
+            </select>
             <select
                 :value="filters.role"
                 class="field-control max-w-48"
@@ -253,7 +299,11 @@ function hasActions(member: StaffRow): boolean {
             v-if="staff.data.length === 0"
             class="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground"
         >
-            {{ trans('staff.empty') }}
+            {{
+                hasActiveFilters
+                    ? trans('staff.no_match')
+                    : trans('staff.empty')
+            }}
         </div>
         <template v-else>
             <div class="grid gap-4 md:hidden">

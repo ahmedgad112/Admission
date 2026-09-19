@@ -53,9 +53,11 @@ const visibleEmployees = computed(() => {
         return props.employees;
     }
 
-    return props.employees.filter((employee) =>
-        employee.name.toLowerCase().includes(query),
-    );
+    return props.employees.filter((employee) => {
+        const haystack = `${employee.name} ${employee.department?.name ?? ''}`.toLowerCase();
+
+        return haystack.includes(query);
+    });
 });
 
 function isSelected(id: number): boolean {

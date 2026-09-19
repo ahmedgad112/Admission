@@ -13,6 +13,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { trans } from '@/composables/useTrans';
 import { attendanceTone } from '@/lib/status';
 
@@ -61,15 +62,60 @@ const props = defineProps<{
 }>();
 
 const exportDepartmentId = ref('');
+const search = ref('');
 
-const visibleAttendances = computed(() => {
-    if (exportDepartmentId.value === '') {
-        return props.day.attendances;
+function matchesQuery(
+    name: string | null | undefined,
+    departmentName: string | null | undefined,
+): boolean {
+    const query = search.value.trim().toLowerCase();
+
+    if (query === '') {
+        return true;
     }
 
-    return props.day.attendances.filter(
-        (record) => String(record.department?.id ?? '') === exportDepartmentId.value,
+    return (
+        (name ?? '').toLowerCase().includes(query) ||
+        (departmentName ?? '').toLowerCase().includes(query)
     );
+}
+
+const visibleAttendances = computed(() => {
+    return props.day.attendances.filter((record) => {
+        if (
+            exportDepartmentId.value !== '' &&
+            String(record.department?.id ?? '') !== exportDepartmentId.value
+        ) {
+            return false;
+        }
+
+        return matchesQuery(record.name, record.department?.name);
+    });
+});
+
+const visibleCandidates = computed(() => {
+    return props.candidates.filter((person) => {
+        if (
+            exportDepartmentId.value !== '' &&
+            String(person.department?.id ?? '') !== exportDepartmentId.value
+        ) {
+            return false;
+        }
+
+        return matchesQuery(person.name, person.department?.name);
+    });
+});
+
+const emptyAttendanceMessage = computed(() => {
+    if (props.day.attendances.length === 0) {
+        return trans('roster.empty_attendance');
+    }
+
+    if (search.value.trim() !== '') {
+        return trans('roster.no_match');
+    }
+
+    return trans('roster.empty_department');
 });
 
 const exportUrl = computed(() => {
@@ -178,31 +224,39 @@ function windowLabel(start: string, end: string): string {
         <div class="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
             <Card class="shadow-sm">
                 <CardHeader class="border-b">
-                    <CardTitle>{{
-                        trans('roster.todays_attendance')
-                    }}</CardTitle>
-                    <CardDescription>
-                        {{ trans('common.staff') }} ·
-                        {{ visibleAttendances.length }}
-                    </CardDescription>
+                    <div
+                        class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+                    >
+                        <div class="min-w-0">
+                            <CardTitle>{{
+                                trans('roster.todays_attendance')
+                            }}</CardTitle>
+                            <CardDescription>
+                                {{ trans('common.staff') }} ·
+                                {{ visibleAttendances.length }}
+                            </CardDescription>
+                        </div>
+                        <Input
+                            v-model="search"
+                            type="search"
+                            class="max-w-64"
+                            :placeholder="trans('roster.search')"
+                        />
+                    </div>
                 </CardHeader>
                 <CardContent class="pt-4 sm:pt-6">
                     <ManualAttendanceForm
                         v-if="canRecord"
                         class="mb-4"
                         :date="day.date"
-                        :candidates="candidates"
+                        :candidates="visibleCandidates"
                         :attendance-day-id="day.id"
                     />
                     <div
                         v-if="visibleAttendances.length === 0"
                         class="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground"
                     >
-                        {{
-                            day.attendances.length === 0
-                                ? trans('roster.empty_attendance')
-                                : trans('roster.empty_department')
-                        }}
+                        {{ emptyAttendanceMessage }}
                     </div>
                     <div v-else>
                         <div class="grid gap-3 md:hidden">

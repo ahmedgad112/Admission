@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import PageHeader from '@/components/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,6 +11,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { trans } from '@/composables/useTrans';
 
 type DepartmentRow = {
@@ -20,10 +22,16 @@ type DepartmentRow = {
     staff_count: number;
 };
 
-defineProps<{
+const props = defineProps<{
     departments: { data: DepartmentRow[] };
+    filters: { search: string };
     canCreate: boolean;
 }>();
+
+const page = usePage();
+const search = ref(props.filters.search);
+
+const hasActiveFilters = computed(() => Boolean(props.filters.search));
 
 defineOptions({
     layout: {
@@ -33,6 +41,16 @@ defineOptions({
         ],
     },
 });
+
+function filter(value: string): void {
+    router.get(
+        '/departments',
+        {
+            search: value || undefined,
+        },
+        { preserveState: true, replace: true },
+    );
+}
 
 function destroy(id: number): void {
     router.delete(`/departments/${id}`);
@@ -57,11 +75,26 @@ function destroy(id: number): void {
             </template>
         </PageHeader>
 
+        <div class="flex flex-wrap gap-3">
+            <Input
+                v-model="search"
+                type="search"
+                class="max-w-64"
+                :placeholder="trans('departments.search')"
+                @keyup.enter="filter(search)"
+                @change="filter(search)"
+            />
+        </div>
+
         <div
             v-if="departments.data.length === 0"
             class="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground"
         >
-            {{ trans('departments.empty') }}
+            {{
+                hasActiveFilters
+                    ? trans('departments.no_match')
+                    : trans('departments.empty')
+            }}
         </div>
         <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <Card
@@ -99,6 +132,18 @@ function destroy(id: number): void {
                     </dl>
                 </CardContent>
                 <CardFooter class="mt-auto flex flex-wrap gap-2 border-t">
+                    <Button
+                        v-if="page.props.can?.viewStaff"
+                        variant="outline"
+                        size="sm"
+                        class="rounded-full"
+                        as-child
+                    >
+                        <Link
+                            :href="`/staff?department_id=${department.id}`"
+                            >{{ trans('departments.view_staff') }}</Link
+                        >
+                    </Button>
                     <Button
                         variant="outline"
                         size="sm"

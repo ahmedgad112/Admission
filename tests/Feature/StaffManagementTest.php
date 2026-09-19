@@ -173,6 +173,94 @@ test('department managers only see staff assigned under them', function () {
     expect(User::query()->whereKey($report->id)->visibleTo($manager)->exists())->toBeTrue();
 });
 
+test('staff index can be searched by name and department', function () {
+    $engineering = Department::factory()->create(['name' => 'Engineering']);
+    $operations = Department::factory()->create([
+        'name' => 'Operations',
+        'branch_id' => $engineering->branch_id,
+    ]);
+    $admin = User::factory()->superAdmin()->create([
+        'name' => 'Super Admin',
+        'branch_id' => $engineering->branch_id,
+    ]);
+    User::factory()->employee()->create([
+        'name' => 'Ahmed Hassan',
+        'department_id' => $engineering->id,
+        'branch_id' => $engineering->branch_id,
+    ]);
+    User::factory()->employee()->create([
+        'name' => 'Sara Ali',
+        'department_id' => $operations->id,
+        'branch_id' => $operations->branch_id,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('staff.index', ['search' => 'Ahmed']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('staff/Index')
+            ->has('staff.data', 1)
+            ->where('staff.data.0.name', 'Ahmed Hassan'));
+
+    $this->actingAs($admin)
+        ->get(route('staff.index', ['search' => 'Operations']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('staff/Index')
+            ->has('staff.data', 1)
+            ->where('staff.data.0.name', 'Sara Ali'));
+});
+
+test('staff index can list everyone in a selected department', function () {
+    $engineering = Department::factory()->create(['name' => 'Engineering']);
+    $operations = Department::factory()->create([
+        'name' => 'Operations',
+        'branch_id' => $engineering->branch_id,
+    ]);
+    $admin = User::factory()->superAdmin()->create([
+        'name' => 'Super Admin',
+        'branch_id' => $engineering->branch_id,
+    ]);
+    User::factory()->employee()->create([
+        'name' => 'Ahmed Hassan',
+        'department_id' => $engineering->id,
+        'branch_id' => $engineering->branch_id,
+    ]);
+    User::factory()->employee()->create([
+        'name' => 'Sara Ali',
+        'department_id' => $operations->id,
+        'branch_id' => $operations->branch_id,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('staff.index', ['department_id' => $engineering->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('staff/Index')
+            ->has('staff.data', 1)
+            ->where('staff.data.0.name', 'Ahmed Hassan')
+            ->where('filters.department_id', (string) $engineering->id)
+            ->has('departments', 2));
+});
+
+test('managers receive departments they can filter on the staff page', function () {
+    $department = Department::factory()->create(['name' => 'Nursing']);
+    $manager = User::factory()->manager()->create([
+        'department_id' => $department->id,
+        'branch_id' => $department->branch_id,
+    ]);
+
+    $this->actingAs($manager)
+        ->get(route('staff.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('staff/Index')
+            ->where('canCreate', false)
+            ->has('departments', 1)
+            ->where('departments.0.id', $department->id)
+            ->where('departments.0.name', 'Nursing'));
+});
+
 test('branch admins can save staff and create another', function () {
     $branch = Branch::factory()->create();
     $admin = User::factory()->branchAdmin()->create(['branch_id' => $branch->id]);

@@ -57,3 +57,19 @@ test('branch admins only see departments in their branch', function () {
             ->has('departments.data', 1)
             ->where('departments.data.0.name', 'Mine'));
 });
+
+test('branch admins can search departments by name', function () {
+    $branch = Branch::factory()->create(['name' => 'Cairo']);
+    $admin = User::factory()->branchAdmin()->create(['branch_id' => $branch->id]);
+    Department::factory()->create(['branch_id' => $branch->id, 'name' => 'Engineering']);
+    Department::factory()->create(['branch_id' => $branch->id, 'name' => 'Operations']);
+
+    $this->actingAs($admin)
+        ->get(route('departments.index', ['search' => 'Engine']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('departments/Index')
+            ->has('departments.data', 1)
+            ->where('departments.data.0.name', 'Engineering')
+            ->where('filters.search', 'Engine'));
+});

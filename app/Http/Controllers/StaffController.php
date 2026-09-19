@@ -51,8 +51,15 @@ class StaffController extends Controller
                 $query->where(function ($builder) use ($search): void {
                     $builder->where('name', 'like', '%'.$search.'%')
                         ->orWhere('email', 'like', '%'.$search.'%')
-                        ->orWhere('phone', 'like', '%'.$search.'%');
+                        ->orWhere('phone', 'like', '%'.$search.'%')
+                        ->orWhereHas(
+                            'department',
+                            fn ($department) => $department->where('name', 'like', '%'.$search.'%'),
+                        );
                 });
+            })
+            ->when($request->integer('department_id') > 0, function ($query) use ($request): void {
+                $query->where('department_id', $request->integer('department_id'));
             })
             ->when($request->string('role')->isNotEmpty(), function ($query) use ($request): void {
                 $query->whereHas(
@@ -87,14 +94,15 @@ class StaffController extends Controller
                 'search' => $request->string('search')->toString(),
                 'role' => $request->string('role')->toString(),
                 'status' => $request->string('status')->toString(),
+                'department_id' => $request->integer('department_id') > 0
+                    ? (string) $request->integer('department_id')
+                    : '',
             ],
             'roleOptions' => Role::query()->ordered()->get()->map(fn (Role $role) => [
                 'value' => $role->slug,
                 'label' => $role->label(),
             ]),
-            'departments' => $user->can('create', User::class)
-                ? $this->importableDepartments($user)
-                : [],
+            'departments' => $this->visibleDepartments($user),
             'canCreate' => $user->can('create', User::class),
         ]);
     }
@@ -294,7 +302,7 @@ class StaffController extends Controller
     /**
      * @return list<array{id: int, name: string, branch_id: int, branch: string|null}>
      */
-    private function importableDepartments(User $user): array
+    private function visibleDepartments(User $user): array
     {
         return Department::query()
             ->visibleTo($user)
