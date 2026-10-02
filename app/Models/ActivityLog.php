@@ -76,9 +76,12 @@ class ActivityLog extends Model
             ? $this->properties['name']
             : '';
 
+        $days = is_array($this->properties) ? ($this->properties['days'] ?? null) : null;
+
         return __('activity.'.$this->event, [
             'subject' => __('activity.subjects.'.$this->subjectKey()),
             'name' => $name,
+            'days' => is_scalar($days) ? (string) $days : '',
         ]);
     }
 }

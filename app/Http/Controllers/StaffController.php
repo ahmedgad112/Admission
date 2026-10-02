@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Concerns\RespondsWithInertiaOrJson;
 use App\Enums\Permission;
 use App\Enums\UserStatus;
+use App\Http\Requests\Staff\AdjustLeaveDaysRequest;
+use App\Http\Requests\Staff\BulkAdjustLeaveDaysRequest;
+use App\Http\Requests\Staff\ImportLeaveDaysRequest;
 use App\Http\Requests\Staff\ImportStaffRequest;
 use App\Http\Requests\Staff\StoreStaffRequest;
 use App\Http\Requests\Staff\UpdateStaffRequest;
@@ -15,6 +18,8 @@ use App\Models\Role;
 use App\Models\Shift;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\LeaveDaysAdjuster;
+use App\Services\LeaveDaysSpreadsheetImporter;
 use App\Services\StaffAttendanceSummary;
 use App\Services\StaffSpreadsheetImporter;
 use App\Support\RolePermissionCatalog;
@@ -33,6 +38,8 @@ class StaffController extends Controller
 
     public function __construct(
         public StaffSpreadsheetImporter $importer,
+        public LeaveDaysSpreadsheetImporter $leaveDaysImporter,
+        public LeaveDaysAdjuster $leaveDays,
         public StaffAttendanceSummary $attendanceSummary,
     ) {}
 
@@ -83,6 +90,7 @@ class StaffController extends Controller
                 'shift' => $member->shift,
                 'leave_days' => $member->leave_days,
                 'can_delete' => $user->can('delete', $member),
+                'can_adjust_leave' => $user->can('update', $member),
             ])
             ->values();
 
@@ -198,6 +206,96 @@ class StaffController extends Controller
         return $this->flashRedirect($request, __('flash.staff.updated'), route('staff.index'), [
             'staff' => $user,
         ]);
+    }
+
+    public function adjustLeaveDays(AdjustLeaveDaysRequest $request, User $user): JsonResponse|RedirectResponse
+    {
+        $days = $request->integer('days');
+        $deduct = $request->string('direction')->toString() === 'deduct';
+        $note = $request->validated('note');
+
+        $this->leaveDays->apply(
+            $user,
+            $deduct ? 'deduct' : 'add',
+            $days,
+            is_string($note) ? $note : null,
+        );
+
+        $signed = $deduct ? -$days : $days;
+
+        return $this->flashRedirect(
+            $request,
+            __('flash.staff.leave_days_adjusted', [
+                'name' => $user->name,
+                'days' => ($signed > 0 ? '+' : '').$signed,
+            ]),
+            route('staff.show', $user),
+        );
+    }
+
+    public function bulkAdjustLeaveDays(BulkAdjustLeaveDaysRequest $request): JsonResponse|RedirectResponse
+    {
+        $actor = $request->user();
+        abort_unless($actor !== null, 403);
+
+        /** @var list<int> $ids */
+        $ids = $request->validated('user_ids');
+        $days = $request->integer('days');
+        $direction = $request->string('direction')->toString();
+        $note = $request->validated('note');
+        $staff = $this->leaveDays->adjustable($actor, $ids);
+
+        DB::transaction(function () use ($staff, $direction, $days, $note): void {
+            foreach ($staff as $member) {
+                $this->leaveDays->apply($member, $direction, $days, is_string($note) ? $note : null);
+            }
+        });
+
+        $signed = $direction === 'deduct' ? -$days : $days;
+
+        return $this->flashRedirect(
+            $request,
+            __('flash.staff.leave_days_bulk', [
+                'count' => $staff->count(),
+                'days' => ($signed > 0 ? '+' : '').$signed,
+            ]),
+            route('staff.index'),
+        );
+    }
+
+    public function leaveDaysTemplate(): StreamedResponse
+    {
+        $this->authorize('create', User::class);
+
+        return $this->leaveDaysImporter->template();
+    }
+
+    public function importLeaveDays(ImportLeaveDaysRequest $request): JsonResponse|RedirectResponse
+    {
+        $actor = $request->user();
+        abort_unless($actor !== null, 403);
+
+        $file = $request->file('file');
+        abort_unless($file instanceof UploadedFile, 422);
+
+        $result = $this->leaveDaysImporter->import($actor, $file);
+        $updated = $result['updated'] > 0;
+        $message = $updated
+            ? __('flash.staff.leave_days_imported', [
+                'count' => $result['updated'],
+                'skipped' => $result['skipped'],
+            ])
+            : __('flash.staff.leave_days_import_none');
+
+        if ($result['errors'] !== []) {
+            $message .= ' '.implode(' ', array_slice($result['errors'], 0, 3));
+        }
+
+        return $this->flashRedirect($request, $message, route('staff.index'), [
+            'updated' => $result['updated'],
+            'skipped' => $result['skipped'],
+            'errors' => $result['errors'],
+        ], $updated ? 'success' : 'error');
     }
 
     public function destroy(Request $request, User $user): JsonResponse|RedirectResponse

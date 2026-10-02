@@ -17,6 +17,7 @@ return [
     'login_failed' => 'محاولة دخول فاشلة لـ :name.',
     'impersonated' => 'بدأ تصفح التطبيق كـ :name.',
     'impersonation_stopped' => 'توقف عن تصفح التطبيق كـ :name.',
+    'leave_days_adjusted' => 'تم تعديل أيام إجازة :name (:days).',
     'subjects' => [
         'user' => 'موظف',
         'branch' => 'فرع',

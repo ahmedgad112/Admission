@@ -76,6 +76,7 @@ class ActivityLogController extends Controller
                 'login_failed',
                 'impersonated',
                 'impersonation_stopped',
+                'leave_days_adjusted',
             ],
         ]);
     }

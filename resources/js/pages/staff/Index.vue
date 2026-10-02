@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { toast } from 'vue-sonner';
 import PageHeader from '@/components/PageHeader.vue';
@@ -30,6 +30,7 @@ type StaffRow = {
     shift?: { id: number; name: string } | null;
     leave_days: number;
     can_delete: boolean;
+    can_adjust_leave: boolean;
 };
 
 const props = defineProps<{
@@ -54,6 +55,14 @@ const page = usePage();
 const search = ref(props.filters.search);
 const importDepartmentId = ref('');
 const importInput = ref<HTMLInputElement | null>(null);
+const leaveInput = ref<HTMLInputElement | null>(null);
+const selected = ref<number[]>([]);
+const bulk = useForm({
+    user_ids: [] as number[],
+    direction: 'add' as 'add' | 'deduct',
+    days: 1,
+    note: '',
+});
 
 defineOptions({
     layout: {
@@ -127,6 +136,78 @@ function pickImportFile(): void {
     }
 
     importInput.value?.click();
+}
+
+const adjustableIds = computed(() =>
+    props.staff.data
+        .filter((member) => member.can_adjust_leave)
+        .map((member) => member.id),
+);
+
+const selectedOnPage = computed(() =>
+    selected.value.filter((id) => adjustableIds.value.includes(id)),
+);
+
+const allSelected = computed(
+    () =>
+        adjustableIds.value.length > 0 &&
+        adjustableIds.value.every((id) => selected.value.includes(id)),
+);
+
+function toggleMember(id: number): void {
+    if (selected.value.includes(id)) {
+        selected.value = selected.value.filter((current) => current !== id);
+
+        return;
+    }
+
+    selected.value = [...selected.value, id];
+}
+
+function toggleAll(): void {
+    if (allSelected.value) {
+        selected.value = selected.value.filter(
+            (id) => !adjustableIds.value.includes(id),
+        );
+
+        return;
+    }
+
+    selected.value = [
+        ...new Set([...selected.value, ...adjustableIds.value]),
+    ];
+}
+
+function applyBulk(): void {
+    bulk.user_ids = selectedOnPage.value;
+    bulk.post('/staff/leave-days', {
+        preserveScroll: true,
+        onSuccess: () => {
+            selected.value = [];
+            bulk.reset('days', 'note');
+            bulk.days = 1;
+        },
+    });
+}
+
+function importLeaveSheet(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) {
+        return;
+    }
+
+    router.post(
+        '/staff/leave-days/import',
+        { file },
+        {
+            forceFormData: true,
+            onFinish: () => {
+                input.value = '';
+            },
+        },
+    );
 }
 
 function importSheet(event: Event): void {
@@ -227,6 +308,33 @@ function hasActions(member: StaffRow): boolean {
                     class="hidden"
                     @change="importSheet"
                 />
+                <Button
+                    v-if="canCreate"
+                    variant="outline"
+                    class="rounded-full"
+                    as-child
+                >
+                    <a href="/staff/leave-days/template">{{
+                        trans('staff.leave_import_template')
+                    }}</a>
+                </Button>
+                <Button
+                    v-if="canCreate"
+                    variant="outline"
+                    class="rounded-full"
+                    type="button"
+                    @click="leaveInput?.click()"
+                >
+                    {{ trans('staff.leave_import') }}
+                </Button>
+                <input
+                    v-if="canCreate"
+                    ref="leaveInput"
+                    type="file"
+                    accept=".xlsx,.csv,text/csv"
+                    class="hidden"
+                    @change="importLeaveSheet"
+                />
             </template>
         </PageHeader>
 
@@ -296,6 +404,59 @@ function hasActions(member: StaffRow): boolean {
         </div>
 
         <div
+            v-if="canCreate && adjustableIds.length > 0"
+            class="flex flex-wrap items-end gap-3 rounded-2xl border p-4"
+        >
+            <label class="flex items-center gap-2 text-sm">
+                <input
+                    type="checkbox"
+                    class="size-4"
+                    :checked="allSelected"
+                    @change="toggleAll"
+                />
+                {{ trans('staff.select_all') }}
+            </label>
+            <p class="text-sm text-muted-foreground">
+                {{
+                    trans('staff.selected_count', {
+                        count: selectedOnPage.length,
+                    })
+                }}
+            </p>
+            <select v-model="bulk.direction" class="field-control max-w-40">
+                <option value="add">{{ trans('staff.add_days') }}</option>
+                <option value="deduct">
+                    {{ trans('staff.deduct_days') }}
+                </option>
+            </select>
+            <Input
+                v-model.number="bulk.days"
+                type="number"
+                min="1"
+                max="365"
+                class="max-w-28"
+                :placeholder="trans('staff.days_count')"
+            />
+            <Button
+                class="rounded-full"
+                type="button"
+                :disabled="bulk.processing || selectedOnPage.length === 0"
+                @click="applyBulk"
+            >
+                {{ trans('staff.apply_to_selected') }}
+            </Button>
+            <p v-if="bulk.errors.days" class="w-full text-sm text-destructive">
+                {{ bulk.errors.days }}
+            </p>
+            <p
+                v-if="bulk.errors.user_ids"
+                class="w-full text-sm text-destructive"
+            >
+                {{ bulk.errors.user_ids }}
+            </p>
+        </div>
+
+        <div
             v-if="staff.data.length === 0"
             class="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground"
         >
@@ -313,15 +474,29 @@ function hasActions(member: StaffRow): boolean {
                     class="h-full shadow-sm"
                 >
                     <CardHeader>
-                        <CardTitle class="text-lg">
-                            <Link
-                                :href="`/staff/${member.id}`"
-                                class="hover:underline"
-                            >
-                                {{ member.name }}
-                            </Link>
-                        </CardTitle>
-                        <CardDescription>{{ member.email }}</CardDescription>
+                        <div class="flex items-start gap-3">
+                            <input
+                                v-if="member.can_adjust_leave"
+                                type="checkbox"
+                                class="mt-1 size-4"
+                                :checked="selected.includes(member.id)"
+                                :aria-label="member.name"
+                                @change="toggleMember(member.id)"
+                            />
+                            <div>
+                                <CardTitle class="text-lg">
+                                    <Link
+                                        :href="`/staff/${member.id}`"
+                                        class="hover:underline"
+                                    >
+                                        {{ member.name }}
+                                    </Link>
+                                </CardTitle>
+                                <CardDescription>{{
+                                    member.email
+                                }}</CardDescription>
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent class="space-y-4">
                         <div class="flex flex-wrap gap-2">
@@ -426,6 +601,18 @@ function hasActions(member: StaffRow): boolean {
                         class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase"
                     >
                         <tr>
+                            <th
+                                v-if="adjustableIds.length > 0"
+                                class="px-4 py-3 font-semibold"
+                            >
+                                <input
+                                    type="checkbox"
+                                    class="size-4"
+                                    :checked="allSelected"
+                                    :aria-label="trans('staff.select_all')"
+                                    @change="toggleAll"
+                                />
+                            </th>
                             <th class="px-4 py-3 font-semibold">
                                 {{ trans('common.name') }}
                             </th>
@@ -455,6 +642,19 @@ function hasActions(member: StaffRow): boolean {
                             :key="member.id"
                             class="border-t"
                         >
+                            <td
+                                v-if="adjustableIds.length > 0"
+                                class="px-4 py-3"
+                            >
+                                <input
+                                    v-if="member.can_adjust_leave"
+                                    type="checkbox"
+                                    class="size-4"
+                                    :checked="selected.includes(member.id)"
+                                    :aria-label="member.name"
+                                    @change="toggleMember(member.id)"
+                                />
+                            </td>
                             <td class="px-4 py-3 font-medium">
                                 <Link
                                     :href="`/staff/${member.id}`"

@@ -176,10 +176,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('staff/create', [StaffController::class, 'create'])->name('staff.create');
     Route::get('staff/import/template', [StaffController::class, 'template'])->name('staff.import.template');
     Route::post('staff/import', [StaffController::class, 'import'])->name('staff.import');
+    Route::get('staff/leave-days/template', [StaffController::class, 'leaveDaysTemplate'])->name('staff.leave-days.template');
+    Route::post('staff/leave-days/import', [StaffController::class, 'importLeaveDays'])->name('staff.leave-days.import');
+    Route::post('staff/leave-days', [StaffController::class, 'bulkAdjustLeaveDays'])->name('staff.leave-days.bulk');
     Route::post('staff', [StaffController::class, 'store'])->name('staff.store');
     Route::get('staff/{user}', [StaffController::class, 'show'])->name('staff.show');
     Route::get('staff/{user}/edit', [StaffController::class, 'edit'])->name('staff.edit');
     Route::put('staff/{user}', [StaffController::class, 'update'])->name('staff.update');
+    Route::post('staff/{user}/leave-days', [StaffController::class, 'adjustLeaveDays'])->name('staff.leave-days.adjust');
     Route::delete('staff/{user}', [StaffController::class, 'destroy'])->name('staff.destroy');
     Route::post('staff/{user}/impersonate', [ImpersonationController::class, 'store'])
         ->name('staff.impersonate');

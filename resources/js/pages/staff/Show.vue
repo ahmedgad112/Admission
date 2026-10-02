@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
@@ -94,6 +94,22 @@ function leaveRange(leave: Summary['leaves'][number]): string {
     }
 
     return `${leave.start_date} – ${leave.end_date}`;
+}
+
+const adjustment = useForm({
+    direction: 'add' as 'add' | 'deduct',
+    days: 1,
+    note: '',
+});
+
+function adjustLeaveDays(): void {
+    adjustment.post(`/staff/${props.member.id}/leave-days`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            adjustment.reset('days', 'note');
+            adjustment.days = 1;
+        },
+    });
 }
 </script>
 
@@ -213,6 +229,78 @@ function leaveRange(leave: Summary['leaves'][number]): string {
                 </CardHeader>
             </Card>
         </dl>
+
+        <Card v-if="canUpdate" class="shadow-sm">
+            <CardHeader class="border-b">
+                <CardTitle>{{ trans('staff.adjust_leave') }}</CardTitle>
+                <CardDescription>
+                    {{ trans('staff.adjust_leave_help') }}
+                </CardDescription>
+            </CardHeader>
+            <CardContent class="grid gap-4 pt-4 sm:grid-cols-2 sm:pt-6">
+                <div class="space-y-2">
+                    <Label for="direction">{{ trans('common.type') }}</Label>
+                    <select
+                        id="direction"
+                        v-model="adjustment.direction"
+                        class="field-control"
+                    >
+                        <option value="add">
+                            {{ trans('staff.add_days') }}
+                        </option>
+                        <option value="deduct">
+                            {{ trans('staff.deduct_days') }}
+                        </option>
+                    </select>
+                    <p
+                        v-if="adjustment.errors.direction"
+                        class="text-sm text-destructive"
+                    >
+                        {{ adjustment.errors.direction }}
+                    </p>
+                </div>
+                <div class="space-y-2">
+                    <Label for="days">{{ trans('staff.days_count') }}</Label>
+                    <Input
+                        id="days"
+                        v-model.number="adjustment.days"
+                        type="number"
+                        min="1"
+                        max="365"
+                    />
+                    <p
+                        v-if="adjustment.errors.days"
+                        class="text-sm text-destructive"
+                    >
+                        {{ adjustment.errors.days }}
+                    </p>
+                </div>
+                <div class="space-y-2 sm:col-span-2">
+                    <Label for="note">{{ trans('staff.adjust_note') }}</Label>
+                    <textarea
+                        id="note"
+                        v-model="adjustment.note"
+                        class="field-control min-h-24 py-3"
+                        :placeholder="trans('staff.adjust_note_placeholder')"
+                    />
+                    <p
+                        v-if="adjustment.errors.note"
+                        class="text-sm text-destructive"
+                    >
+                        {{ adjustment.errors.note }}
+                    </p>
+                </div>
+                <div>
+                    <Button
+                        class="rounded-full"
+                        :disabled="adjustment.processing"
+                        @click="adjustLeaveDays"
+                    >
+                        {{ trans('staff.apply_adjustment') }}
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
 
         <template v-if="summary">
         <Card class="shadow-sm">
