@@ -25,7 +25,7 @@ class BulkAdjustLeaveDaysRequest extends FormRequest
             'user_ids' => ['required', 'array', 'min:1', 'max:500'],
             'user_ids.*' => ['integer', 'distinct'],
             'direction' => ['required', Rule::in(['add', 'deduct'])],
-            'days' => ['required', 'integer', 'min:1', 'max:365'],
+            'days' => ['required', 'integer', 'min:1', 'max:'.LeaveDaysAdjuster::MAX],
             'note' => ['nullable', 'string', 'max:500'],
         ];
     }
@@ -60,11 +60,14 @@ class BulkAdjustLeaveDaysRequest extends FormRequest
 
                 $direction = $this->string('direction')->toString();
                 $days = $this->integer('days');
+                $month = now()->format('Y-m');
 
                 foreach ($staff as $member) {
-                    if ($adjuster->balanceAfter($member->leave_days, $direction, $days) === null) {
+                    if ($adjuster->balanceAfter($adjuster->credit($member, $month), $direction, $days) === null) {
                         $validator->errors()->add('days', __('flash.staff.leave_days_bulk_bounds', [
                             'name' => $member->name,
+                            'min' => LeaveDaysAdjuster::MIN,
+                            'max' => LeaveDaysAdjuster::MAX,
                         ]));
 
                         return;

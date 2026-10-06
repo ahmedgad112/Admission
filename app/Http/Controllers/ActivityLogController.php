@@ -77,6 +77,7 @@ class ActivityLogController extends Controller
                 'impersonated',
                 'impersonation_stopped',
                 'leave_days_adjusted',
+                'attendance_days_adjusted',
             ],
         ]);
     }

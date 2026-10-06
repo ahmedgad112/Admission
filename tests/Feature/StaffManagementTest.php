@@ -5,11 +5,13 @@ use App\Enums\UserStatus;
 use App\Models\ActivityLog;
 use App\Models\Attendance;
 use App\Models\AttendanceDay;
+use App\Models\AttendanceDayAdjustment;
 use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Shift;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\StaffAttendanceSummary;
 use Inertia\Testing\AssertableInertia as Assert;
 
 function staffPayload(Branch $branch, array $overrides = []): array
@@ -391,33 +393,39 @@ test('branch admins cannot delete super admins', function () {
     expect(User::query()->whereKey($super->id)->exists())->toBeTrue();
 });
 
-test('admins can add leave days to a staff member', function () {
+test('admins can add attendance days to a staff member', function () {
     $admin = User::factory()->superAdmin()->create();
     $staff = User::factory()->employee()->create(['leave_days' => 21]);
+    $month = now()->format('Y-m');
 
     $this->actingAs($admin)
         ->post(route('staff.leave-days.adjust', $staff), [
             'direction' => 'add',
             'days' => 3,
+            'month' => $month,
             'note' => 'Compensation',
         ])
-        ->assertRedirect(route('staff.show', $staff))
+        ->assertRedirect(route('staff.show', ['user' => $staff, 'month' => $month]))
         ->assertSessionHasNoErrors();
 
     $log = ActivityLog::query()
-        ->where('event', 'leave_days_adjusted')
+        ->where('event', 'attendance_days_adjusted')
         ->where('subject_id', $staff->id)
         ->where('causer_id', $admin->id)
         ->first();
 
-    expect($staff->refresh()->leave_days)->toBe(24)
-        ->and($staff->remainingLeaveDays())->toBe(24)
+    $summary = app(StaffAttendanceSummary::class)->for($staff->refresh(), $month);
+
+    expect($staff->leave_days)->toBe(21)
+        ->and($staff->remainingLeaveDays())->toBe(21)
+        ->and($summary['present_days'])->toBe(3)
+        ->and($summary['absent_days'])->toBe(0)
         ->and($log)->not->toBeNull()
-        ->and($log->description())->toBe('Leave days for '.$staff->name.' adjusted (+3).')
+        ->and($log->description())->toBe('Attendance days for '.$staff->name.' adjusted (+3).')
         ->and($log->properties['changes']['note'] ?? null)->toBe('Compensation');
 });
 
-test('admins can deduct leave days from a staff member', function () {
+test('admins can deduct attendance days from a staff member', function () {
     $admin = User::factory()->superAdmin()->create();
     $staff = User::factory()->employee()->create(['leave_days' => 21]);
 
@@ -426,42 +434,59 @@ test('admins can deduct leave days from a staff member', function () {
             'direction' => 'deduct',
             'days' => 5,
         ])
-        ->assertRedirect(route('staff.show', $staff))
+        ->assertRedirect(route('staff.show', ['user' => $staff, 'month' => now()->format('Y-m')]))
         ->assertSessionHasNoErrors();
 
-    expect($staff->refresh()->leave_days)->toBe(16);
+    expect($staff->refresh()->leave_days)->toBe(21)
+        ->and((int) AttendanceDayAdjustment::query()->where('user_id', $staff->id)->sum('days'))->toBe(-5);
 });
 
-test('leave days cannot be deducted below zero', function () {
+test('attendance days cannot be deducted past the monthly limit', function () {
     $admin = User::factory()->superAdmin()->create();
     $staff = User::factory()->employee()->create(['leave_days' => 4]);
+
+    $this->actingAs($admin)
+        ->post(route('staff.leave-days.adjust', $staff), [
+            'direction' => 'deduct',
+            'days' => 31,
+        ])
+        ->assertSessionHasNoErrors();
 
     $this->actingAs($admin)
         ->from(route('staff.show', $staff))
         ->post(route('staff.leave-days.adjust', $staff), [
             'direction' => 'deduct',
-            'days' => 5,
+            'days' => 1,
         ])
         ->assertRedirect(route('staff.show', $staff))
         ->assertSessionHasErrors('days');
 
-    expect($staff->refresh()->leave_days)->toBe(4);
+    expect($staff->refresh()->leave_days)->toBe(4)
+        ->and((int) AttendanceDayAdjustment::query()->where('user_id', $staff->id)->sum('days'))->toBe(-31);
 });
 
-test('leave days cannot be raised above 365', function () {
+test('attendance days cannot be raised above the monthly limit', function () {
     $admin = User::factory()->superAdmin()->create();
     $staff = User::factory()->employee()->create(['leave_days' => 360]);
+
+    $this->actingAs($admin)
+        ->post(route('staff.leave-days.adjust', $staff), [
+            'direction' => 'add',
+            'days' => 31,
+        ])
+        ->assertSessionHasNoErrors();
 
     $this->actingAs($admin)
         ->from(route('staff.show', $staff))
         ->post(route('staff.leave-days.adjust', $staff), [
             'direction' => 'add',
-            'days' => 10,
+            'days' => 1,
         ])
         ->assertRedirect(route('staff.show', $staff))
         ->assertSessionHasErrors('days');
 
-    expect($staff->refresh()->leave_days)->toBe(360);
+    expect($staff->refresh()->leave_days)->toBe(360)
+        ->and((int) AttendanceDayAdjustment::query()->where('user_id', $staff->id)->sum('days'))->toBe(31);
 });
 
 test('employees cannot adjust leave days', function () {

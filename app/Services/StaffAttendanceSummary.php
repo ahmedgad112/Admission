@@ -7,6 +7,7 @@ use App\Enums\LeaveRequestType;
 use App\Enums\UserStatus;
 use App\Models\Attendance;
 use App\Models\AttendanceDay;
+use App\Models\AttendanceDayAdjustment;
 use App\Models\LeaveRequest;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -46,6 +47,7 @@ class StaffAttendanceSummary
             ->get();
 
         $presentDates = $this->presentDates($records);
+        $presentDays = $this->adjustedPresent($presentDates->count(), $this->attendanceCredit($staff->id, $monthStart->format('Y-m')));
         $leaves = LeaveRequest::query()
             ->where('user_id', $staff->id)
             ->blocking()
@@ -74,7 +76,7 @@ class StaffAttendanceSummary
             'from' => $from,
             'to' => $to,
             'expected_days' => $expectedDates->count(),
-            'present_days' => $presentDates->count(),
+            'present_days' => $presentDays,
             'absent_days' => $absentDates->count(),
             'late_days' => $records
                 ->filter(fn (Attendance $attendance): bool => in_array($attendance->status, [
@@ -83,7 +85,7 @@ class StaffAttendanceSummary
                 ], true))
                 ->count(),
             'permission_days' => $permissionDays,
-            'attendance_rate' => $this->rate($presentDates->count(), $absentDates->count()),
+            'attendance_rate' => $this->rate($presentDays, $absentDates->count()),
             'leave_days_used' => $staff->usedLeaveDays($monthStart->year),
             'remaining_leave_days' => $staff->remainingLeaveDays($monthStart->year),
             'records' => array_values($records->map(fn (Attendance $attendance): array => [
@@ -167,16 +169,19 @@ class StaffAttendanceSummary
                 ->overlapping($from, $to)
                 ->get();
 
+        $credits = $this->attendanceCredits($staff->modelKeys(), $monthStart->format('Y-m'));
+
         return [
             'month' => $monthStart->format('Y-m'),
             'from' => $from,
             'to' => $to,
             'dates' => array_values($dates->all()),
-            'people' => array_values($staff->map(function (User $member) use ($dates, $days, $records, $leaves, $from, $until): array {
+            'people' => array_values($staff->map(function (User $member) use ($dates, $days, $records, $leaves, $credits, $from, $until): array {
                 $memberDays = $days->where('branch_id', $member->branch_id);
                 $expectedDates = $this->expectedDatesFromDays($member, $memberDays, $until);
                 $memberRecords = $records->where('user_id', $member->id);
                 $presentDates = $this->presentDates($memberRecords);
+                $presentDays = $this->adjustedPresent($presentDates->count(), (int) ($credits[$member->id] ?? 0));
                 $memberLeaves = $leaves->where('user_id', $member->id);
                 $leaveMarks = $this->leaveMarks($memberLeaves, $from, $until);
                 $absentDates = $expectedDates
@@ -191,7 +196,7 @@ class StaffAttendanceSummary
                     'branch' => $member->branch,
                     'department' => $member->department,
                     'expected_days' => $expectedDates->count(),
-                    'present_days' => $presentDates->count(),
+                    'present_days' => $presentDays,
                     'absent_days' => $absentDates->count(),
                     'late_days' => $memberRecords
                         ->filter(fn (Attendance $attendance): bool => in_array($attendance->status, [
@@ -201,7 +206,7 @@ class StaffAttendanceSummary
                         ->count(),
                     'permission_days' => $leaveMarks->filter(fn (string $mark): bool => $mark === 'permission')->count(),
                     'leave_days' => $leaveMarks->filter(fn (string $mark): bool => $mark === 'leave')->count(),
-                    'attendance_rate' => $this->rate($presentDates->count(), $absentDates->count()),
+                    'attendance_rate' => $this->rate($presentDays, $absentDates->count()),
                     'marks' => $dates->mapWithKeys(fn (string $date): array => [
                         $date => $this->markForDate(
                             $date,
@@ -223,6 +228,39 @@ class StaffAttendanceSummary
         }
 
         return now()->format('Y-m');
+    }
+
+    /**
+     * @param  list<int>|Collection<int, int>  $userIds
+     * @return Collection<int, int>
+     */
+    private function attendanceCredits(array|Collection $userIds, string $month): Collection
+    {
+        if ($userIds instanceof Collection) {
+            $userIds = $userIds->all();
+        }
+
+        if ($userIds === []) {
+            return collect();
+        }
+
+        return AttendanceDayAdjustment::query()
+            ->whereIn('user_id', $userIds)
+            ->where('month', $month)
+            ->groupBy('user_id')
+            ->selectRaw('user_id, SUM(days) as total')
+            ->pluck('total', 'user_id')
+            ->map(fn (mixed $total): int => (int) $total);
+    }
+
+    private function attendanceCredit(int $userId, string $month): int
+    {
+        return (int) ($this->attendanceCredits([$userId], $month)[$userId] ?? 0);
+    }
+
+    private function adjustedPresent(int $recorded, int $credit): int
+    {
+        return max(0, $recorded + $credit);
     }
 
     public function rate(int $presentDays, int $absentDays): float

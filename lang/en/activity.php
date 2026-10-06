@@ -18,6 +18,7 @@ return [
     'impersonated' => 'Started viewing the app as :name.',
     'impersonation_stopped' => 'Stopped viewing the app as :name.',
     'leave_days_adjusted' => 'Leave days for :name adjusted (:days).',
+    'attendance_days_adjusted' => 'Attendance days for :name adjusted (:days).',
     'subjects' => [
         'user' => 'Staff member',
         'branch' => 'Branch',

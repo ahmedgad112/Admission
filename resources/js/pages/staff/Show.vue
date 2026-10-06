@@ -100,9 +100,11 @@ const adjustment = useForm({
     direction: 'add' as 'add' | 'deduct',
     days: 1,
     note: '',
+    month: props.summary?.month ?? '',
 });
 
 function adjustLeaveDays(): void {
+    adjustment.month = props.summary?.month ?? '';
     adjustment.post(`/staff/${props.member.id}/leave-days`, {
         preserveScroll: true,
         onSuccess: () => {
@@ -266,7 +268,7 @@ function adjustLeaveDays(): void {
                         v-model.number="adjustment.days"
                         type="number"
                         min="1"
-                        max="365"
+                        max="31"
                     />
                     <p
                         v-if="adjustment.errors.days"

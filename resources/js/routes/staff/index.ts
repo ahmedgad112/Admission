@@ -158,7 +158,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     create.form = createForm
 /**
 * @see \App\Http\Controllers\StaffController::importMethod
- * @see app/Http/Controllers/StaffController.php:330
+ * @see app/Http/Controllers/StaffController.php:334
  * @route '/staff/import'
  */
 export const importMethod = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -173,7 +173,7 @@ importMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\StaffController::importMethod
- * @see app/Http/Controllers/StaffController.php:330
+ * @see app/Http/Controllers/StaffController.php:334
  * @route '/staff/import'
  */
 importMethod.url = (options?: RouteQueryOptions) => {
@@ -182,7 +182,7 @@ importMethod.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\StaffController::importMethod
- * @see app/Http/Controllers/StaffController.php:330
+ * @see app/Http/Controllers/StaffController.php:334
  * @route '/staff/import'
  */
 importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -192,7 +192,7 @@ importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\StaffController::importMethod
- * @see app/Http/Controllers/StaffController.php:330
+ * @see app/Http/Controllers/StaffController.php:334
  * @route '/staff/import'
  */
     const importMethodForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -202,7 +202,7 @@ importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\StaffController::importMethod
- * @see app/Http/Controllers/StaffController.php:330
+ * @see app/Http/Controllers/StaffController.php:334
  * @route '/staff/import'
  */
         importMethodForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -561,7 +561,7 @@ update.put = (args: { user: number | { id: number } } | [user: number | { id: nu
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\StaffController::destroy
- * @see app/Http/Controllers/StaffController.php:301
+ * @see app/Http/Controllers/StaffController.php:305
  * @route '/staff/{user}'
  */
 export const destroy = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -576,7 +576,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\StaffController::destroy
- * @see app/Http/Controllers/StaffController.php:301
+ * @see app/Http/Controllers/StaffController.php:305
  * @route '/staff/{user}'
  */
 destroy.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -609,7 +609,7 @@ destroy.url = (args: { user: number | { id: number } } | [user: number | { id: n
 
 /**
 * @see \App\Http\Controllers\StaffController::destroy
- * @see app/Http/Controllers/StaffController.php:301
+ * @see app/Http/Controllers/StaffController.php:305
  * @route '/staff/{user}'
  */
 destroy.delete = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -619,7 +619,7 @@ destroy.delete = (args: { user: number | { id: number } } | [user: number | { id
 
     /**
 * @see \App\Http\Controllers\StaffController::destroy
- * @see app/Http/Controllers/StaffController.php:301
+ * @see app/Http/Controllers/StaffController.php:305
  * @route '/staff/{user}'
  */
     const destroyForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -634,7 +634,7 @@ destroy.delete = (args: { user: number | { id: number } } | [user: number | { id
 
             /**
 * @see \App\Http\Controllers\StaffController::destroy
- * @see app/Http/Controllers/StaffController.php:301
+ * @see app/Http/Controllers/StaffController.php:305
  * @route '/staff/{user}'
  */
         destroyForm.delete = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

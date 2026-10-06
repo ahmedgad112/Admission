@@ -213,12 +213,15 @@ class StaffController extends Controller
         $days = $request->integer('days');
         $deduct = $request->string('direction')->toString() === 'deduct';
         $note = $request->validated('note');
+        $month = $request->validated('month');
+        $month = is_string($month) && $month !== '' ? $month : now()->format('Y-m');
 
         $this->leaveDays->apply(
             $user,
             $deduct ? 'deduct' : 'add',
             $days,
             is_string($note) ? $note : null,
+            $month,
         );
 
         $signed = $deduct ? -$days : $days;
@@ -229,7 +232,7 @@ class StaffController extends Controller
                 'name' => $user->name,
                 'days' => ($signed > 0 ? '+' : '').$signed,
             ]),
-            route('staff.show', $user),
+            route('staff.show', ['user' => $user, 'month' => $month]),
         );
     }
 
@@ -243,11 +246,12 @@ class StaffController extends Controller
         $days = $request->integer('days');
         $direction = $request->string('direction')->toString();
         $note = $request->validated('note');
+        $month = now()->format('Y-m');
         $staff = $this->leaveDays->adjustable($actor, $ids);
 
-        DB::transaction(function () use ($staff, $direction, $days, $note): void {
+        DB::transaction(function () use ($staff, $direction, $days, $note, $month): void {
             foreach ($staff as $member) {
-                $this->leaveDays->apply($member, $direction, $days, is_string($note) ? $note : null);
+                $this->leaveDays->apply($member, $direction, $days, is_string($note) ? $note : null, $month);
             }
         });
 

@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\StaffController::template
- * @see app/Http/Controllers/StaffController.php:266
+ * @see app/Http/Controllers/StaffController.php:270
  * @route '/staff/leave-days/template'
  */
 export const template = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ template.definition = {
 
 /**
 * @see \App\Http\Controllers\StaffController::template
- * @see app/Http/Controllers/StaffController.php:266
+ * @see app/Http/Controllers/StaffController.php:270
  * @route '/staff/leave-days/template'
  */
 template.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ template.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\StaffController::template
- * @see app/Http/Controllers/StaffController.php:266
+ * @see app/Http/Controllers/StaffController.php:270
  * @route '/staff/leave-days/template'
  */
 template.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ template.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\StaffController::template
- * @see app/Http/Controllers/StaffController.php:266
+ * @see app/Http/Controllers/StaffController.php:270
  * @route '/staff/leave-days/template'
  */
 template.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ template.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\StaffController::template
- * @see app/Http/Controllers/StaffController.php:266
+ * @see app/Http/Controllers/StaffController.php:270
  * @route '/staff/leave-days/template'
  */
     const templateForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ template.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\StaffController::template
- * @see app/Http/Controllers/StaffController.php:266
+ * @see app/Http/Controllers/StaffController.php:270
  * @route '/staff/leave-days/template'
  */
         templateForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ template.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\StaffController::template
- * @see app/Http/Controllers/StaffController.php:266
+ * @see app/Http/Controllers/StaffController.php:270
  * @route '/staff/leave-days/template'
  */
         templateForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ template.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     template.form = templateForm
 /**
 * @see \App\Http\Controllers\StaffController::importMethod
- * @see app/Http/Controllers/StaffController.php:273
+ * @see app/Http/Controllers/StaffController.php:277
  * @route '/staff/leave-days/import'
  */
 export const importMethod = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ importMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\StaffController::importMethod
- * @see app/Http/Controllers/StaffController.php:273
+ * @see app/Http/Controllers/StaffController.php:277
  * @route '/staff/leave-days/import'
  */
 importMethod.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ importMethod.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\StaffController::importMethod
- * @see app/Http/Controllers/StaffController.php:273
+ * @see app/Http/Controllers/StaffController.php:277
  * @route '/staff/leave-days/import'
  */
 importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\StaffController::importMethod
- * @see app/Http/Controllers/StaffController.php:273
+ * @see app/Http/Controllers/StaffController.php:277
  * @route '/staff/leave-days/import'
  */
     const importMethodForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\StaffController::importMethod
- * @see app/Http/Controllers/StaffController.php:273
+ * @see app/Http/Controllers/StaffController.php:277
  * @route '/staff/leave-days/import'
  */
         importMethodForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -134,7 +134,7 @@ importMethod.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     importMethod.form = importMethodForm
 /**
 * @see \App\Http\Controllers\StaffController::bulk
- * @see app/Http/Controllers/StaffController.php:236
+ * @see app/Http/Controllers/StaffController.php:239
  * @route '/staff/leave-days'
  */
 export const bulk = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -149,7 +149,7 @@ bulk.definition = {
 
 /**
 * @see \App\Http\Controllers\StaffController::bulk
- * @see app/Http/Controllers/StaffController.php:236
+ * @see app/Http/Controllers/StaffController.php:239
  * @route '/staff/leave-days'
  */
 bulk.url = (options?: RouteQueryOptions) => {
@@ -158,7 +158,7 @@ bulk.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\StaffController::bulk
- * @see app/Http/Controllers/StaffController.php:236
+ * @see app/Http/Controllers/StaffController.php:239
  * @route '/staff/leave-days'
  */
 bulk.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -168,7 +168,7 @@ bulk.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\StaffController::bulk
- * @see app/Http/Controllers/StaffController.php:236
+ * @see app/Http/Controllers/StaffController.php:239
  * @route '/staff/leave-days'
  */
     const bulkForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -178,7 +178,7 @@ bulk.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\StaffController::bulk
- * @see app/Http/Controllers/StaffController.php:236
+ * @see app/Http/Controllers/StaffController.php:239
  * @route '/staff/leave-days'
  */
         bulkForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

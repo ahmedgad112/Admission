@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\AttendanceDayAdjustment;
 use App\Models\Branch;
 use App\Models\User;
+use App\Services\StaffAttendanceSummary;
 use App\Support\SimpleXlsx;
 use Illuminate\Http\UploadedFile;
 
@@ -29,9 +31,13 @@ test('admins can add leave days to several staff at once', function () {
         ->assertRedirect(route('staff.index'))
         ->assertSessionHasNoErrors();
 
-    expect($first->refresh()->leave_days)->toBe(13)
-        ->and($second->refresh()->leave_days)->toBe(15)
-        ->and($untouched->refresh()->leave_days)->toBe(8);
+    expect($first->refresh()->leave_days)->toBe(10)
+        ->and($second->refresh()->leave_days)->toBe(12)
+        ->and($untouched->refresh()->leave_days)->toBe(8)
+        ->and((int) AttendanceDayAdjustment::query()->where('user_id', $first->id)->sum('days'))->toBe(3)
+        ->and((int) AttendanceDayAdjustment::query()->where('user_id', $second->id)->sum('days'))->toBe(3)
+        ->and(app(StaffAttendanceSummary::class)->for($first, now()->format('Y-m'))['present_days'])->toBe(3)
+        ->and(AttendanceDayAdjustment::query()->where('user_id', $untouched->id)->exists())->toBeFalse();
 });
 
 test('admins can deduct leave days from several staff at once', function () {
@@ -48,27 +54,39 @@ test('admins can deduct leave days from several staff at once', function () {
         ->assertRedirect(route('staff.index'))
         ->assertSessionHasNoErrors();
 
-    expect($first->refresh()->leave_days)->toBe(8)
-        ->and($second->refresh()->leave_days)->toBe(4);
+    expect($first->refresh()->leave_days)->toBe(10)
+        ->and($second->refresh()->leave_days)->toBe(6)
+        ->and((int) AttendanceDayAdjustment::query()->where('user_id', $first->id)->sum('days'))->toBe(-2)
+        ->and((int) AttendanceDayAdjustment::query()->where('user_id', $second->id)->sum('days'))->toBe(-2);
 });
 
-test('bulk leave day changes are rejected when one balance would fall outside the limit', function () {
+test('bulk attendance changes are rejected when one person would pass the monthly limit', function () {
     $admin = User::factory()->superAdmin()->create();
     $first = User::factory()->employee()->create(['name' => 'Near Limit', 'leave_days' => 364]);
     $second = User::factory()->employee()->create(['leave_days' => 10]);
+
+    $this->actingAs($admin)
+        ->post(route('staff.leave-days.bulk'), [
+            'user_ids' => [$first->id],
+            'direction' => 'add',
+            'days' => 31,
+        ])
+        ->assertSessionHasNoErrors();
 
     $this->actingAs($admin)
         ->from(route('staff.index'))
         ->post(route('staff.leave-days.bulk'), [
             'user_ids' => [$first->id, $second->id],
             'direction' => 'add',
-            'days' => 3,
+            'days' => 1,
         ])
         ->assertRedirect(route('staff.index'))
         ->assertSessionHasErrors('days');
 
     expect($first->refresh()->leave_days)->toBe(364)
-        ->and($second->refresh()->leave_days)->toBe(10);
+        ->and($second->refresh()->leave_days)->toBe(10)
+        ->and((int) AttendanceDayAdjustment::query()->where('user_id', $first->id)->sum('days'))->toBe(31)
+        ->and(AttendanceDayAdjustment::query()->where('user_id', $second->id)->exists())->toBeFalse();
 });
 
 test('branch admins cannot bulk adjust staff outside their branch', function () {
@@ -144,8 +162,10 @@ test('admins can add and deduct leave days from a spreadsheet', function () {
         ->assertRedirect(route('staff.index'))
         ->assertSessionHasNoErrors();
 
-    expect($ahmed->refresh()->leave_days)->toBe(13)
-        ->and($sara->refresh()->leave_days)->toBe(6);
+    expect($ahmed->refresh()->leave_days)->toBe(10)
+        ->and($sara->refresh()->leave_days)->toBe(8)
+        ->and((int) AttendanceDayAdjustment::query()->where('user_id', $ahmed->id)->sum('days'))->toBe(3)
+        ->and((int) AttendanceDayAdjustment::query()->where('user_id', $sara->id)->sum('days'))->toBe(-2);
 });
 
 test('a spreadsheet skips unknown names and does not change anyone else on that row', function () {
@@ -167,7 +187,8 @@ test('a spreadsheet skips unknown names and does not change anyone else on that 
         ])
         ->assertRedirect(route('staff.index'));
 
-    expect($staff->refresh()->leave_days)->toBe(11);
+    expect($staff->refresh()->leave_days)->toBe(10)
+        ->and((int) AttendanceDayAdjustment::query()->where('user_id', $staff->id)->sum('days'))->toBe(1);
 });
 
 test('a spreadsheet skips a name that matches more than one staff member', function () {
@@ -205,7 +226,9 @@ test('a spreadsheet skips a name that matches more than one staff member', funct
         ->assertRedirect(route('staff.index'));
 
     expect($first->refresh()->leave_days)->toBe(10)
-        ->and($second->refresh()->leave_days)->toBe(12);
+        ->and($second->refresh()->leave_days)->toBe(10)
+        ->and((int) AttendanceDayAdjustment::query()->where('user_id', $second->id)->sum('days'))->toBe(2)
+        ->and(AttendanceDayAdjustment::query()->where('user_id', $first->id)->exists())->toBeFalse();
 });
 
 test('employees cannot import leave days', function () {

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AttendanceDayAdjustment;
 use App\Models\User;
 use App\Support\ActivityLogger;
 use Illuminate\Support\Collection;
@@ -9,9 +10,17 @@ use InvalidArgumentException;
 
 class LeaveDaysAdjuster
 {
-    public const int MIN = 0;
+    public const int MIN = -31;
 
-    public const int MAX = 365;
+    public const int MAX = 31;
+
+    public function credit(User $staff, string $month): int
+    {
+        return (int) AttendanceDayAdjustment::query()
+            ->where('user_id', $staff->id)
+            ->where('month', $month)
+            ->sum('days');
+    }
 
     public function balanceAfter(int $current, string $direction, int $days): ?int
     {
@@ -24,27 +33,35 @@ class LeaveDaysAdjuster
         return $next;
     }
 
-    public function apply(User $staff, string $direction, int $days, ?string $note = null): void
+    public function apply(User $staff, string $direction, int $days, ?string $note = null, ?string $month = null): void
     {
-        $next = $this->balanceAfter($staff->leave_days, $direction, $days);
+        $month ??= now()->format('Y-m');
+        $next = $this->balanceAfter($this->credit($staff, $month), $direction, $days);
 
         if ($next === null) {
-            throw new InvalidArgumentException('Leave days are outside the allowed range.');
+            throw new InvalidArgumentException('Attendance days are outside the allowed range.');
         }
 
         $signed = $this->signed($direction, $days);
 
-        User::withoutEvents(function () use ($staff, $next): void {
-            $staff->update(['leave_days' => $next]);
-        });
+        AttendanceDayAdjustment::query()->create([
+            'user_id' => $staff->id,
+            'adjusted_by' => auth()->id(),
+            'month' => $month,
+            'days' => $signed,
+            'note' => is_string($note) && $note !== '' ? $note : null,
+        ]);
 
-        $changes = ['leave_days' => $next];
+        $changes = [
+            'attendance_days' => $next,
+            'month' => $month,
+        ];
 
         if (is_string($note) && $note !== '') {
             $changes['note'] = $note;
         }
 
-        ActivityLogger::record('leave_days_adjusted', $staff, [
+        ActivityLogger::record('attendance_days_adjusted', $staff, [
             'name' => $staff->name,
             'days' => ($signed > 0 ? '+' : '').$signed,
             'changes' => $changes,

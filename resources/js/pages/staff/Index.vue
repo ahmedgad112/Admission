@@ -422,6 +422,7 @@ function hasActions(member: StaffRow): boolean {
                         count: selectedOnPage.length,
                     })
                 }}
+                · {{ trans('staff.adjust_attendance_month') }}
             </p>
             <select v-model="bulk.direction" class="field-control max-w-40">
                 <option value="add">{{ trans('staff.add_days') }}</option>
@@ -433,7 +434,7 @@ function hasActions(member: StaffRow): boolean {
                 v-model.number="bulk.days"
                 type="number"
                 min="1"
-                max="365"
+                max="31"
                 class="max-w-28"
                 :placeholder="trans('staff.days_count')"
             />

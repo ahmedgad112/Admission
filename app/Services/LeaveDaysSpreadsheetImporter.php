@@ -48,7 +48,9 @@ class LeaveDaysSpreadsheetImporter
             ->filter(fn (User $staff): bool => $actor->can('update', $staff))
             ->values();
 
-        DB::transaction(function () use ($rows, $people, &$updated, &$skipped, &$errors): void {
+        $month = now()->format('Y-m');
+
+        DB::transaction(function () use ($rows, $people, $month, &$updated, &$skipped, &$errors): void {
             foreach ($rows as $index => $row) {
                 $line = $index + 2;
                 $name = trim($row['name']);
@@ -81,7 +83,7 @@ class LeaveDaysSpreadsheetImporter
                     continue;
                 }
 
-                if ($this->adjuster->balanceAfter($staff->leave_days, $direction, $days) === null) {
+                if ($this->adjuster->balanceAfter($this->adjuster->credit($staff, $month), $direction, $days) === null) {
                     $skipped++;
                     $errors[] = __('flash.staff.leave_days_import_bounds', [
                         'line' => $line,
@@ -91,7 +93,7 @@ class LeaveDaysSpreadsheetImporter
                     continue;
                 }
 
-                $this->adjuster->apply($staff, $direction, $days);
+                $this->adjuster->apply($staff, $direction, $days, null, $month);
                 $updated++;
             }
         });

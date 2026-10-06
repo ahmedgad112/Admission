@@ -134,6 +134,14 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * @return HasMany<AttendanceDayAdjustment, $this>
+     */
+    public function attendanceDayAdjustments(): HasMany
+    {
+        return $this->hasMany(AttendanceDayAdjustment::class);
+    }
+
+    /**
      * @return BelongsToMany<Task, $this>
      */
     public function assignedTasks(): BelongsToMany
