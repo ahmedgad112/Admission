@@ -173,9 +173,7 @@ function toggleAll(): void {
         return;
     }
 
-    selected.value = [
-        ...new Set([...selected.value, ...adjustableIds.value]),
-    ];
+    selected.value = [...new Set([...selected.value, ...adjustableIds.value])];
 }
 
 function applyBulk(): void {

@@ -139,10 +139,9 @@ function destroy(id: number): void {
                         class="rounded-full"
                         as-child
                     >
-                        <Link
-                            :href="`/staff?department_id=${department.id}`"
-                            >{{ trans('departments.view_staff') }}</Link
-                        >
+                        <Link :href="`/staff?department_id=${department.id}`">{{
+                            trans('departments.view_staff')
+                        }}</Link>
                     </Button>
                     <Button
                         variant="outline"

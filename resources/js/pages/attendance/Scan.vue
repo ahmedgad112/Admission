@@ -97,7 +97,9 @@ async function startCamera(): Promise<void> {
         throw new Error(trans('scan.camera_failed'));
     }
 
-    const detectorPromise = detectQr ? Promise.resolve(detectQr) : createQrDetector();
+    const detectorPromise = detectQr
+        ? Promise.resolve(detectQr)
+        : createQrDetector();
 
     video.value.srcObject = stream;
     video.value.muted = true;

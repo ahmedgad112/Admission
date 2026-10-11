@@ -81,14 +81,10 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                     </div>
                     <InputError :message="errors.code" />
                 </div>
-                <Button
-                    type="submit"
-                    class="w-full"
-                    :disabled="processing"
-                >
+                <Button type="submit" class="w-full" :disabled="processing">
                     {{ trans('auth.two_factor.continue') }}
                 </Button>
-                <div class="text-muted-foreground text-center text-sm">
+                <div class="text-center text-sm text-muted-foreground">
                     <span>{{ trans('auth.two_factor.or') }} </span>
                     <button
                         type="button"
@@ -116,15 +112,11 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                     required
                 />
                 <InputError :message="errors.recovery_code" />
-                <Button
-                    type="submit"
-                    class="w-full"
-                    :disabled="processing"
-                >
+                <Button type="submit" class="w-full" :disabled="processing">
                     {{ trans('auth.two_factor.continue') }}
                 </Button>
 
-                <div class="text-muted-foreground text-center text-sm">
+                <div class="text-center text-sm text-muted-foreground">
                     <span>{{ trans('auth.two_factor.or') }} </span>
                     <button
                         type="button"

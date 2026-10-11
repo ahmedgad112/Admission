@@ -222,9 +222,7 @@ function adjustLeaveDays(): void {
                     }}</CardDescription>
                     <CardTitle class="text-3xl tabular-nums">
                         {{ summary.remaining_leave_days }}
-                        <span
-                            class="text-sm font-normal text-muted-foreground"
-                        >
+                        <span class="text-sm font-normal text-muted-foreground">
                             / {{ member.leave_days }}
                         </span>
                     </CardTitle>
@@ -305,140 +303,146 @@ function adjustLeaveDays(): void {
         </Card>
 
         <template v-if="summary">
-        <Card class="shadow-sm">
-            <CardHeader class="border-b">
-                <CardTitle>{{ trans('staff.attendance_days') }}</CardTitle>
-                <CardDescription>
-                    {{ trans('staff.late_days') }}:
-                    {{ summary.late_days }}
-                </CardDescription>
-            </CardHeader>
-            <CardContent class="pt-4 sm:pt-6">
-                <div
-                    v-if="summary.records.length === 0"
-                    class="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground"
-                >
-                    {{ trans('staff.no_attendance') }}
-                </div>
-                <div v-else class="overflow-x-auto">
-                    <table class="w-full min-w-[36rem] text-start text-sm">
-                        <thead
-                            class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase"
-                        >
-                            <tr>
-                                <th class="px-4 py-3 font-semibold">
-                                    {{ trans('common.date') }}
-                                </th>
-                                <th class="px-4 py-3 font-semibold">
-                                    {{ trans('common.in') }}
-                                </th>
-                                <th class="px-4 py-3 font-semibold">
-                                    {{ trans('common.out') }}
-                                </th>
-                                <th class="px-4 py-3 font-semibold">
-                                    {{ trans('common.hours') }}
-                                </th>
-                                <th class="px-4 py-3 font-semibold">
-                                    {{ trans('common.status') }}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="record in summary.records"
-                                :key="record.id"
-                                class="border-t"
+            <Card class="shadow-sm">
+                <CardHeader class="border-b">
+                    <CardTitle>{{ trans('staff.attendance_days') }}</CardTitle>
+                    <CardDescription>
+                        {{ trans('staff.late_days') }}:
+                        {{ summary.late_days }}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent class="pt-4 sm:pt-6">
+                    <div
+                        v-if="summary.records.length === 0"
+                        class="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground"
+                    >
+                        {{ trans('staff.no_attendance') }}
+                    </div>
+                    <div v-else class="overflow-x-auto">
+                        <table class="w-full min-w-[36rem] text-start text-sm">
+                            <thead
+                                class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase"
                             >
-                                <td class="px-4 py-3 font-medium tabular-nums">
-                                    {{ record.date }}
-                                </td>
-                                <td class="px-4 py-3 tabular-nums">
-                                    {{ record.check_in ?? '—' }}
-                                </td>
-                                <td class="px-4 py-3 tabular-nums">
-                                    {{ record.check_out ?? '—' }}
-                                </td>
-                                <td class="px-4 py-3 tabular-nums">
-                                    {{ record.work_hours ?? '—' }}
-                                </td>
-                                <td class="px-4 py-3">
-                                    <StatusBadge
-                                        :value="record.status"
-                                        :tone="attendanceTone(record.status)"
-                                    />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </CardContent>
-        </Card>
-
-        <Card class="shadow-sm">
-            <CardHeader class="border-b">
-                <CardTitle>{{ trans('staff.leave_history') }}</CardTitle>
-            </CardHeader>
-            <CardContent class="pt-4 sm:pt-6">
-                <div
-                    v-if="summary.leaves.length === 0"
-                    class="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground"
-                >
-                    {{ trans('staff.no_leave') }}
-                </div>
-                <div v-else class="overflow-x-auto">
-                    <table class="w-full min-w-[36rem] text-start text-sm">
-                        <thead
-                            class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase"
-                        >
-                            <tr>
-                                <th class="px-4 py-3 font-semibold">
-                                    {{ trans('common.date') }}
-                                </th>
-                                <th class="px-4 py-3 font-semibold">
-                                    {{ trans('common.type') }}
-                                </th>
-                                <th class="px-4 py-3 font-semibold">
-                                    {{ trans('common.status') }}
-                                </th>
-                                <th class="px-4 py-3 font-semibold">
-                                    {{ trans('common.reason') }}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="leave in summary.leaves"
-                                :key="leave.id"
-                                class="border-t"
-                            >
-                                <td class="px-4 py-3 font-medium">
-                                    {{ leaveRange(leave) }}
-                                    <span
-                                        class="block text-xs text-muted-foreground"
+                                <tr>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.date') }}
+                                    </th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.in') }}
+                                    </th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.out') }}
+                                    </th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.hours') }}
+                                    </th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.status') }}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="record in summary.records"
+                                    :key="record.id"
+                                    class="border-t"
+                                >
+                                    <td
+                                        class="px-4 py-3 font-medium tabular-nums"
                                     >
-                                        {{ leave.days }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3">
-                                    {{ trans(`leave.type.${leave.type}`) }}
-                                </td>
-                                <td class="px-4 py-3">
-                                    <StatusBadge
-                                        :value="leave.status"
-                                        :tone="
-                                            leaveRequestStatusTone(leave.status)
-                                        "
-                                    />
-                                </td>
-                                <td class="px-4 py-3 text-muted-foreground">
-                                    {{ leave.reason }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </CardContent>
-        </Card>
+                                        {{ record.date }}
+                                    </td>
+                                    <td class="px-4 py-3 tabular-nums">
+                                        {{ record.check_in ?? '—' }}
+                                    </td>
+                                    <td class="px-4 py-3 tabular-nums">
+                                        {{ record.check_out ?? '—' }}
+                                    </td>
+                                    <td class="px-4 py-3 tabular-nums">
+                                        {{ record.work_hours ?? '—' }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <StatusBadge
+                                            :value="record.status"
+                                            :tone="
+                                                attendanceTone(record.status)
+                                            "
+                                        />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card class="shadow-sm">
+                <CardHeader class="border-b">
+                    <CardTitle>{{ trans('staff.leave_history') }}</CardTitle>
+                </CardHeader>
+                <CardContent class="pt-4 sm:pt-6">
+                    <div
+                        v-if="summary.leaves.length === 0"
+                        class="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground"
+                    >
+                        {{ trans('staff.no_leave') }}
+                    </div>
+                    <div v-else class="overflow-x-auto">
+                        <table class="w-full min-w-[36rem] text-start text-sm">
+                            <thead
+                                class="bg-muted/40 text-xs tracking-wide text-muted-foreground uppercase"
+                            >
+                                <tr>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.date') }}
+                                    </th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.type') }}
+                                    </th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.status') }}
+                                    </th>
+                                    <th class="px-4 py-3 font-semibold">
+                                        {{ trans('common.reason') }}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="leave in summary.leaves"
+                                    :key="leave.id"
+                                    class="border-t"
+                                >
+                                    <td class="px-4 py-3 font-medium">
+                                        {{ leaveRange(leave) }}
+                                        <span
+                                            class="block text-xs text-muted-foreground"
+                                        >
+                                            {{ leave.days }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        {{ trans(`leave.type.${leave.type}`) }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <StatusBadge
+                                            :value="leave.status"
+                                            :tone="
+                                                leaveRequestStatusTone(
+                                                    leave.status,
+                                                )
+                                            "
+                                        />
+                                    </td>
+                                    <td class="px-4 py-3 text-muted-foreground">
+                                        {{ leave.reason }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </CardContent>
+            </Card>
         </template>
     </div>
 </template>

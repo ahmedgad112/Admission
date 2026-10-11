@@ -394,7 +394,9 @@ function windowLabel(start: string, end: string): string {
                                                 record.name ?? '—'
                                             }}</span>
                                         </td>
-                                        <td class="px-4 py-3 text-muted-foreground">
+                                        <td
+                                            class="px-4 py-3 text-muted-foreground"
+                                        >
                                             {{
                                                 record.department?.name ??
                                                 trans('common.no_department')
