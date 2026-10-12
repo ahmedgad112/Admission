@@ -66,7 +66,9 @@ async function createBarcodeDetector(): Promise<BarcodeDetectorLike | null> {
     }
 }
 
-function canvasContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {
+function canvasContext(
+    canvas: HTMLCanvasElement,
+): CanvasRenderingContext2D | null {
     return canvas.getContext('2d', { willReadFrequently: true });
 }
 
@@ -77,7 +79,9 @@ function even(value: number): number {
 function enhanceContrast(data: Uint8ClampedArray): void {
     for (let index = 0; index < data.length; index += 4) {
         const gray = Math.round(
-            data[index] * 0.299 + data[index + 1] * 0.587 + data[index + 2] * 0.114,
+            data[index] * 0.299 +
+                data[index + 1] * 0.587 +
+                data[index + 2] * 0.114,
         );
         const boosted = gray < 110 ? 0 : gray > 170 ? 255 : gray;
         data[index] = boosted;
@@ -222,7 +226,10 @@ export function drawVideoFrame(
 }
 
 export async function waitForVideo(video: HTMLVideoElement): Promise<void> {
-    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && video.videoWidth > 0) {
+    if (
+        video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+        video.videoWidth > 0
+    ) {
         return;
     }
 
@@ -265,10 +272,13 @@ export async function startRearCamera(): Promise<MediaStream> {
 
     try {
         const devices = await navigator.mediaDevices.enumerateDevices();
-        const cameras = devices.filter((device) => device.kind === 'videoinput');
+        const cameras = devices.filter(
+            (device) => device.kind === 'videoinput',
+        );
         const rear =
-            cameras.find((device) => /back|rear|environment/i.test(device.label)) ??
-            cameras.at(-1);
+            cameras.find((device) =>
+                /back|rear|environment/i.test(device.label),
+            ) ?? cameras.at(-1);
 
         if (rear?.deviceId) {
             return await navigator.mediaDevices.getUserMedia({
@@ -285,7 +295,9 @@ export async function startRearCamera(): Promise<MediaStream> {
         : new Error('Unable to start camera.');
 }
 
-export async function detectQrFromImageFile(file: File): Promise<string | null> {
+export async function detectQrFromImageFile(
+    file: File,
+): Promise<string | null> {
     const bitmap = await createImageBitmap(file);
     const detector = await createBarcodeDetector();
 
@@ -328,7 +340,10 @@ export async function detectQrFromImageFile(file: File): Promise<string | null> 
     return detector ? detectWithBarcode(detector, canvas) : null;
 }
 
-export function kioskScanUrl(token: string, origin = window.location.origin): string {
+export function kioskScanUrl(
+    token: string,
+    origin = window.location.origin,
+): string {
     return `${origin.replace(/\/$/, '')}/q/${encodeURIComponent(token)}`;
 }
 

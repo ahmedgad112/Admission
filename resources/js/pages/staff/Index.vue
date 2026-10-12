@@ -173,9 +173,7 @@ function toggleAll(): void {
         return;
     }
 
-    selected.value = [
-        ...new Set([...selected.value, ...adjustableIds.value]),
-    ];
+    selected.value = [...new Set([...selected.value, ...adjustableIds.value])];
 }
 
 function applyBulk(): void {
@@ -231,10 +229,6 @@ function importSheet(event: Event): void {
             },
         },
     );
-}
-
-function hasActions(member: StaffRow): boolean {
-    return true;
 }
 </script>
 
@@ -549,10 +543,7 @@ function hasActions(member: StaffRow): boolean {
                             </div>
                         </dl>
                     </CardContent>
-                    <CardFooter
-                        v-if="hasActions(member)"
-                        class="mt-auto flex flex-wrap gap-2 border-t"
-                    >
+                    <CardFooter class="mt-auto flex flex-wrap gap-2 border-t">
                         <Button
                             variant="outline"
                             size="sm"

@@ -129,27 +129,25 @@ function selectPerson(person: Candidate): void {
 }
 
 function submit(): void {
-    form
-        .transform(() => ({
-            date: props.date,
-            attendance_day_id: props.attendanceDayId || null,
-            entries: [
-                {
-                    user_id: Number(form.user_id),
-                    check_in: form.check_in || null,
-                    check_out: form.check_out || null,
-                },
-            ],
-        }))
-        .put('/attendance/entries', {
-            preserveScroll: true,
-            onSuccess: () => {
-                form.reset();
-                form.check_in = defaultCheckIn(props.date);
-                query.value = '';
-                open.value = false;
+    form.transform(() => ({
+        date: props.date,
+        attendance_day_id: props.attendanceDayId || null,
+        entries: [
+            {
+                user_id: Number(form.user_id),
+                check_in: form.check_in || null,
+                check_out: form.check_out || null,
             },
-        });
+        ],
+    })).put('/attendance/entries', {
+        preserveScroll: true,
+        onSuccess: () => {
+            form.reset();
+            form.check_in = defaultCheckIn(props.date);
+            query.value = '';
+            open.value = false;
+        },
+    });
 }
 </script>
 

@@ -61,7 +61,7 @@ const handleCancel = () => {
 </script>
 
 <template>
-    <div v-if="!isSupported" class="text-muted-foreground text-sm">
+    <div v-if="!isSupported" class="text-sm text-muted-foreground">
         {{ trans('settings.security.passkeys.unsupported') }}
     </div>
 
@@ -71,7 +71,7 @@ const handleCancel = () => {
 
     <form
         v-else
-        class="border-border bg-muted/50 space-y-4 rounded-lg border p-4"
+        class="space-y-4 rounded-lg border border-border bg-muted/50 p-4"
         @submit="handleSubmit"
     >
         <div class="grid gap-2">
@@ -85,10 +85,10 @@ const handleCancel = () => {
                 :placeholder="
                     trans('settings.security.passkeys.name_placeholder')
                 "
-                class="border-foreground/20 mt-1 block w-full"
+                class="mt-1 block w-full border-foreground/20"
                 autofocus
             />
-            <p class="text-muted-foreground text-xs">
+            <p class="text-xs text-muted-foreground">
                 {{ trans('settings.security.passkeys.name_help') }}
             </p>
         </div>

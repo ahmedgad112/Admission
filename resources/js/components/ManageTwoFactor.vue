@@ -40,13 +40,15 @@ onUnmounted(() => clearTwoFactorAuthData());
             v-if="!twoFactorEnabled"
             class="flex flex-col items-start justify-start space-y-4"
         >
-            <p class="text-muted-foreground text-sm">
+            <p class="text-sm text-muted-foreground">
                 {{ trans('settings.security.2fa.enable_help') }}
             </p>
 
             <div>
                 <Button v-if="hasSetupData" @click="showSetupModal = true">
-                    <ShieldCheck />{{ trans('settings.security.2fa.continue_setup') }}
+                    <ShieldCheck />{{
+                        trans('settings.security.2fa.continue_setup')
+                    }}
                 </Button>
                 <Form
                     v-else
@@ -62,7 +64,7 @@ onUnmounted(() => clearTwoFactorAuthData());
         </div>
 
         <div v-else class="flex flex-col items-start justify-start space-y-4">
-            <p class="text-muted-foreground text-sm">
+            <p class="text-sm text-muted-foreground">
                 {{ trans('settings.security.2fa.enabled_help') }}
             </p>
 

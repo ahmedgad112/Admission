@@ -169,7 +169,13 @@ class StaffAttendanceSummary
                 ->overlapping($from, $to)
                 ->get();
 
-        $credits = $this->attendanceCredits($staff->modelKeys(), $monthStart->format('Y-m'));
+        $credits = $this->attendanceCredits(
+            array_values(array_map(
+                static fn (int|string $id): int => (int) $id,
+                $staff->modelKeys(),
+            )),
+            $monthStart->format('Y-m'),
+        );
 
         return [
             'month' => $monthStart->format('Y-m'),
