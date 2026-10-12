@@ -5,6 +5,7 @@ use App\Models\Attendance;
 use App\Models\Shift;
 use App\Models\User;
 use App\Services\AttendanceService;
+use App\Services\AttendanceSettings;
 use App\Services\QrSessionService;
 use Carbon\CarbonImmutable;
 use Tests\TestCase;
@@ -13,7 +14,7 @@ uses(TestCase::class);
 
 function attendanceService(): AttendanceService
 {
-    return new AttendanceService(new QrSessionService);
+    return new AttendanceService(new QrSessionService(new AttendanceSettings));
 }
 
 test('the application timezone is africa cairo', function () {
