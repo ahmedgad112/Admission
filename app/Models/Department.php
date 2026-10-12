@@ -88,7 +88,7 @@ class Department extends Model
      */
     public static function exportOptionsFor(User $actor, ?int $branchId = null): array
     {
-        return static::query()
+        return array_values(static::query()
             ->exportableTo($actor, $branchId)
             ->orderBy('name')
             ->get(['id', 'name'])
@@ -96,8 +96,7 @@ class Department extends Model
                 'id' => $department->id,
                 'name' => $department->name,
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 
     public static function findExportableTo(User $actor, int $id, ?int $branchId = null): ?self

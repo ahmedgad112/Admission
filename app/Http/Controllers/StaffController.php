@@ -406,7 +406,7 @@ class StaffController extends Controller
      */
     private function visibleDepartments(User $user): array
     {
-        return Department::query()
+        return array_values(Department::query()
             ->visibleTo($user)
             ->when(
                 $user->limitsRecordsToTeam(),
@@ -421,7 +421,6 @@ class StaffController extends Controller
                 'branch_id' => $department->branch_id,
                 'branch' => $department->branch?->name,
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 }
